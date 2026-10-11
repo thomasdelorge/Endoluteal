@@ -9,6 +9,8 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.repository.CycleRepository
 import fr.luteal.core.data.repository.DailyEntryRepository
+import fr.luteal.core.data.repository.TreatmentPlanRepository
+import fr.luteal.core.model.meds.continuousHormonalActive
 import fr.luteal.core.model.AgeBand
 import fr.luteal.core.model.CycleEstimateCalculator
 import fr.luteal.core.model.CycleEstimateResult
@@ -28,7 +30,8 @@ class NotificationScheduler @Inject constructor(
     @ApplicationContext private val context: Context,
     private val userPreferencesDataStore: UserPreferencesDataStore,
     private val cycleRepository: CycleRepository,
-    private val dailyEntryRepository: DailyEntryRepository
+    private val dailyEntryRepository: DailyEntryRepository,
+    private val treatmentPlanRepository: TreatmentPlanRepository
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -82,14 +85,18 @@ class NotificationScheduler @Inject constructor(
                 hasTimingContext = prefs.hasTimingContext
             )
 
-            if (prefs.isPeriodWindowEnabled && estimateResult is CycleEstimateResult.Available) {
+            val hormonal = continuousHormonalActive(
+                treatmentPlanRepository.allOnce(),
+                now.toLocalDate()
+            )
+            if (!hormonal && prefs.isPeriodWindowEnabled && estimateResult is CycleEstimateResult.Available) {
                 schedulePeriodWindow(estimateResult.estimate.earliestDate, prefs.periodWindowLeadDays, now)
             } else {
                 cancelAlarm(NotificationType.PERIOD_WINDOW)
             }
 
             // Late Cycle Check-in
-            if (prefs.isLateCycleEnabled && estimateResult is CycleEstimateResult.Available) {
+            if (!hormonal && prefs.isLateCycleEnabled && estimateResult is CycleEstimateResult.Available) {
                 scheduleLateCycle(estimateResult.estimate.latestDate, prefs.lateCycleGraceDays, now)
             } else {
                 cancelAlarm(NotificationType.LATE_CYCLE)

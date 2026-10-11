@@ -22,6 +22,8 @@ import fr.luteal.core.data.repository.CycleRepository
 import fr.luteal.core.data.repository.DailyEntryRepository
 import fr.luteal.app.notification.NotificationScheduler
 import fr.luteal.core.data.repository.UserRepository
+import fr.luteal.core.data.repository.TreatmentPlanRepository
+import fr.luteal.core.model.meds.continuousHormonalActive
 import fr.luteal.core.model.AgeBand
 import fr.luteal.core.model.Cycle
 import fr.luteal.core.model.CycleEstimate
@@ -55,6 +57,7 @@ class LutealViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val clinicalReportAggregator: ClinicalReportAggregator,
     private val notificationScheduler: NotificationScheduler,
+    private val treatmentPlanRepository: TreatmentPlanRepository,
     private val clock: Clock
 ) : ViewModel() {
     private val operationState = MutableStateFlow(OperationState())
@@ -80,8 +83,9 @@ class LutealViewModel @Inject constructor(
             RecordSnapshot(cycles, currentCycle, entries, biomarkers, preferences)
         },
         operationState,
-        todayFlow
-    ) { records, operation, today ->
+        todayFlow,
+        treatmentPlanRepository.observe()
+    ) { records, operation, today, plans ->
         val todayEntry = records.entries.firstOrNull { it.date == today }
         val dayOfCycle = records.currentCycle?.takeIf { !today.isBefore(it.startDate) }?.let {
             ChronoUnit.DAYS.between(it.startDate, today).toInt() + 1
@@ -112,6 +116,7 @@ class LutealViewModel @Inject constructor(
             todayEntry = todayEntry,
             dayOfCycle = dayOfCycle,
             estimate = estimate,
+            hideCycleEstimate = continuousHormonalActive(plans, today),
             currentPhase = currentPhase
         )
     }.stateIn(
@@ -266,6 +271,7 @@ data class LutealUiState(
         ?.takeIf { !today.isBefore(it.startDate) }
         ?.let { ChronoUnit.DAYS.between(it.startDate, today).toInt() + 1 },
     val estimate: CycleEstimate? = (estimateResult as? CycleEstimateResult.Available)?.estimate,
+    val hideCycleEstimate: Boolean = false,
     val currentPhase: CurrentCyclePhase = CurrentCyclePhaseCalculator.evaluate(
         today = today,
         currentCycle = currentCycle,

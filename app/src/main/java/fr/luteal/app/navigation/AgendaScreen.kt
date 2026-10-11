@@ -121,7 +121,11 @@ fun AgendaScreen(
     val dayEvents = eventsOnDay(events, selectedDate)
     val dailyRecapLabel = stringResource(R.string.agenda_action_daily_recap)
     val medicationLabel = stringResource(R.string.agenda_action_medication)
-    val displayedEstimate = state.estimateResult
+    val displayedEstimate = if (state.hideCycleEstimate) {
+        CycleEstimateResult.NeedsMoreHistory
+    } else {
+        state.estimateResult
+    }
 
     val entriesByDate = remember(state.entries) {
         state.entries.associateBy(DailyEntry::date)
@@ -188,7 +192,11 @@ fun AgendaScreen(
         }
 
         item {
-            CycleEstimateSection(state = state, onBackfillCycle = onBackfillCycle)
+            if (state.hideCycleEstimate) {
+                Text(stringResource(R.string.agenda_hormonal_hidden))
+            } else {
+                CycleEstimateSection(state = state, onBackfillCycle = onBackfillCycle)
+            }
         }
 
         item {
