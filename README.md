@@ -1,74 +1,127 @@
-# Luteal
+# Endoluteal
 
-A menstrual cycle tracker for Android, built around one rule: what you recorded
-and what the app calculated are never presented as the same thing.
+Application Android de **suivi de l'endométriose**, organisée autour d'un agenda :
+prises de médicaments, douleurs localisées sur le corps, traitements non
+médicamenteux (TENS, bouillotte...), rendez-vous médicaux, hospitalisations et
+récap quotidien.
 
-Recorded observations are labelled as recorded. Predictions are labelled as
-estimates, shown as a range rather than a confident date, and the app says what
-the range was derived from. Luteal makes no diagnosis.
+> **Hard-fork de [Luteal](https://github.com/JoeriKaiser/luteal)** (Joeri
+> Kaiser), suivi de cycle menstruel sous licence GPL-3.0. Endoluteal diverge
+> définitivement de l'upstream pour répondre à un besoin précis : le suivi au
+> quotidien de l'endométriose. Ce projet n'est pas affilié à Luteal et ne
+> reverse pas ses changements upstream.
 
-The app is French-first; English is also shipped. It works entirely offline by
-default, with optional end-to-end encrypted sync.
+## Statut
 
-## Privacy
+En développement. Le code est encore celui de Luteal tant que le nettoyage
+(milestone M1) n'est pas livré. Le plan complet, les décisions d'architecture
+et le découpage en issues sont dans
+[docs/product/ENDOLUTEAL_ROADMAP.md](docs/product/ENDOLUTEAL_ROADMAP.md).
 
-- Tracking data lives in a local Room database. Nothing leaves the device until
-  sync is explicitly enabled - `SyncMode` defaults to `OFFLINE_LOCAL`.
-- Android cloud backup is disabled for the app's data (`allowBackup=false`).
-- Home-screen widgets start concealed and never show private notes or detailed
-  observations. Revealing a widget sends its visible content to the launcher,
-  which may retain previews or screenshots outside Luteal's control.
-- No advertising, no analytics, no Google Play Services, no Firebase.
-- Crash reporting is ACRA with a consent dialog: nothing is sent unless the user
-  reads it and chooses to send. Tracking data is not included.
-- When sync is on, records are encrypted on this device before upload. The
-  server stores ciphertext and routing metadata. It also issued the account
-  code and receives that code again when a device is added, so the app does
-  not claim the operator has never seen the key. See
-  [docs/architecture/E2EE_DESIGN.md](docs/architecture/E2EE_DESIGN.md).
+## Fonctionnalités visées
 
-## Building
+- Agenda avec saisie rapide (bouton +) : médicament, symptôme, traitement,
+  rendez-vous, hospitalisation.
+- Base de médicaments personnelle avec alertes de surdosage (cumul d'une même
+  substance sur 24 h), de doublon de classe (deux anti-inflammatoires) et
+  d'incompatibilité, et calcul de la prochaine prise possible.
+- Plans de traitement avec rappels regroupés et report (+10 min, +30 min, +1 h).
+- Carte du corps recto/verso pour localiser et coter chaque douleur (0-10).
+- Contrôle de la douleur après chaque prise, pour mesurer ce qui soulage.
+- Récap quotidien en cartes : cycle, douleurs et « 5D » de l'endométriose,
+  état psychologique, état général, transit.
+- Import des rendez-vous depuis l'agenda du téléphone, compte rendu après
+  chaque rendez-vous, frise chronologique par praticien, export PDF.
+- Sauvegarde quotidienne automatique dans un dossier local.
 
-Requires JDK 21 and the Android SDK (compileSdk 37, minSdk 26).
+## Confidentialité
 
-```sh
-./gradlew assembleDebug          # debug build
-./gradlew testDebugUnitTest      # unit tests
-./gradlew assembleRelease        # release build
+- Les données restent sur l'appareil, dans une base Room locale. La cible est
+  une application **sans permission Internet**.
+- Pas de publicité, pas d'analytics, pas de Google Play Services, pas de
+  Firebase.
+- La sauvegarde cloud Android est désactivée (`allowBackup=false`).
+- Les rapports de plantage (ACRA) ne partent qu'après consentement explicite,
+  par mail, sans données de suivi.
+
+## Avertissement médical
+
+Endoluteal ne pose aucun diagnostic. Les alertes médicamenteuses sont une aide
+à la prise et ne remplacent pas l'avis d'un médecin ou d'un pharmacien.
+
+## Installation avec Obtainium
+
+Les APK signés sont publiés dans les
+[releases GitHub](https://github.com/thomasdelorge/Endoluteal/releases). Dans
+[Obtainium](https://github.com/ImranR98/Obtainium), ajoutez l'application
+depuis l'URL `https://github.com/thomasdelorge/Endoluteal`. Les mises à jour
+sont ensuite détectées automatiquement.
+
+Endoluteal s'installe à côté de Luteal : identifiant et clé de signature
+différents, sans reprise des données Luteal.
+
+## Développement
+
+Prérequis : JDK 21 et SDK Android. Avec [mise](https://mise.jdx.dev/) :
+`java = "temurin-21"` et `android-sdk = "13.0"`. Le premier build télécharge
+lui-même `platforms;android-37.0` (compileSdk 37, minSdk 26).
+
+Le SDK est trouvé via `ANDROID_HOME` ou `local.properties` (non versionné) :
+
+```properties
+sdk.dir=/home/<user>/.local/share/mise/installs/android-sdk/13.0
 ```
 
-A plain clone builds with no other checkout present: the folicular API contract
-is vendored under [`contract/`](contract/README.md).
+Commandes principales :
 
-Release signing reads `keystore.properties` at the repository root - copy
-`keystore.properties.example` and fill it in. Without that file the release
-build is left unsigned rather than falling back to the debug key.
+```sh
+./gradlew assembleDebug                       # build debug
+./gradlew assembleDebug lintDebug testDebugUnitTest   # vérification d'une PR
+./gradlew installDebug                        # installation sur l'appareil connecté
+```
 
-## Layout
+Émulateur dédié (Pixel 8, API 35, sans écran de verrouillage) :
 
-| Path | Contents |
+```sh
+avdmanager create avd -n endoluteal_api35 \
+  -k "system-images;android-35;google_apis;x86_64" -d pixel_8
+emulator -avd endoluteal_api35 -gpu host &
+adb logcat --pid=$(adb shell pidof -s fr.luteal.app)
+```
+
+Sur un téléphone physique : activer le débogage sans fil, puis `adb pair` et
+`adb connect`.
+
+Le dépôt GitHub étant un fork, configurez `gh` pour cibler ce dépôt et non
+l'upstream :
+
+```sh
+gh repo set-default thomasdelorge/Endoluteal
+```
+
+La signature des releases lit `keystore.properties` à la racine (voir
+`keystore.properties.example`). Sans ce fichier, l'APK release n'est pas signé.
+
+## Organisation du code
+
+| Chemin | Contenu |
 | --- | --- |
-| `app/src/main/java/fr/luteal/app` | Screens, navigation, view models, DI wiring |
-| `app/src/main/java/fr/luteal/core` | Domain model, Room storage, sync, crypto |
-| `contract/` | Vendored folicular OpenAPI spec and conformance fixtures |
-| `docs/architecture` | Sync boundary, E2EE design, backend integration |
-| `docs/product` | Feature research, roadmap, and widget behavior |
-| `docs/research` | Cycle research notes and source register |
-| `fastlane/` | F-Droid listing metadata |
+| `app/src/main/java/fr/luteal/app` | Écrans, navigation, view models, injection |
+| `app/src/main/java/fr/luteal/core` | Modèle métier, stockage Room, calculs |
+| `docs/product` | Roadmap Endoluteal |
+| `docs/research` | Notes de recherche héritées de Luteal |
+| `scripts/` | Outils de dev (création des issues, données de démonstration) |
 
-## Backend
+Les packages Kotlin `fr.luteal.*` sont conservés volontairement pour limiter
+le diff avec le code d'origine.
 
-Sync talks to [folicular](https://github.com/JoeriKaiser/folicular), a Go
-service. It is optional: the app is fully usable without it. The server address
-defaults to the official Luteal service (`BuildConfig.SYNC_BASE_URL`) and can be
-pointed to any self-hosted folicular instance in Settings.
 ## Licence
 
-GNU General Public License v3.0 or later. See [LICENSE](LICENSE).
+GNU General Public License v3.0 ou ultérieure. Voir [LICENSE](LICENSE).
 
-Luteal is free software: you can redistribute it and/or modify it under the
-terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version. It is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE. See the GNU General Public License for more details.
+Endoluteal est dérivé de [Luteal](https://github.com/JoeriKaiser/luteal),
+Copyright (C) Joeri Kaiser, distribué sous GPL-3.0-or-later. Les
+modifications apportées par Endoluteal sont distribuées sous la même licence.
+Ce programme est distribué dans l'espoir qu'il sera utile, mais SANS AUCUNE
+GARANTIE, sans même la garantie implicite de QUALITÉ MARCHANDE ou
+d'ADÉQUATION À UN USAGE PARTICULIER.
