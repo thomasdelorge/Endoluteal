@@ -57,7 +57,13 @@ data class UserPreferences(
     val notificationCustomBody: String = "",
     val temperatureUnit: String = "CELSIUS",
     val medicationsSeedOffered: Boolean = false,
-    val painFollowupDelayMinutes: Int = 45
+    val painFollowupDelayMinutes: Int = 45,
+    val autoBackupEnabled: Boolean = false,
+    val autoBackupUri: String = "",
+    val autoBackupHour: String = "03:00",
+    val autoBackupKeep: Int = 14,
+    val autoBackupLastSuccess: String = "",
+    val autoBackupLastError: String = ""
 ) {
     /** Contexts the user declared during onboarding. */
     val declaredContexts: Set<TrackingContext>
@@ -123,6 +129,12 @@ class UserPreferencesDataStore @Inject constructor(
         val TEMPERATURE_UNIT = stringPreferencesKey("temperature_unit")
         val MEDICATIONS_SEED_OFFERED = booleanPreferencesKey("medications_seed_offered")
         val PAIN_FOLLOWUP_DELAY_MINUTES = androidx.datastore.preferences.core.intPreferencesKey("pain_followup_delay_minutes")
+        val AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")
+        val AUTO_BACKUP_URI = stringPreferencesKey("auto_backup_uri")
+        val AUTO_BACKUP_HOUR = stringPreferencesKey("auto_backup_hour")
+        val AUTO_BACKUP_KEEP = androidx.datastore.preferences.core.intPreferencesKey("auto_backup_keep")
+        val AUTO_BACKUP_LAST_SUCCESS = stringPreferencesKey("auto_backup_last_success")
+        val AUTO_BACKUP_LAST_ERROR = stringPreferencesKey("auto_backup_last_error")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -173,7 +185,13 @@ class UserPreferencesDataStore @Inject constructor(
                 notificationCustomBody = preferences[NOTIF_CUSTOM_BODY] ?: "",
                 temperatureUnit = preferences[TEMPERATURE_UNIT] ?: "CELSIUS",
                 medicationsSeedOffered = preferences[MEDICATIONS_SEED_OFFERED] ?: false,
-                painFollowupDelayMinutes = preferences[PAIN_FOLLOWUP_DELAY_MINUTES] ?: 45
+                painFollowupDelayMinutes = preferences[PAIN_FOLLOWUP_DELAY_MINUTES] ?: 45,
+                autoBackupEnabled = preferences[AUTO_BACKUP_ENABLED] ?: false,
+                autoBackupUri = preferences[AUTO_BACKUP_URI] ?: "",
+                autoBackupHour = preferences[AUTO_BACKUP_HOUR] ?: "03:00",
+                autoBackupKeep = preferences[AUTO_BACKUP_KEEP] ?: 14,
+                autoBackupLastSuccess = preferences[AUTO_BACKUP_LAST_SUCCESS] ?: "",
+                autoBackupLastError = preferences[AUTO_BACKUP_LAST_ERROR] ?: ""
             )
         }
 
@@ -239,6 +257,14 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setTemperatureUnit(unit: String) = edit { it[TEMPERATURE_UNIT] = unit }
     suspend fun setMedicationsSeedOffered(offered: Boolean) = edit { it[MEDICATIONS_SEED_OFFERED] = offered }
     suspend fun setPainFollowupDelayMinutes(minutes: Int) = edit { it[PAIN_FOLLOWUP_DELAY_MINUTES] = minutes }
+    suspend fun setAutoBackupEnabled(enabled: Boolean) = edit { it[AUTO_BACKUP_ENABLED] = enabled }
+    suspend fun setAutoBackupUri(uri: String) = edit { it[AUTO_BACKUP_URI] = uri }
+    suspend fun setAutoBackupHour(hour: String) = edit { it[AUTO_BACKUP_HOUR] = hour }
+    suspend fun setAutoBackupKeep(keep: Int) = edit { it[AUTO_BACKUP_KEEP] = keep }
+    suspend fun setAutoBackupStatus(success: String, error: String) = edit {
+        it[AUTO_BACKUP_LAST_SUCCESS] = success
+        it[AUTO_BACKUP_LAST_ERROR] = error
+    }
     suspend fun clear() = edit { it.clear() }
 
     private suspend fun edit(block: suspend (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

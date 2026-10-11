@@ -23,6 +23,7 @@ class NotificationChannelManager @Inject constructor(
         const val CHANNEL_CARE_FOLLOWUP = "care_followup"
         const val CHANNEL_RECAP = "recap"
         const val CHANNEL_APPOINTMENT_REPORT = "appointment_report"
+        const val CHANNEL_BACKUP = "backup"
     }
 
     fun registerChannels() {
@@ -68,7 +69,8 @@ class NotificationChannelManager @Inject constructor(
         channel(CHANNEL_PAIN_FOLLOWUP, R.string.notif_channel_pain_followup, R.string.notif_channel_pain_followup_desc),
         channel(CHANNEL_CARE_FOLLOWUP, R.string.notif_channel_care_followup, R.string.notif_channel_care_followup_desc),
         channel(CHANNEL_RECAP, R.string.notif_channel_recap, R.string.notif_channel_recap_desc),
-        channel(CHANNEL_APPOINTMENT_REPORT, R.string.notif_channel_appointment_report, R.string.notif_channel_appointment_report_desc)
+        channel(CHANNEL_APPOINTMENT_REPORT, R.string.notif_channel_appointment_report, R.string.notif_channel_appointment_report_desc),
+        channel(CHANNEL_BACKUP, R.string.notif_channel_backup, R.string.notif_channel_backup_desc)
     )
 
     @RequiresApi(Build.VERSION_CODES.O)

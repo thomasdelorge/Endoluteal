@@ -868,7 +868,6 @@
     <string name="notif_action_open">Ouvrir</string>
     <string name="notif_reminder_title">Rappel</string>
     <string name="notif_reminder_body">Un rappel est arrivé à échéance.</string>
-
     <string name="settings_meds_title">Médicaments</string>
     <string name="settings_meds_open">Base de médicaments</string>
     <string name="settings_meds_open_body">Substances, posologies et incompatibilités</string>
@@ -910,7 +909,6 @@
     <string name="drug_class_triptan">Triptan</string>
     <string name="drug_class_hormonal">Hormonal</string>
     <string name="drug_class_other">Autre</string>
-
     <string name="intake_title">Prise de médicament</string>
     <string name="intake_search">Rechercher</string>
     <string name="intake_units">Nombre d’unités</string>
@@ -932,8 +930,6 @@
     <string name="meds_alert_class">Deux substances de la même classe sont trop rapprochées.</string>
     <string name="meds_alert_rule">Incompatibilité signalée.</string>
     <string name="meds_alert_unvalidated">Basée sur des valeurs non validées.</string>
-    <string name="notif_action_pain_check">Contrôler</string>
-    <string name="notif_action_take_all">Tout pris</string>
     <string name="agenda_hormonal_hidden">Prédiction masquée : traitement hormonal continu en cours.</string>
     <string name="meds_plans">Plans en cours</string>
     <string name="meds_add_plan">Ajouter un plan</string>
@@ -946,4 +942,19 @@
     <string name="meds_start">Début (AAAA-MM-JJ)</string>
     <string name="meds_end">Fin, optionnelle (AAAA-MM-JJ)</string>
     <string name="meds_hormonal">Traitement hormonal continu</string>
+    <string name="notif_action_pain_check">Contrôler</string>
+    <string name="notif_action_take_all">Tout pris</string>
+    <string name="notif_channel_backup">Sauvegarde</string>
+    <string name="notif_channel_backup_desc">Échec de la sauvegarde automatique</string>
+    <string name="backup_auto_title">Sauvegarde automatique</string>
+    <string name="backup_auto_body">Écrit un fichier JSON dans le dossier choisi.</string>
+    <string name="backup_choose_folder">Choisir un dossier</string>
+    <string name="backup_hour">Heure</string>
+    <string name="backup_keep">Nombre de sauvegardes conservées</string>
+    <string name="backup_now">Sauvegarder maintenant</string>
+    <string name="backup_last_success">Dernière réussite : %1$s</string>
+    <string name="backup_last_error">Dernière erreur : %1$s</string>
+    <string name="backup_failed_title">Sauvegarde impossible</string>
+    <string name="backup_error_folder">Le dossier de sauvegarde est inaccessible.</string>
+    <string name="backup_error_generic">La sauvegarde a échoué.</string>
 </resources>

@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import fr.luteal.app.BuildConfig
 import fr.luteal.app.R
+import fr.luteal.app.backup.AutoBackupCard
 import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
@@ -360,6 +361,8 @@ fun SettingsScreen(
             onDismissImportState = viewModel::clearImportState,
             onDismissReportExportState = viewModel::clearReportExportState
         )
+
+        AutoBackupCard()
 
         TrackingContextCard(
             declared = syncState.declaredContexts,
