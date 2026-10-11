@@ -9,10 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Hard-fork identity (`io.github.thomasdelorge.endoluteal`), roadmap, and GitHub
-  issue backlog.
 - Agenda d'accueil : calendrier, événements du jour et saisie du récap.
 - Échelle de douleur 0-10 et silhouette de localisation.
+- Rappels exacts reportables (+10 min, +30 min, +1 h).
 
 ### Changed
 

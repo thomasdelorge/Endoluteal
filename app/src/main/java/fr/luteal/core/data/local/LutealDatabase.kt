@@ -8,6 +8,7 @@ import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.JournalEventEntity
 import fr.luteal.core.data.entity.PainMarkEntity
+import fr.luteal.core.data.entity.ReminderEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.entity.UserProfileEntity
 
@@ -19,9 +20,10 @@ import fr.luteal.core.data.entity.UserProfileEntity
         UserProfileEntity::class,
         BiomarkerObservationEntity::class,
         JournalEventEntity::class,
-        PainMarkEntity::class
+        PainMarkEntity::class,
+        ReminderEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -32,4 +34,5 @@ abstract class LutealDatabase : RoomDatabase() {
     abstract fun userProfileDao(): UserProfileDao
     abstract fun biomarkerDao(): BiomarkerDao
     abstract fun journalEventDao(): JournalEventDao
+    abstract fun reminderDao(): ReminderDao
 }

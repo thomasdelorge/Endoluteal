@@ -12,6 +12,7 @@ import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
+import fr.luteal.core.data.local.ReminderDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.data.local.UserProfileDao
 import javax.inject.Singleton
@@ -57,4 +58,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideJournalEventDao(database: LutealDatabase): JournalEventDao = database.journalEventDao()
+
+    @Provides
+    @Singleton
+    fun provideReminderDao(database: LutealDatabase): ReminderDao = database.reminderDao()
 }

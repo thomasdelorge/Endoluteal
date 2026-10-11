@@ -18,6 +18,11 @@ class NotificationChannelManager @Inject constructor(
         const val CHANNEL_DAILY_CHECKIN = "channel_daily_checkin"
         const val CHANNEL_PERIOD_WINDOW = "channel_period_window"
         const val CHANNEL_LATE_CYCLE = "channel_late_cycle"
+        const val CHANNEL_MEDS = "meds"
+        const val CHANNEL_PAIN_FOLLOWUP = "pain_followup"
+        const val CHANNEL_CARE_FOLLOWUP = "care_followup"
+        const val CHANNEL_RECAP = "recap"
+        const val CHANNEL_APPOINTMENT_REPORT = "appointment_report"
     }
 
     fun registerChannels() {
@@ -51,7 +56,28 @@ class NotificationChannelManager @Inject constructor(
                 setShowBadge(true)
             }
 
-            notificationManager.createNotificationChannels(listOf(dailyChannel, windowChannel, lateChannel))
+            notificationManager.createNotificationChannels(
+                listOf(dailyChannel, windowChannel, lateChannel) + reminderChannels()
+            )
         }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun reminderChannels(): List<NotificationChannel> = listOf(
+        channel(CHANNEL_MEDS, R.string.notif_channel_meds, R.string.notif_channel_meds_desc),
+        channel(CHANNEL_PAIN_FOLLOWUP, R.string.notif_channel_pain_followup, R.string.notif_channel_pain_followup_desc),
+        channel(CHANNEL_CARE_FOLLOWUP, R.string.notif_channel_care_followup, R.string.notif_channel_care_followup_desc),
+        channel(CHANNEL_RECAP, R.string.notif_channel_recap, R.string.notif_channel_recap_desc),
+        channel(CHANNEL_APPOINTMENT_REPORT, R.string.notif_channel_appointment_report, R.string.notif_channel_appointment_report_desc)
+    )
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun channel(id: String, titleRes: Int, descriptionRes: Int) = NotificationChannel(
+        id,
+        context.getString(titleRes),
+        NotificationManager.IMPORTANCE_DEFAULT
+    ).apply {
+        description = context.getString(descriptionRes)
+        setShowBadge(true)
     }
 }

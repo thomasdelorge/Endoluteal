@@ -754,6 +754,12 @@
     <string name="inspection_biomarker_lh">Test LH : %1$s</string>
     <string name="inspection_lh_positive">Positif (pic détecté)</string>
     <string name="inspection_lh_negative">Négatif</string>
+    <string name="event_type_medication_intake">Prise de médicament</string>
+    <string name="event_type_pain_check">Contrôle de douleur</string>
+    <string name="event_type_symptom">Symptôme</string>
+    <string name="event_type_care_session">Soin</string>
+    <string name="event_type_hospitalization">Hospitalisation</string>
+    <string name="event_type_appointment">Rendez-vous</string>
 
     <string name="body_zone_head">Tête</string>
     <string name="body_zone_neck">Cou</string>
@@ -796,6 +802,17 @@
     <string name="body_zone_bladder">Vessie</string>
     <string name="body_zone_ovary_left">Ovaire gauche</string>
     <string name="body_zone_ovary_right">Ovaire droit</string>
+    <string name="body_region_head">Tête et cou</string>
+    <string name="body_region_torso">Tronc avant</string>
+    <string name="body_region_back">Dos</string>
+    <string name="body_region_limbs">Membres</string>
+    <string name="body_region_internal">Zones internes</string>
+    <string name="body_side_front">Avant</string>
+    <string name="body_side_back">Arrière</string>
+    <string name="body_map_list_mode">Saisir par liste</string>
+    <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
+    <string name="body_map_remove">Retirer</string>
+    <string name="body_map_sheet_title">%1$s</string>
     <string name="pain_type_shooting">Élancements</string>
     <string name="pain_type_lancinating">Lancinante</string>
     <string name="pain_type_penetrating">Pénétrante</string>
@@ -813,31 +830,11 @@
     <string name="pain_type_heaviness">Lourdeur</string>
     <string name="pain_type_pelvic_heaviness">Pesanteur pelvienne</string>
     <string name="pain_type_dull">Sourde</string>
-
     <string name="pain_scale_anchor_none">Aucune douleur</string>
     <string name="pain_scale_anchor_moderate">Modérée</string>
     <string name="pain_scale_anchor_worst">Pire douleur imaginable</string>
     <string name="pain_scale_value">%1$d, %2$s</string>
     <string name="pain_scale_value_only">%1$d</string>
-
-    <string name="body_region_head">Tête et cou</string>
-    <string name="body_region_torso">Tronc avant</string>
-    <string name="body_region_back">Dos</string>
-    <string name="body_region_limbs">Membres</string>
-    <string name="body_region_internal">Zones internes</string>
-    <string name="body_side_front">Avant</string>
-    <string name="body_side_back">Arrière</string>
-    <string name="body_map_list_mode">Saisir par liste</string>
-    <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
-    <string name="body_map_remove">Retirer</string>
-    <string name="body_map_sheet_title">%1$s</string>
-
-    <string name="event_type_medication_intake">Prise de médicament</string>
-    <string name="event_type_pain_check">Contrôle de douleur</string>
-    <string name="event_type_symptom">Symptôme</string>
-    <string name="event_type_care_session">Soin</string>
-    <string name="event_type_hospitalization">Hospitalisation</string>
-    <string name="event_type_appointment">Rendez-vous</string>
     <string name="nav_agenda">Agenda</string>
     <string name="nav_timeline">Frise</string>
     <string name="nav_medications">Médicaments</string>
@@ -853,4 +850,21 @@
     <string name="datetime_field_date">Date</string>
     <string name="datetime_field_time">Heure</string>
     <string name="calendar_event_dot">Événements enregistrés</string>
+    <string name="notif_channel_meds">Prises de médicaments</string>
+    <string name="notif_channel_meds_desc">Rappels de prise</string>
+    <string name="notif_channel_pain_followup">Suivi de douleur</string>
+    <string name="notif_channel_pain_followup_desc">Contrôle de la douleur après une prise ou un soin</string>
+    <string name="notif_channel_care_followup">Suivi de soin</string>
+    <string name="notif_channel_care_followup_desc">Rappel après un traitement non médicamenteux</string>
+    <string name="notif_channel_recap">Récap du jour</string>
+    <string name="notif_channel_recap_desc">Invitation à compléter la journée</string>
+    <string name="notif_channel_appointment_report">Compte rendu</string>
+    <string name="notif_channel_appointment_report_desc">Compte rendu après un rendez-vous</string>
+    <string name="notif_action_snooze_10">+10 min</string>
+    <string name="notif_action_snooze_30">+30 min</string>
+    <string name="notif_action_snooze_60">+1 h</string>
+    <string name="notif_action_dismiss">Ignorer</string>
+    <string name="notif_action_open">Ouvrir</string>
+    <string name="notif_reminder_title">Rappel</string>
+    <string name="notif_reminder_body">Un rappel est arrivé à échéance.</string>
 </resources>
