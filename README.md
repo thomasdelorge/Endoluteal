@@ -54,8 +54,9 @@ Endoluteal ne pose aucun diagnostic. Les alertes médicamenteuses sont une aide
 Les APK signés sont publiés dans les
 [releases GitHub](https://github.com/thomasdelorge/Endoluteal/releases). Dans
 [Obtainium](https://github.com/ImranR98/Obtainium), ajoutez l'application
-depuis l'URL `https://github.com/thomasdelorge/Endoluteal`. Les mises à jour
-sont ensuite détectées automatiquement.
+depuis l'URL `https://github.com/thomasdelorge/Endoluteal`. Filtre d'APK
+recommandé : `endoluteal-v.*\.apk`. Les mises à jour sont détectées
+automatiquement à chaque release GitHub.
 
 Endoluteal s'installe à côté de Luteal : identifiant et clé de signature
 différents, sans reprise des données Luteal.
@@ -98,8 +99,23 @@ l'upstream :
 gh repo set-default thomasdelorge/Endoluteal
 ```
 
-La signature des releases lit `keystore.properties` à la racine (voir
-`keystore.properties.example`). Sans ce fichier, l'APK release n'est pas signé.
+### Signature des releases (mainteneur)
+
+Générer une clé dédiée Endoluteal (une seule fois, à conserver hors dépôt) :
+
+```sh
+keytool -genkeypair -v -keystore endoluteal-release.jks -alias endoluteal \
+  -keyalg RSA -keysize 4096 -validity 10000
+base64 -w0 endoluteal-release.jks | gh secret set RELEASE_KEYSTORE_BASE64
+gh secret set KEYSTORE_PASSWORD
+gh secret set KEY_ALIAS
+gh secret set KEY_PASSWORD
+```
+
+Pousser un tag `vX.Y.Z` égal à `versionName` dans `app/build.gradle.kts`
+déclenche la publication de `endoluteal-vX.Y.Z.apk` signé. En local,
+`keystore.properties` (voir `keystore.properties.example`) est requis pour
+`make release-build`. Sans keystore, l'APK release n'est pas signé.
 
 ## Organisation du code
 
