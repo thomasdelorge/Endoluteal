@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -38,7 +37,6 @@ fun ClinicalReportDialog(
 ) {
     var selectedPreset by remember { mutableStateOf(ReportDateRangePreset.LAST_6_CYCLES) }
     var selectedFormat by remember { mutableStateOf(ReportFormat.PDF) }
-    var selectedLanguage by remember { mutableStateOf(ReportLanguage.FRENCH) }
     var includeNotes by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -104,26 +102,6 @@ fun ClinicalReportDialog(
 
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-                Text(
-                    text = stringResource(R.string.report_language_label),
-                    style = MaterialTheme.typography.titleSmall
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                    FilterChip(
-                        selected = selectedLanguage == ReportLanguage.FRENCH,
-                        onClick = { selectedLanguage = ReportLanguage.FRENCH },
-                        label = { Text(stringResource(R.string.report_language_fr)) }
-                    )
-                    FilterChip(
-                        selected = selectedLanguage == ReportLanguage.ENGLISH,
-                        onClick = { selectedLanguage = ReportLanguage.ENGLISH },
-                        label = { Text(stringResource(R.string.report_language_en)) }
-                    )
-                }
-
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-
                 LutealToggleRow(
                     title = stringResource(R.string.report_include_notes_title),
                     description = stringResource(R.string.report_include_notes_desc),
@@ -138,7 +116,7 @@ fun ClinicalReportDialog(
                     val config = ClinicalReportConfig(
                         preset = selectedPreset,
                         includeNotes = includeNotes,
-                        language = selectedLanguage,
+                        language = ReportLanguage.FRENCH,
                         format = selectedFormat
                     )
                     onExport(config)

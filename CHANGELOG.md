@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Hard-fork identity (`io.github.thomasdelorge.endoluteal`), roadmap, and GitHub
   issue backlog.
+
+### Changed
+
+- Application entièrement en français ; accueil sur le Journal (plus d’onglet
+  Aujourd’hui).
+- Suppression du mode Duo, des widgets, de la synchronisation cloud et du
+  schéma Room Luteal (base `endoluteal.db`, sauvegardes `endoluteal/v1`).
+
 - Local dev tooling (`mise.toml`, `make avd` / `emu` / `run` / `logcat`).
 - CI: debug APK artifact on PRs; signed release APK on version tags for
   Obtainium.
