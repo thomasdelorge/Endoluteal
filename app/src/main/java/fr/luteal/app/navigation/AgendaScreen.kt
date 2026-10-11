@@ -2,6 +2,7 @@ package fr.luteal.app.navigation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -99,6 +100,8 @@ fun AgendaScreen(
     intakeLabels: Map<String, String> = emptyMap(),
     onSelectDate: (LocalDate) -> Unit,
     onRecordMedication: (LocalDate) -> Unit = {},
+    onRecordSymptom: (LocalDate) -> Unit = {},
+    onOpenEvent: (JournalEvent) -> Unit = {},
     onEditCycle: (cycleId: String, newStartDate: LocalDate) -> Unit = { _, _ -> },
     onDeleteCycle: (cycleId: String) -> Unit = {},
     onBackfillCycle: () -> Unit = {}
@@ -121,6 +124,7 @@ fun AgendaScreen(
     val dayEvents = eventsOnDay(events, selectedDate)
     val dailyRecapLabel = stringResource(R.string.agenda_action_daily_recap)
     val medicationLabel = stringResource(R.string.agenda_action_medication)
+    val symptomLabel = stringResource(R.string.agenda_action_symptom)
     val displayedEstimate = if (state.hideCycleEstimate) {
         CycleEstimateResult.NeedsMoreHistory
     } else {
@@ -302,7 +306,11 @@ fun AgendaScreen(
                 )
             }
             item {
-                DayEventList(events = dayEvents, intakeLabels = intakeLabels)
+                DayEventList(
+                    events = dayEvents,
+                    intakeLabels = intakeLabels,
+                    onOpenEvent = onOpenEvent
+                )
             }
     }
         AgendaSpeedDial(
@@ -315,6 +323,10 @@ fun AgendaScreen(
                 SpeedDialAction("agenda_action_medication", medicationLabel) {
                     fabExpanded = false
                     onRecordMedication(selectedDate)
+                },
+                SpeedDialAction("agenda_action_symptom", symptomLabel) {
+                    fabExpanded = false
+                    onRecordSymptom(selectedDate)
                 }
             ),
             onToggle = { fabExpanded = !fabExpanded },
@@ -349,7 +361,11 @@ fun AgendaScreen(
 }
 
 @Composable
-private fun DayEventList(events: List<JournalEvent>, intakeLabels: Map<String, String>) {
+private fun DayEventList(
+    events: List<JournalEvent>,
+    intakeLabels: Map<String, String>,
+    onOpenEvent: (JournalEvent) -> Unit
+) {
     val children = events.filter { it.linkedEventId != null }.groupBy { it.linkedEventId }
     val roots = events.filter { event ->
         event.linkedEventId == null || events.none { it.id == event.linkedEventId }
@@ -363,9 +379,9 @@ private fun DayEventList(events: List<JournalEvent>, intakeLabels: Map<String, S
             )
         } else {
             roots.forEach { event ->
-                EventLine(event, intakeLabels[event.id])
+                EventLine(event, intakeLabels[event.id], onClick = { onOpenEvent(event) })
                 children[event.id].orEmpty().forEach { child ->
-                    EventLine(child, intakeLabels[child.id], nested = true)
+                    EventLine(child, intakeLabels[child.id], nested = true, onClick = { onOpenEvent(child) })
                 }
             }
         }
@@ -373,7 +389,12 @@ private fun DayEventList(events: List<JournalEvent>, intakeLabels: Map<String, S
 }
 
 @Composable
-private fun EventLine(event: JournalEvent, intakeLabel: String?, nested: Boolean = false) {
+private fun EventLine(
+    event: JournalEvent,
+    intakeLabel: String?,
+    nested: Boolean = false,
+    onClick: () -> Unit = {}
+) {
     val typeLabel = stringResource(event.type.labelRes())
     val pain = event.marks.maxOfOrNull { it.intensity }
     val text = buildString {
@@ -385,7 +406,9 @@ private fun EventLine(event: JournalEvent, intakeLabel: String?, nested: Boolean
     Text(
         text = text,
         style = if (nested) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
-        modifier = Modifier.semantics { contentDescription = text }
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = text }
     )
     if (event.notes.isNotBlank()) {
         Text(

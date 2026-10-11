@@ -842,6 +842,13 @@
     <string name="agenda_subtitle">Ce qui a été enregistré, jour par jour</string>
     <string name="agenda_action_daily_recap">Récap du jour</string>
     <string name="agenda_action_medication">Médicament</string>
+    <string name="agenda_action_symptom">Symptôme</string>
+    <string name="symptom_title">Symptôme douloureux</string>
+    <string name="symptom_notes">Notes</string>
+    <string name="symptom_delete">Supprimer</string>
+    <string name="symptom_delete_title">Supprimer ce symptôme ?</string>
+    <string name="symptom_delete_body">L’événement et les marques de douleur seront retirés de l’agenda.</string>
+    <string name="symptom_delete_confirm">Supprimer</string>
     <string name="agenda_fab_open">Ouvrir les saisies</string>
     <string name="agenda_fab_close">Fermer les saisies</string>
     <string name="agenda_events_empty">Aucun événement ce jour</string>

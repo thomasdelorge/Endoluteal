@@ -43,6 +43,9 @@ import fr.luteal.app.R
 import fr.luteal.app.navigation.entry.MedicationIntakeSheet
 import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
 import fr.luteal.app.navigation.entry.PainCheckSheet
+import fr.luteal.app.navigation.entry.SymptomEntryViewModel
+import fr.luteal.app.navigation.entry.SymptomSheet
+import fr.luteal.core.model.JournalEventType
 import fr.luteal.app.navigation.meds.MedsScreen
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.ObservationCatalog
@@ -60,6 +63,7 @@ fun LutealMainScaffold(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val agendaViewModel: AgendaViewModel = hiltViewModel()
     val intakeViewModel: MedicationIntakeViewModel = hiltViewModel()
+    val symptomViewModel: SymptomEntryViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
@@ -67,6 +71,8 @@ fun LutealMainScaffold(
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
     var intakeMedicationId by remember { mutableStateOf<String?>(null) }
     var painCheckEventId by remember { mutableStateOf<String?>(null) }
+    var symptomDate by remember { mutableStateOf<LocalDate?>(null) }
+    var symptomEventId by remember { mutableStateOf<String?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -174,6 +180,21 @@ fun LutealMainScaffold(
                                     intakeMedicationId = null
                                     intakeDate = date
                                 },
+                                onRecordSymptom = { date ->
+                                    symptomEventId = null
+                                    symptomDate = date
+                                },
+                                onOpenEvent = { event ->
+                                    when (event.type) {
+                                        JournalEventType.SYMPTOM -> {
+                                            symptomDate = event.startAt.atZone(
+                                                java.time.ZoneId.of(event.zoneId)
+                                            ).toLocalDate()
+                                            symptomEventId = event.id
+                                        }
+                                        else -> Unit
+                                    }
+                                },
                                 onEditCycle = { cycleId, newStartDate ->
                                     viewModel.editCycleStartDate(cycleId, newStartDate)
                                 },
@@ -246,6 +267,18 @@ fun LutealMainScaffold(
             linkedEventId = eventId,
             viewModel = intakeViewModel,
             onDismiss = { painCheckEventId = null }
+        )
+    }
+
+    symptomDate?.let { date ->
+        SymptomSheet(
+            initialDate = date,
+            existingEventId = symptomEventId,
+            viewModel = symptomViewModel,
+            onDismiss = {
+                symptomDate = null
+                symptomEventId = null
+            }
         )
     }
 }
