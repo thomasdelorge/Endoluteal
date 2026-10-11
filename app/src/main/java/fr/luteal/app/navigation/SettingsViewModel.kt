@@ -3,26 +3,17 @@ package fr.luteal.app.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import fr.luteal.app.sync.SyncScheduler
-import fr.luteal.core.data.datastore.SyncDataStore
 import fr.luteal.core.data.repository.UserRepository
 import fr.luteal.core.data.seed.TestDataSeeder
 import fr.luteal.core.model.AgeBand
-import fr.luteal.core.model.SyncMode
 import fr.luteal.core.model.TrackingContext
-import fr.luteal.core.network.auth.SyncCredentialStore
-import fr.luteal.core.network.auth.SyncCredentials
-import fr.luteal.core.network.sync.FolicularApiClientFactory
-import fr.luteal.core.network.sync.SyncCursorStore
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 import android.content.Context
@@ -53,22 +44,11 @@ import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.model.LutealBackupPreview
 import java.io.ByteArrayInputStream
 
-/**
- * Settings tab view model.
- *
- * Connects the UI to [UserRepository] for local configuration, [SyncDataStore]
- * and [SyncScheduler] for online sync, [DataExportManager] for JSON backups,
- * and [LocalDataPurgeManager] for local data wiping.
- */
+/** Settings tab view model: local prefs, backup/restore, PIN lock, notifications. */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val syncDataStore: SyncDataStore,
-    private val syncScheduler: SyncScheduler,
     private val testDataSeeder: TestDataSeeder,
-    private val credentialStore: SyncCredentialStore,
-    private val apiClientFactory: FolicularApiClientFactory,
-    private val cursorStore: SyncCursorStore,
     private val dataExportManager: DataExportManager,
     private val dataImportManager: DataImportManager,
     private val localDataPurgeManager: LocalDataPurgeManager,
@@ -78,26 +58,7 @@ class SettingsViewModel @Inject constructor(
     private val clinicalReportAggregator: ClinicalReportAggregator,
     private val notificationScheduler: NotificationScheduler
 ) : ViewModel() {
-    private val syncCursorStore: SyncCursorStore get() = cursorStore
-
-    private val _syncUiState = MutableStateFlow(
-        SettingsSyncUiState(
-            hasAccount = credentialStore.load() != null,
-            isLinked = credentialStore.load() != null,
-            accountCode = credentialStore.load()?.accountCode,
-            deviceToken = credentialStore.load()?.deviceToken
-        )
-    )
-    val syncUiState: StateFlow<SettingsSyncUiState> = _syncUiState.asStateFlow()
-
-    /** Local edit buffer for the base URL field, kept out of the DataStore. */
-    private val baseUrlDraft = MutableStateFlow("")
-
     private val testDataActionState = MutableStateFlow<TestDataActionState>(TestDataActionState.Idle)
-    /** Account-code recovery buffers. Declared before [uiState] so the
-     *  initializer below can observe them. */
-    private val recoveryCodeDraft = MutableStateFlow("")
-    private val recoveryState = MutableStateFlow<RecoveryState>(RecoveryState.Idle)
 
     private val exportState = MutableStateFlow<DataExportState>(DataExportState.Idle)
     private val wipeState = MutableStateFlow<DataWipeState>(DataWipeState.Idle)
@@ -110,37 +71,17 @@ class SettingsViewModel @Inject constructor(
             FileOps(export, wipe, importOp, report)
         }
 
-    private val drafts: Flow<Drafts> =
-        combine(baseUrlDraft, recoveryCodeDraft, fileOps, _syncUiState) { base, recovery, files, syncUi ->
-            Drafts(base, recovery, files.export, files.wipe, files.importOp, files.report, syncUi)
-        }
     val uiState: StateFlow<SettingsSyncUiState> = combine(
         userRepository.getUserPreferences(),
-        syncDataStore.syncPreferencesFlow,
-        drafts,
+        fileOps,
         testDataActionState,
-        recoveryState
-    ) { preferences, syncPreferences, draft, actionState, recovery ->
-        val creds = credentialStore.load()
-        val isLinked = creds != null
+    ) { preferences, files, actionState ->
         SettingsSyncUiState(
-            onlineSyncEnabled = preferences.syncMode == SyncMode.ONLINE_CLOUD.name,
-            baseUrlDraft = draft.baseUrl,
-            storedBaseUrl = syncPreferences.baseUrl.orEmpty(),
-            inProgress = syncPreferences.inProgress,
-            lastSyncedEpochMillis = syncPreferences.lastSyncedEpochMillis,
-            lastError = syncPreferences.lastError,
             testDataState = actionState,
-            recoveryCodeDraft = draft.recoveryCode,
-            recoveryState = recovery,
-            exportState = draft.exportState,
-            wipeState = draft.wipeState,
-            importState = draft.importState,
-            reportExportState = draft.reportExportState,
-            hasAccount = isLinked,
-            isLinked = isLinked,
-            accountCode = creds?.accountCode,
-            deviceToken = creds?.deviceToken,
+            exportState = files.export,
+            wipeState = files.wipe,
+            importState = files.importOp,
+            reportExportState = files.report,
             declaredContexts = preferences.declaredContexts,
             ageBand = AgeBand.fromId(preferences.ageBand),
             isAppLockEnabled = preferences.isAppLockEnabled,
@@ -167,14 +108,6 @@ class SettingsViewModel @Inject constructor(
         initialValue = SettingsSyncUiState()
     )
 
-    fun setOnlineSyncEnabled(enabled: Boolean) {
-        viewModelScope.launch {
-            userRepository.updateSyncMode(
-                if (enabled) SyncMode.ONLINE_CLOUD else SyncMode.OFFLINE_LOCAL
-            )
-        }
-    }
-
     fun setTrackingContext(context: TrackingContext, enabled: Boolean) {
         viewModelScope.launch {
             userRepository.setTrackingContext(context.id, enabled)
@@ -191,28 +124,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             userPreferencesDataStore.setTemperatureUnit(unit)
         }
-    }
-
-    fun onBaseUrlChange(value: String) {
-        baseUrlDraft.update { value }
-    }
-
-    /** Persists the custom sync server base URL. */
-    fun saveSyncSettings() {
-        val base = baseUrlDraft.value.trim()
-        viewModelScope.launch {
-            val previous = cursorStore.getBaseUrl()
-            syncDataStore.setBaseUrl(base.ifBlank { null })
-            val next = cursorStore.getBaseUrl()
-            if (cursorStore.getDatasetAccountId() != null && previous != next) {
-                syncDataStore.setCursor(0)
-                syncScheduler.cancelAndJoin()
-            }
-        }
-    }
-
-    fun syncNow() {
-        syncScheduler.syncNow()
     }
 
     fun seedMockData() {
@@ -251,91 +162,6 @@ class SettingsViewModel @Inject constructor(
         testDataActionState.value = TestDataActionState.Idle
     }
 
-    fun getAccountCode(): String? = credentialStore.load()?.accountCode
-
-    fun unlinkSync() {
-        viewModelScope.launch {
-            syncScheduler.cancelAndJoin()
-            credentialStore.clear()
-            syncDataStore.setCursor(0)
-            _syncUiState.update { it.copy(isLinked = false, accountCode = null, deviceToken = null) }
-        }
-    }
-
-    // --- Account recovery ---------------------------------------------------
-
-    fun onRecoveryCodeChange(value: String) {
-        recoveryCodeDraft.value = value
-    }
-
-    fun recoverAccount() {
-        recoverAccount(recoveryCodeDraft.value)
-    }
-
-    /**
-     * Attaches this device to an existing account by sending the account code.
-     *
-     * The code decrypts synced records. The server issued it, so this is not a
-     * claim that the operator has never seen it. On success the credentials are
-     * stored and the next sync pulls the account history. A device that already
-     * holds another account's records is refused.
-     */
-    fun recoverAccount(accountCode: String) {
-        val code = accountCode.trim()
-        if (code.isBlank()) return
-        viewModelScope.launch {
-            recoveryState.value = RecoveryState.Loading
-            runCatching {
-                val client = apiClientFactory.create(cursorStore.getBaseUrl())
-                val result = client.addDevice(code, cursorStore.getDeviceLabel())
-                val bound = cursorStore.getDatasetAccountId()
-                if (bound != null && bound != result.accountId) {
-                    throw ForeignAccountRestore()
-                }
-                credentialStore.clear()
-                credentialStore.save(
-                    SyncCredentials(
-                        accountId = result.accountId,
-                        accountCode = code,
-                        deviceToken = result.deviceToken
-                    )
-                )
-                // A restored device starts from cursor zero so it pulls the
-                // whole history rather than resuming someone else's position.
-                syncDataStore.setCursor(0L)
-                cursorStore.setDatasetAccountId(result.accountId)
-                cursorStore.setBoundBaseUrl(cursorStore.getBaseUrl())
-                result
-            }.onSuccess { result ->
-                recoveryState.value = RecoveryState.Success
-                recoveryCodeDraft.value = ""
-                _syncUiState.update {
-                    it.copy(
-                        isLinked = true,
-                        accountCode = code,
-                        deviceToken = result.deviceToken
-                    )
-                }
-                syncScheduler.syncNow()
-            }.onFailure { err ->
-                recoveryState.value = if (err is ForeignAccountRestore) {
-                    RecoveryState.Error(
-                        messageResId = R.string.settings_recovery_error_foreign_account
-                    )
-                } else {
-                    RecoveryState.Error(
-                        message = err.message,
-                        messageResId = if (err.message.isNullOrBlank()) R.string.settings_recovery_error_failed else null
-                    )
-                }
-            }
-        }
-    }
-
-    fun clearRecoveryState() {
-        recoveryState.value = RecoveryState.Idle
-    }
-
     fun exportData(context: Context, uri: Uri) {
         viewModelScope.launch {
             exportState.value = DataExportState.Loading
@@ -357,7 +183,6 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             wipeState.value = DataWipeState.Loading
             runCatching {
-                syncScheduler.cancelAndJoin()
                 if (!localDataPurgeManager.purgeAllLocalData()) {
                     error("local erase did not clear every secret")
                 }
@@ -610,13 +435,6 @@ class SettingsViewModel @Inject constructor(
     suspend fun verifyPin(pin: String): Boolean = pinCryptoManager.verifyPin(pin)
 }
 
-sealed interface RecoveryState {
-    data object Idle : RecoveryState
-    data object Loading : RecoveryState
-    data object Success : RecoveryState
-    data class Error(val message: String? = null, @param:StringRes val messageResId: Int? = null) : RecoveryState
-}
-
 sealed interface DataExportState {
     data object Idle : DataExportState
     data object Loading : DataExportState
@@ -641,23 +459,11 @@ sealed interface DataImportState {
 }
 
 data class SettingsSyncUiState(
-    val onlineSyncEnabled: Boolean = false,
-    val baseUrlDraft: String = "",
-    val storedBaseUrl: String = "",
-    val inProgress: Boolean = false,
-    val lastSyncedEpochMillis: Long? = null,
-    val lastError: String? = null,
     val testDataState: TestDataActionState = TestDataActionState.Idle,
-    val recoveryCodeDraft: String = "",
-    val recoveryState: RecoveryState = RecoveryState.Idle,
     val exportState: DataExportState = DataExportState.Idle,
     val wipeState: DataWipeState = DataWipeState.Idle,
     val importState: DataImportState = DataImportState.Idle,
     val reportExportState: DataExportState = DataExportState.Idle,
-    val hasAccount: Boolean = false,
-    val isLinked: Boolean = false,
-    val accountCode: String? = null,
-    val deviceToken: String? = null,
     /** Contexts the user has declared, editable after onboarding. */
     val declaredContexts: Set<TrackingContext> = emptySet(),
     /** Null means no band declared, which is a valid state. */
@@ -689,16 +495,6 @@ private data class FileOps(
     val report: DataExportState
 )
 
-private data class Drafts(
-    val baseUrl: String,
-    val recoveryCode: String,
-    val exportState: DataExportState,
-    val wipeState: DataWipeState,
-    val importState: DataImportState,
-    val reportExportState: DataExportState,
-    val syncUi: SettingsSyncUiState = SettingsSyncUiState()
-)
-
 sealed interface TestDataActionState {
     data object Idle : TestDataActionState
     data object Loading : TestDataActionState
@@ -706,5 +502,3 @@ sealed interface TestDataActionState {
     data object SuccessCleared : TestDataActionState
     data class Error(val message: String? = null, @param:StringRes val messageResId: Int? = null) : TestDataActionState
 }
-
-private class ForeignAccountRestore : Exception()

@@ -3,15 +3,12 @@ package fr.luteal.core.data.repository
 import androidx.room.withTransaction
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
-import fr.luteal.core.data.entity.SyncStateEntity
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.LutealDatabase
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.model.BleedingIntensity
 import fr.luteal.core.model.Cycle
 import fr.luteal.core.model.PeriodDay
-import fr.luteal.core.network.sync.SyncRevisionClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -28,9 +25,7 @@ class CycleRepositoryImpl @Inject constructor(
     private val database: LutealDatabase,
     private val cycleDao: CycleDao,
     private val dailyEntryDao: DailyEntryDao,
-    private val syncStateDao: SyncStateDao,
-    private val clock: Clock,
-    private val revisionClock: SyncRevisionClock
+    private val clock: Clock
 ) : CycleRepository {
 
     override fun getCycles(): Flow<List<Cycle>> {
@@ -52,11 +47,8 @@ class CycleRepositoryImpl @Inject constructor(
     }
 
     override suspend fun saveCycle(cycle: Cycle) {
-        // Entity and envelope must land atomically: a crash between them
-        // would leave an unpushed edit (or a resurrected deletion).
         database.withTransaction {
             upsertCycle(cycle)
-            markDirty(cycle.id)
         }
     }
 
@@ -71,33 +63,11 @@ class CycleRepositoryImpl @Inject constructor(
     ) {
         database.withTransaction {
             cycleDao.updateExclusion(id, isExcluded, reason?.name?.lowercase())
-            markDirty(id)
         }
     }
 
     override suspend fun deleteCycle(id: String) {
-        database.withTransaction {
-            val now = clock.millis()
-            val existingState = syncStateDao.getState(id)
-            cycleDao.deleteCycle(id)
-            val stateToSave = existingState?.copy(
-                clientRev = UUID.randomUUID().toString(),
-                updatedAtEpochMillis = now,
-                deletedAtEpochMillis = now,
-                dirty = true,
-                lastPushError = null
-            ) ?: SyncStateEntity(
-                entityId = id,
-                entityType = SyncStateEntity.TYPE_CYCLE,
-                clientRev = UUID.randomUUID().toString(),
-                createdAtEpochMillis = now,
-                updatedAtEpochMillis = now,
-                deletedAtEpochMillis = now,
-                dirty = true,
-                lastPushError = null
-            )
-            syncStateDao.upsert(stateToSave)
-        }
+        cycleDao.deleteCycle(id)
     }
 
     override suspend fun addBackfilledCycle(startDate: LocalDate) {
@@ -127,7 +97,6 @@ class CycleRepositoryImpl @Inject constructor(
                 val newEndDate = nextStart?.minusDays(1)?.toString()
                 if (current.id == newCycle.id || current.endDate != newEndDate) {
                     cycleDao.insertCycle(current.copy(endDate = newEndDate))
-                    markDirty(current.id)
                 }
             }
         }
@@ -154,7 +123,6 @@ class CycleRepositoryImpl @Inject constructor(
                 val newEndDate = nextStart?.minusDays(1)?.toString()
                 if (current.id == cycleId || current.endDate != newEndDate) {
                     cycleDao.insertCycle(current.copy(endDate = newEndDate))
-                    markDirty(current.id)
                 }
             }
         }
@@ -170,34 +138,9 @@ class CycleRepositoryImpl @Inject constructor(
                 val newEndDate = nextStart?.minusDays(1)?.toString()
                 if (current.endDate != newEndDate) {
                     cycleDao.insertCycle(current.copy(endDate = newEndDate))
-                    markDirty(current.id)
                 }
             }
         }
-    }
-
-    /**
-     * Records a fresh envelope for a locally edited cycle: a new client_rev on
-     * every edit (the conflict tiebreak), created_at preserved across edits,
-     * updated_at bumped to now, and the dirty flag set so the sync worker
-     * pushes it. This is a local Room write only - it never waits on network.
-     */
-    private suspend fun markDirty(cycleId: String) {
-        val now = clock.millis()
-        val existing = syncStateDao.getState(cycleId)
-        val ticket = revisionClock.allocate()
-        syncStateDao.upsert(
-            SyncStateEntity(
-                entityId = cycleId,
-                entityType = SyncStateEntity.TYPE_CYCLE,
-                clientRev = ticket.clientRev,
-                createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
-                updatedAtEpochMillis = ticket.updatedAtEpochMillis,
-                deletedAtEpochMillis = null,
-                dirty = true,
-                lastPushError = if (ticket.pushable) null else SyncRevisionClock.WAITING_CLOCK
-            )
-        )
     }
 
     private fun CycleEntity.toDomain(entries: List<DailyEntryEntity> = emptyList()): Cycle {

@@ -1,11 +1,7 @@
 package fr.luteal.core.data.repository
 
-import androidx.room.withTransaction
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
-import fr.luteal.core.data.entity.SyncStateEntity
 import fr.luteal.core.data.local.BiomarkerDao
-import fr.luteal.core.data.local.LutealDatabase
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.model.BbtDisturbance
 import fr.luteal.core.model.BasalBodyTemperature
 import fr.luteal.core.model.BiomarkerObservation
@@ -18,22 +14,15 @@ import fr.luteal.core.model.RapidTestLogs
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import org.json.JSONArray
-import fr.luteal.core.network.sync.SyncRevisionClock
-import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalTime
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BiomarkerRepositoryImpl @Inject constructor(
-    private val database: LutealDatabase,
-    private val biomarkerDao: BiomarkerDao,
-    private val syncStateDao: SyncStateDao,
-    private val clock: Clock,
-    private val revisionClock: SyncRevisionClock
+    private val biomarkerDao: BiomarkerDao
 ) : BiomarkerRepository {
     override fun observeObservations(): Flow<List<BiomarkerObservation>> =
         biomarkerDao.observeObservations().map { rows -> rows.map { it.toDomain() } }
@@ -45,29 +34,15 @@ class BiomarkerRepositoryImpl @Inject constructor(
         biomarkerDao.getObservationOnce(date.toString())?.toDomain()
 
     override suspend fun save(observation: BiomarkerObservation) {
-        database.withTransaction {
-            if (observation.isEmpty) {
-                deleteInternal(observation.date)
-                return@withTransaction
-            }
-            biomarkerDao.upsert(observation.toEntity())
-            markDirty(observation.date.toString(), deleted = false)
+        if (observation.isEmpty) {
+            biomarkerDao.deleteForDate(observation.date.toString())
+            return
         }
+        biomarkerDao.upsert(observation.toEntity())
     }
 
     override suspend fun delete(date: LocalDate) {
-        database.withTransaction {
-            deleteInternal(date)
-        }
-    }
-
-    /** Caller must own a transaction. */
-    private suspend fun deleteInternal(date: LocalDate) {
-        val existing = biomarkerDao.getObservationOnce(date.toString())
         biomarkerDao.deleteForDate(date.toString())
-        if (existing != null) {
-            markDirty(date.toString(), deleted = true)
-        }
     }
 
     private fun BiomarkerObservationEntity.toDomain(): BiomarkerObservation {
@@ -129,23 +104,4 @@ class BiomarkerRepositoryImpl @Inject constructor(
             }
         }
     }.getOrDefault(emptySet())
-
-    private suspend fun markDirty(date: String, deleted: Boolean) {
-        val now = clock.millis()
-        val entityId = SyncStateEntity.biomarkerEntityId(date)
-        val existing = syncStateDao.getState(entityId)
-        val ticket = revisionClock.allocate()
-        syncStateDao.upsert(
-            SyncStateEntity(
-                entityId = entityId,
-                entityType = SyncStateEntity.TYPE_BIOMARKER_OBSERVATION,
-                clientRev = ticket.clientRev,
-                createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
-                updatedAtEpochMillis = ticket.updatedAtEpochMillis,
-                deletedAtEpochMillis = if (deleted) now else null,
-                dirty = true,
-                lastPushError = if (ticket.pushable) null else SyncRevisionClock.WAITING_CLOCK
-            )
-        )
-    }
 }

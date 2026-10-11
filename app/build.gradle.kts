@@ -7,7 +7,6 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
-    alias(libs.plugins.openapi.generator)
 }
 
 android {
@@ -32,10 +31,6 @@ android {
         // 84 locales (most of resources.arsc); keep this in step with
         // res/xml/locales_config.xml and the values-* folders.
         androidResources.localeFilters += listOf("fr", "en")
-        // Default folicular base URL for online sync. The debug/dev build
-        // targets the local trial server (emulator loopback); the release
-        // build overrides this with the production API (see buildTypes).
-        buildConfigField("String", "SYNC_BASE_URL", "\"http://10.0.2.2:8080\"")
     }
 
     signingConfigs {
@@ -58,9 +53,6 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            // Production folicular API. Release syncs over HTTPS only
-            // (cleartext is not permitted); overrides the local-trial default.
-            buildConfigField("String", "SYNC_BASE_URL", "\"https://luteal-api.waldemar.site\"")
             // Sign only when real credentials are present. Without
             // keystore.properties the release APK is left unsigned rather than
             // falling back to the debug key: F-Droid signs its own builds, and
@@ -113,46 +105,6 @@ android {
         includeInBundle = false
     }
 
-    // Generated folicular API contract DTOs (see docs/architecture/BACKEND_INTEGRATION.md).
-    // The spec is vendored at contract/openapi.yaml; override the path with
-    // -Pfolicular.spec=... to build against an upstream working copy.
-    sourceSets {
-        getByName("main") {
-            kotlin.directories.add("$projectDir/build/generated/openapi/src/main/kotlin")
-        }
-    }
-}
-
-// Contract DTO generation from the folicular OpenAPI spec (models only;
-// transport stays hand-written). Runs before every build.
-//
-// The spec is vendored at contract/openapi.yaml so a plain clone builds with
-// no sibling checkout - see contract/README.md for how to refresh it. The
-// folicular repository remains the upstream source of truth; point at it with
-// -Pfolicular.spec=/abs/path/openapi.yaml when working on both sides at once.
-val folicularSpec = providers.gradleProperty("folicular.spec")
-    .getOrElse("$rootDir/contract/openapi.yaml")
-
-openApiGenerate {
-    generatorName.set("kotlin")
-    inputSpec.set(folicularSpec)
-    outputDir.set(layout.buildDirectory.dir("generated/openapi").get().asFile.absolutePath)
-    globalProperties.set(mapOf("models" to ""))
-    configOptions.set(
-        mapOf(
-            "packageName" to "fr.luteal.core.network.contract",
-            "serializationLibrary" to "kotlinx_serialization",
-            "dateLibrary" to "java8",
-            "enumPropertyNaming" to "UPPERCASE",
-            "sourceFolder" to "src/main/kotlin",
-        )
-    )
-    // Quiet the per-file log noise; keep warnings and errors.
-    verbose.set(false)
-}
-
-tasks.named("preBuild") {
-    dependsOn("openApiGenerate")
 }
 
 dependencies {
@@ -184,20 +136,10 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
-    // Coroutines & Serialization (serialization also backs the generated
-    // contract DTOs in fr.luteal.core.network.contract)
+    // Coroutines & Serialization
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
 
-    // Online sync path. The network permission is declared in the main
-    // manifest; the debug build additionally permits cleartext for the local
-    // trial server (see app/src/debug). Release syncs over HTTPS only.
-    // androidx.security:security-crypto is deliberately absent. Google
-    // deprecated it in April 2025 at 1.1.0-alpha07, and it pulled in Google
-    // Tink - 1416 classes, about a fifth of this app - to protect a handful of
-    // short strings. Secrets now use core/network/auth/KeystoreSecretStore,
-    // which wraps an AndroidKeyStore AES-GCM key directly.
-    implementation(libs.okhttp)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
@@ -209,7 +151,6 @@ dependencies {
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.androidx.room.testing)
     testImplementation(libs.androidx.work.testing)
     testImplementation(libs.androidx.test.core)

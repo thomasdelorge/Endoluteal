@@ -3,7 +3,6 @@ package fr.luteal.core.data
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
-import fr.luteal.core.data.datastore.SyncDataStore
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
@@ -40,7 +39,6 @@ class DataImportManagerTest {
     private lateinit var context: Context
     private lateinit var database: LutealDatabase
     private lateinit var userPreferencesDataStore: UserPreferencesDataStore
-    private lateinit var syncDataStore: SyncDataStore
     private lateinit var exportManager: DataExportManager
     private lateinit var importManager: DataImportManager
 
@@ -51,7 +49,6 @@ class DataImportManagerTest {
             .allowMainThreadQueries()
             .build()
         userPreferencesDataStore = UserPreferencesDataStore(context)
-        syncDataStore = SyncDataStore(context)
 
         exportManager = DataExportManager(
             cycleDao = database.cycleDao(),

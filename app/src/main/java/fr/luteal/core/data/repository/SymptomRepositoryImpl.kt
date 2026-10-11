@@ -1,29 +1,18 @@
 package fr.luteal.core.data.repository
 
-import androidx.room.withTransaction
-import fr.luteal.core.data.entity.SyncStateEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
-import fr.luteal.core.data.local.LutealDatabase
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.SymptomLog
-import fr.luteal.core.network.sync.SyncRevisionClock
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class SymptomRepositoryImpl @Inject constructor(
-    private val database: LutealDatabase,
-    private val symptomDao: SymptomDao,
-    private val syncStateDao: SyncStateDao,
-    private val clock: Clock,
-    private val revisionClock: SyncRevisionClock
+    private val symptomDao: SymptomDao
 ) : SymptomRepository {
 
     override fun getSymptomsForDate(date: LocalDate): Flow<List<SymptomLog>> {
@@ -39,49 +28,11 @@ class SymptomRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logSymptom(log: SymptomLog) {
-        database.withTransaction {
-            symptomDao.insertSymptomLog(log.toEntity())
-            markDirty(log.id)
-        }
+        symptomDao.insertSymptomLog(log.toEntity())
     }
 
     override suspend fun deleteSymptomLog(id: String) {
-        database.withTransaction {
-            val now = clock.millis()
-            val existing = syncStateDao.getState(id)
-            val ticket = revisionClock.allocate()
-            symptomDao.deleteSymptomLog(id)
-            syncStateDao.upsert(
-                SyncStateEntity(
-                    entityId = id,
-                    entityType = SyncStateEntity.TYPE_SYMPTOM_LOG,
-                    clientRev = ticket.clientRev,
-                    createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
-                    updatedAtEpochMillis = ticket.updatedAtEpochMillis,
-                    deletedAtEpochMillis = now,
-                    dirty = true,
-                    lastPushError = if (ticket.pushable) null else SyncRevisionClock.WAITING_CLOCK
-                )
-            )
-        }
-    }
-
-    private suspend fun markDirty(entityId: String) {
-        val now = clock.millis()
-        val existing = syncStateDao.getState(entityId)
-        val ticket = revisionClock.allocate()
-        syncStateDao.upsert(
-            SyncStateEntity(
-                entityId = entityId,
-                entityType = SyncStateEntity.TYPE_SYMPTOM_LOG,
-                clientRev = ticket.clientRev,
-                createdAtEpochMillis = existing?.createdAtEpochMillis ?: now,
-                updatedAtEpochMillis = ticket.updatedAtEpochMillis,
-                deletedAtEpochMillis = null,
-                dirty = true,
-                lastPushError = if (ticket.pushable) null else SyncRevisionClock.WAITING_CLOCK
-            )
-        )
+        symptomDao.deleteSymptomLog(id)
     }
 
     private fun SymptomLogEntity.toDomain(): SymptomLog {

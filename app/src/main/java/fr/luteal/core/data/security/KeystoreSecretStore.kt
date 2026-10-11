@@ -1,4 +1,4 @@
-package fr.luteal.core.network.auth
+package fr.luteal.core.data.security
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -31,7 +31,7 @@ import javax.crypto.spec.GCMParameterSpec
  *    "account_code"; only the values are secret.
  *
  * The envelope layout deliberately matches
- * [fr.luteal.core.network.crypto.RecordCrypto] so there is one format to reason
+ * encrypted backup payloads so there is one format to reason
  * about, but the key here never leaves the Keystore, so it cannot be passed to
  * that class.
  *

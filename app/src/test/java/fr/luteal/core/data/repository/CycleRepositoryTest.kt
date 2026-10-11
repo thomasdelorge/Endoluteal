@@ -48,12 +48,7 @@ class CycleRepositoryTest {
             database,
             database.cycleDao(),
             database.dailyEntryDao(),
-            database.syncStateDao(),
-            clock,
-            fr.luteal.core.network.sync.SyncRevisionClock(
-                fr.luteal.core.network.sync.MemoryRevisionWatermarkStore(),
-                clock
-            )
+            clock
         )
     }
 
@@ -63,7 +58,7 @@ class CycleRepositoryTest {
     }
 
     @Test
-    fun saveCycleInsertsAndMarksDirty() = runTest {
+    fun saveCycleInsertsRow() = runTest {
         val cycle = Cycle(
             id = "c1",
             startDate = LocalDate.parse("2026-06-01"),
@@ -73,43 +68,20 @@ class CycleRepositoryTest {
         repo.saveCycle(cycle)
 
         assertNotNull(database.cycleDao().getCycleById("c1"))
-        val state = database.syncStateDao().getState("c1")
-        assertNotNull(state)
-        assertTrue(state!!.dirty)
-        assertNull(state.deletedAtEpochMillis)
-        assertEquals(fixedInstant.toEpochMilli(), state.updatedAtEpochMillis)
     }
 
     @Test
-    fun saveTwiceKeepsCreatedAtFromFirstEnvelope() = runTest {
-        val first = Cycle(id = "c1", startDate = LocalDate.parse("2026-06-01"), endDate = null)
-        repo.saveCycle(first)
-        val original = database.syncStateDao().getState("c1")!!
-
-        // A later edit lands after the fixed clock moved on: createdAt preserved.
-        repo.saveCycle(first.copy(endDate = LocalDate.parse("2026-06-28")))
-
-        val updated = database.syncStateDao().getState("c1")!!
-        assertEquals(original.createdAtEpochMillis, updated.createdAtEpochMillis)
-        assertTrue(updated.clientRev != original.clientRev)
-    }
-
-    @Test
-    fun deleteCycleRemovesAndWritesSyncTombstone() = runTest {
+    fun deleteCycleRemovesRow() = runTest {
         val cycle = Cycle(id = "c1", startDate = LocalDate.parse("2026-06-01"), endDate = null)
         repo.saveCycle(cycle)
 
         repo.deleteCycle("c1")
 
         assertNull(database.cycleDao().getCycleById("c1"))
-        val tombstone = database.syncStateDao().getState("c1")
-        assertNotNull(tombstone)
-        assertEquals(fixedInstant.toEpochMilli(), tombstone!!.deletedAtEpochMillis)
-        assertTrue(tombstone.dirty)
     }
 
     @Test
-    fun updateCycleExclusionPersistsAndMarksDirty() = runTest {
+    fun updateCycleExclusionPersists() = runTest {
         val cycle = Cycle(id = "cycle-1", startDate = LocalDate.parse("2026-06-01"), endDate = LocalDate.parse("2026-06-28"))
         repo.saveCycle(cycle)
 
@@ -117,9 +89,6 @@ class CycleRepositoryTest {
 
         val updated = repo.getCyclesOnce().first()
         assertTrue(updated.isExcludedFromEstimates)
-        val state = database.syncStateDao().getState("cycle-1")
-        assertNotNull(state)
-        assertTrue(state!!.dirty)
     }
 
     @Test
@@ -215,9 +184,6 @@ class CycleRepositoryTest {
         assertEquals(LocalDate.parse("2026-05-31"), cycles[0].endDate)
         assertEquals(LocalDate.parse("2026-06-01"), cycles[1].startDate)
         assertNull(cycles[1].endDate)
-
-        assertTrue(database.syncStateDao().getState("c1")!!.dirty)
-        assertTrue(database.syncStateDao().getState(cycles[1].id)!!.dirty)
     }
 
     @Test
@@ -234,9 +200,6 @@ class CycleRepositoryTest {
         assertEquals(LocalDate.parse("2026-06-04"), cycles[0].endDate)
         assertEquals(LocalDate.parse("2026-06-05"), cycles[1].startDate)
         assertNull(cycles[1].endDate)
-
-        assertTrue(database.syncStateDao().getState("c1")!!.dirty)
-        assertTrue(database.syncStateDao().getState("c2")!!.dirty)
     }
 
     @Test
@@ -256,12 +219,6 @@ class CycleRepositoryTest {
         assertEquals(LocalDate.parse("2026-06-30"), cycles[0].endDate)
         assertEquals("c3", cycles[1].id)
         assertNull(cycles[1].endDate)
-
-        val c2Tombstone = database.syncStateDao().getState("c2")
-        assertNotNull(c2Tombstone)
-        assertTrue(c2Tombstone!!.dirty)
-        assertNotNull(c2Tombstone.deletedAtEpochMillis)
-
-        assertTrue(database.syncStateDao().getState("c1")!!.dirty)
+        assertNull(database.cycleDao().getCycleById("c2"))
     }
 }
