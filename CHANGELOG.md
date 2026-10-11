@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sauvegarde automatique dans un dossier local.
 - Saisie d’un symptôme douloureux depuis l’agenda (localisation, intensité, notes).
 - Soins non médicamenteux : catalogue, séance avec durée et rappel de douleur 1 h après la fin.
+- Hospitalisation sur plusieurs jours dans l’agenda (lieu, motif, examens, médicaments).
 
 ### Changed
 

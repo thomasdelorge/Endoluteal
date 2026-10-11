@@ -102,6 +102,7 @@ fun AgendaScreen(
     onRecordMedication: (LocalDate) -> Unit = {},
     onRecordSymptom: (LocalDate) -> Unit = {},
     onRecordCare: (LocalDate) -> Unit = {},
+    onRecordHospitalization: (LocalDate) -> Unit = {},
     onOpenEvent: (JournalEvent) -> Unit = {},
     onEditCycle: (cycleId: String, newStartDate: LocalDate) -> Unit = { _, _ -> },
     onDeleteCycle: (cycleId: String) -> Unit = {},
@@ -127,6 +128,7 @@ fun AgendaScreen(
     val medicationLabel = stringResource(R.string.agenda_action_medication)
     val symptomLabel = stringResource(R.string.agenda_action_symptom)
     val careLabel = stringResource(R.string.agenda_action_care)
+    val hospitalLabel = stringResource(R.string.agenda_action_hospital)
     val displayedEstimate = if (state.hideCycleEstimate) {
         CycleEstimateResult.NeedsMoreHistory
     } else {
@@ -333,6 +335,10 @@ fun AgendaScreen(
                 SpeedDialAction("agenda_action_care", careLabel) {
                     fabExpanded = false
                     onRecordCare(selectedDate)
+                },
+                SpeedDialAction("agenda_action_hospital", hospitalLabel) {
+                    fabExpanded = false
+                    onRecordHospitalization(selectedDate)
                 }
             ),
             onToggle = { fabExpanded = !fabExpanded },

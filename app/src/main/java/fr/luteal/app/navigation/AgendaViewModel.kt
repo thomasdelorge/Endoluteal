@@ -56,12 +56,36 @@ class AgendaViewModel @Inject constructor(
 }
 
 fun eventsOnDay(events: List<JournalEvent>, date: LocalDate): List<JournalEvent> =
-    events.filter { event -> event.localDate() == date }.sortedBy { it.startAt }
+    events.filter { event -> event.occursOn(date) }.sortedBy { it.startAt }
 
-fun eventCountsByDay(events: List<JournalEvent>): Map<LocalDate, Int> =
-    events.groupingBy { it.localDate() }.eachCount()
-
-private fun JournalEvent.localDate(): LocalDate {
-    val zone = runCatching { ZoneId.of(zoneId) }.getOrDefault(ZoneId.systemDefault())
-    return startAt.atZone(zone).toLocalDate()
+fun eventCountsByDay(events: List<JournalEvent>): Map<LocalDate, Int> {
+    val counts = mutableMapOf<LocalDate, Int>()
+    events.forEach { event ->
+        event.occurrenceDates().forEach { day ->
+            counts[day] = (counts[day] ?: 0) + 1
+        }
+    }
+    return counts
 }
+
+fun JournalEvent.occursOn(date: LocalDate): Boolean = occurrenceDates().contains(date)
+
+fun JournalEvent.occurrenceDates(): List<LocalDate> {
+    val zone = eventZone()
+    val startDate = startAt.atZone(zone).toLocalDate()
+    if (type != JournalEventType.HOSPITALIZATION) {
+        return listOf(startDate)
+    }
+    val end = endAt?.atZone(zone)?.toLocalDate() ?: return listOf(startDate)
+    if (end.isBefore(startDate)) return listOf(startDate)
+    val dates = mutableListOf<LocalDate>()
+    var cursor = startDate
+    while (!cursor.isAfter(end)) {
+        dates.add(cursor)
+        cursor = cursor.plusDays(1)
+    }
+    return dates
+}
+
+private fun JournalEvent.eventZone(): ZoneId =
+    runCatching { ZoneId.of(zoneId) }.getOrDefault(ZoneId.systemDefault())

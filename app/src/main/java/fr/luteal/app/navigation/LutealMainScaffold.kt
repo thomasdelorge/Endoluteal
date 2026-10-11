@@ -45,6 +45,8 @@ import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
 import fr.luteal.app.navigation.entry.PainCheckSheet
 import fr.luteal.app.navigation.entry.CareSessionEntryViewModel
 import fr.luteal.app.navigation.entry.CareSessionSheet
+import fr.luteal.app.navigation.entry.HospitalizationEntryViewModel
+import fr.luteal.app.navigation.entry.HospitalizationSheet
 import fr.luteal.app.navigation.entry.SymptomEntryViewModel
 import fr.luteal.app.navigation.entry.SymptomSheet
 import fr.luteal.core.model.JournalEventType
@@ -67,6 +69,7 @@ fun LutealMainScaffold(
     val intakeViewModel: MedicationIntakeViewModel = hiltViewModel()
     val symptomViewModel: SymptomEntryViewModel = hiltViewModel()
     val careViewModel: CareSessionEntryViewModel = hiltViewModel()
+    val hospitalViewModel: HospitalizationEntryViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     val careLabels by agendaViewModel.careLabels.collectAsStateWithLifecycle()
@@ -80,6 +83,8 @@ fun LutealMainScaffold(
     var symptomEventId by remember { mutableStateOf<String?>(null) }
     var careDate by remember { mutableStateOf<LocalDate?>(null) }
     var careEventId by remember { mutableStateOf<String?>(null) }
+    var hospitalDate by remember { mutableStateOf<LocalDate?>(null) }
+    var hospitalEventId by remember { mutableStateOf<String?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -195,6 +200,10 @@ fun LutealMainScaffold(
                                     careEventId = null
                                     careDate = date
                                 },
+                                onRecordHospitalization = { date ->
+                                    hospitalEventId = null
+                                    hospitalDate = date
+                                },
                                 onOpenEvent = { event ->
                                     val zone = java.time.ZoneId.of(event.zoneId)
                                     when (event.type) {
@@ -205,6 +214,10 @@ fun LutealMainScaffold(
                                         JournalEventType.CARE_SESSION -> {
                                             careDate = event.startAt.atZone(zone).toLocalDate()
                                             careEventId = event.id
+                                        }
+                                        JournalEventType.HOSPITALIZATION -> {
+                                            hospitalDate = event.startAt.atZone(zone).toLocalDate()
+                                            hospitalEventId = event.id
                                         }
                                         else -> Unit
                                     }
@@ -304,6 +317,18 @@ fun LutealMainScaffold(
             onDismiss = {
                 careDate = null
                 careEventId = null
+            }
+        )
+    }
+
+    hospitalDate?.let { date ->
+        HospitalizationSheet(
+            initialDate = date,
+            existingEventId = hospitalEventId,
+            viewModel = hospitalViewModel,
+            onDismiss = {
+                hospitalDate = null
+                hospitalEventId = null
             }
         )
     }
