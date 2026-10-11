@@ -15,11 +15,11 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "fr.luteal.app"
+        applicationId = "io.github.thomasdelorge.endoluteal"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "1.8.0"
+        versionCode = 1
+        versionName = "0.1.0-dev"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -52,6 +52,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".dev"
+        }
         release {
             isMinifyEnabled = true
             isShrinkResources = true

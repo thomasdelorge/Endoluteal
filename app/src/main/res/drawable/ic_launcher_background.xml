@@ -18,12 +18,12 @@
                 android:centerX="54"
                 android:centerY="54"
                 android:gradientRadius="65"
-                android:startColor="#FAF7F1"
-                android:endColor="#E3DDD0" />
+                android:startColor="#F3E4E6"
+                android:endColor="#6B2D3C" />
         </aapt:attr>
     </path>
     <!-- Soft ambient inner halo within the 72dp safe zone -->
     <path
-        android:fillColor="#06235B4E"
+        android:fillColor="#064A1E2A"
         android:pathData="M54,20 A34,34 0 1,0 54,88 A34,34 0 1,0 54,20 Z" />
 </vector>

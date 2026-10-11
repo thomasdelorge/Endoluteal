@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Luteal</string>
+    <string name="app_name">Endoluteal</string>
 
     <string name="widget_personal_name">Luteal · Mon cycle</string>
     <string name="widget_personal_description">Jour du cycle enregistré et plage estimée, avec contrôle de confidentialité.</string>

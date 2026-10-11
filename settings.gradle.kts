@@ -20,5 +20,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "luteal"
+rootProject.name = "endoluteal"
 include(":app")
