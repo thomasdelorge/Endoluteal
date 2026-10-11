@@ -3,8 +3,13 @@ package fr.luteal.core.model
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+object EndolutealBackup {
+    const val FORMAT = "endoluteal/v1"
+}
+
 @Serializable
 data class LutealBackupPayload(
+    @SerialName("backup_format") val backupFormat: String? = null,
     @SerialName("schema_version") val schemaVersion: Int = 1,
     @SerialName("exported_at") val exportedAt: String,
     @SerialName("app_version") val appVersion: String,

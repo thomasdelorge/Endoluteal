@@ -8,9 +8,7 @@ import fr.luteal.core.data.entity.UserProfileEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
-import fr.luteal.core.data.local.DuoWidgetCacheDao
 import fr.luteal.core.data.local.SymptomDao
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.data.local.UserProfileDao
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.model.SyncMode
@@ -36,8 +34,6 @@ class TestDataSeederImpl @Inject constructor(
     private val dailyEntryDao: DailyEntryDao,
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
-    private val syncStateDao: SyncStateDao,
-    private val duoWidgetCacheDao: DuoWidgetCacheDao,
     private val userProfileDao: UserProfileDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) : TestDataSeeder {
@@ -47,8 +43,6 @@ class TestDataSeederImpl @Inject constructor(
         dailyEntryDao.deleteAllEntries()
         symptomDao.deleteAllSymptomLogs()
         biomarkerDao.deleteAll()
-        syncStateDao.deleteAll()
-        duoWidgetCacheDao.clear()
     }
 
     override suspend fun seedMockData(anchorDate: LocalDate) {

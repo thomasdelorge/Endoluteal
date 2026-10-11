@@ -8,6 +8,7 @@ import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
+import fr.luteal.core.model.EndolutealBackup
 import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
@@ -146,6 +147,7 @@ class DataExportManager @Inject constructor(
         )
 
         return LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = Instant.now().toString(),
             appVersion = appVersion,

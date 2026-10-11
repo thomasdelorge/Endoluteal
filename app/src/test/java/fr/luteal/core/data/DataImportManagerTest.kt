@@ -9,12 +9,12 @@ import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
-import fr.luteal.core.data.entity.SyncStateEntity
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
 import fr.luteal.core.model.DataImportError
 import fr.luteal.core.model.ImportStrategy
+import fr.luteal.core.model.EndolutealBackup
 import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
@@ -64,7 +64,6 @@ class DataImportManagerTest {
             dailyEntryDao = database.dailyEntryDao(),
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
-            syncStateDao = database.syncStateDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }
@@ -77,6 +76,7 @@ class DataImportManagerTest {
     @Test
     fun inspectValidBackupGeneratesAccuratePreview() = runTest {
         val payload = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = "2026-08-15T12:00:00Z",
             appVersion = "1.2.0",
@@ -187,6 +187,7 @@ class DataImportManagerTest {
         )
 
         val payload = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = "2026-08-15T12:00:00Z",
             appVersion = "1.2.0",
@@ -242,11 +243,6 @@ class DataImportManagerTest {
         assertEquals(1, symptoms.size)
         assertEquals("symptom_new", symptoms[0].id)
 
-        val dirtyStates = database.syncStateDao().getDirtyStates()
-        assertTrue(dirtyStates.any { it.entityId == "new_cycle" && it.deletedAtEpochMillis == null })
-        assertTrue(dirtyStates.any { it.entityId == "old_cycle" && it.deletedAtEpochMillis != null })
-        assertTrue(dirtyStates.any { it.entityId == "2026-01-01" && it.deletedAtEpochMillis != null })
-
         // Verify preferences updated
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         assertTrue(prefs.trackEndometriosis)
@@ -265,6 +261,7 @@ class DataImportManagerTest {
         )
 
         val payload = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = "2026-08-15T12:00:00Z",
             appVersion = "1.2.0",
@@ -325,6 +322,7 @@ class DataImportManagerTest {
             )
         )
         val payload = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = "2026-08-15T12:00:00Z",
             appVersion = "1.2.0",
@@ -409,6 +407,7 @@ class DataImportManagerTest {
         // "2026-13-45" passes the old blank-only check but explodes
         // LocalDate.parse on every later read. Import must reject it up front.
         val payload = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
             schemaVersion = 1,
             exportedAt = "2026-08-15T12:00:00Z",
             appVersion = "1.2.0",
@@ -438,145 +437,20 @@ class DataImportManagerTest {
     }
 
     @Test
-    fun mergeUpsertSkipsOlderDailyEntryAndPreservesSyncStateEnvelope() = runTest {
-        val date = "2026-06-01"
-        val localUpdatedAt = Instant.parse("2026-06-01T20:00:00Z").toEpochMilli()
-
-        database.dailyEntryDao().upsert(
-            DailyEntryEntity(
-                date = date,
-                bleedingIntensity = "HEAVY",
-                painLevel = 4,
-                moodLevel = 2,
-                energyLevel = 3,
-                symptomIdsJson = "[\"cramps\"]",
-                notes = "Local newer entry",
-                updatedAtEpochMillis = localUpdatedAt
-            )
-        )
-
-        val localSyncState = SyncStateEntity(
-            entityType = SyncStateEntity.TYPE_DAILY_ENTRY,
-            entityId = date,
-            clientRev = "local-client-rev-123",
-            createdAtEpochMillis = localUpdatedAt,
-            updatedAtEpochMillis = localUpdatedAt,
-            dirty = false,
-            lastPushError = null
-        )
-        database.syncStateDao().upsert(localSyncState)
-
-        val payload = LutealBackupPayload(
-            schemaVersion = 1,
-            exportedAt = "2026-08-15T12:00:00Z",
-            appVersion = "1.2.0",
-            cycles = emptyList(),
-            dailyEntries = listOf(
-                DailyEntryBackupDto(
-                    date = date,
-                    bleedingIntensity = "LIGHT",
-                    painLevel = 1,
-                    moodLevel = 5,
-                    energyLevel = 5,
-                    symptomIds = emptyList(),
-                    notes = "Older backup entry",
-                    updatedAt = "2026-06-01T10:00:00Z"
-                )
-            ),
-            symptomLogs = emptyList(),
-            biomarkerObservations = emptyList()
-        )
-
-        val result = importManager.restoreBackup(payload, ImportStrategy.MERGE_UPSERT)
-        assertTrue(result.isSuccess)
-        assertEquals(0, result.getOrThrow().dailyEntriesImported)
-
-        val persistedEntry = database.dailyEntryDao().getEntryOnce(date)
-        assertNotNull(persistedEntry)
-        assertEquals("Local newer entry", persistedEntry?.notes)
-        assertEquals("HEAVY", persistedEntry?.bleedingIntensity)
-        assertEquals(localUpdatedAt, persistedEntry?.updatedAtEpochMillis)
-
-        val persistedSyncState = database.syncStateDao().getState(date)
-        assertNotNull(persistedSyncState)
-        assertEquals("local-client-rev-123", persistedSyncState?.clientRev)
-        assertEquals(localUpdatedAt, persistedSyncState?.createdAtEpochMillis)
-        assertEquals(localUpdatedAt, persistedSyncState?.updatedAtEpochMillis)
-        assertEquals(false, persistedSyncState?.dirty)
-    }
-
-    @Test
-    fun mergeUpsertSkipsOlderBiomarkerObservationAndPreservesSyncStateEnvelope() = runTest {
-        val date = "2026-06-01"
-        val localUpdatedAt = Instant.parse("2026-06-01T20:00:00Z").toEpochMilli()
-        val syncEntityId = SyncStateEntity.biomarkerEntityId(date)
-
-        database.biomarkerDao().upsert(
-            BiomarkerObservationEntity(
-                date = date,
-                bbtCelsius = 36.6,
-                bbtTime = "07:00",
-                bbtQuality = "normal",
-                bbtDisturbancesJson = "[]",
-                cervicalSensation = "wet",
-                cervicalTexture = "egg_white",
-                lhTestResult = "positive",
-                hcgTestResult = null,
-                notes = "Local newer biomarker",
-                updatedAtEpochMillis = localUpdatedAt
-            )
-        )
-
-        val localSyncState = SyncStateEntity(
-            entityType = SyncStateEntity.TYPE_BIOMARKER_OBSERVATION,
-            entityId = syncEntityId,
-            clientRev = "local-biomarker-rev-456",
-            createdAtEpochMillis = localUpdatedAt,
-            updatedAtEpochMillis = localUpdatedAt,
-            dirty = false,
-            lastPushError = null
-        )
-        database.syncStateDao().upsert(localSyncState)
-
-        val payload = LutealBackupPayload(
-            schemaVersion = 1,
-            exportedAt = "2026-08-15T12:00:00Z",
-            appVersion = "1.2.0",
-            cycles = emptyList(),
-            dailyEntries = emptyList(),
-            symptomLogs = emptyList(),
-            biomarkerObservations = listOf(
-                BiomarkerBackupDto(
-                    date = date,
-                    bbtCelsius = 36.2,
-                    bbtTime = "06:30",
-                    bbtQuality = "normal",
-                    bbtDisturbances = emptyList(),
-                    cervicalSensation = "dry",
-                    cervicalTexture = "sticky",
-                    lhTestResult = "negative",
-                    hcgTestResult = null,
-                    notes = "Older backup biomarker",
-                    updatedAt = "2026-06-01T08:00:00Z"
-                )
-            )
-        )
-
-        val result = importManager.restoreBackup(payload, ImportStrategy.MERGE_UPSERT)
-        assertTrue(result.isSuccess)
-        assertEquals(0, result.getOrThrow().biomarkersImported)
-
-        val persistedBiomarker = database.biomarkerDao().getObservationOnce(date)
-        assertNotNull(persistedBiomarker)
-        assertEquals("Local newer biomarker", persistedBiomarker?.notes)
-        assertEquals(36.6, persistedBiomarker?.bbtCelsius)
-        assertEquals(localUpdatedAt, persistedBiomarker?.updatedAtEpochMillis)
-
-        val persistedSyncState = database.syncStateDao().getState(syncEntityId)
-        assertNotNull(persistedSyncState)
-        assertEquals("local-biomarker-rev-456", persistedSyncState?.clientRev)
-        assertEquals(localUpdatedAt, persistedSyncState?.createdAtEpochMillis)
-        assertEquals(localUpdatedAt, persistedSyncState?.updatedAtEpochMillis)
-        assertEquals(false, persistedSyncState?.dirty)
+    fun inspectRejectsLegacyLutealBackupWithoutEndolutealFormat() = runTest {
+        val json = """
+            {
+              "schema_version": 1,
+              "exported_at": "2026-08-15T12:00:00Z",
+              "app_version": "1.3.0",
+              "cycles": [],
+              "daily_entries": [],
+              "symptom_logs": [],
+              "preferences": {}
+            }
+        """.trimIndent()
+        val result = importManager.inspectBackup(ByteArrayInputStream(json.toByteArray()))
+        assertTrue(result.isFailure)
+        assertTrue(result.exceptionOrNull() is DataImportError.UnsupportedSchemaVersion)
     }
 }

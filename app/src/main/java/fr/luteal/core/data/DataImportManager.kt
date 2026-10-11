@@ -5,15 +5,14 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
-import fr.luteal.core.data.entity.SyncStateEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.SymptomDao
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.model.DataImportError
+import fr.luteal.core.model.EndolutealBackup
 import fr.luteal.core.model.ImportStrategy
 import fr.luteal.core.model.ImportSummary
 import fr.luteal.core.model.LutealBackupPayload
@@ -27,7 +26,6 @@ import org.json.JSONObject
 import java.io.InputStream
 import java.time.Instant
 import java.time.LocalDate
-import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -38,7 +36,6 @@ class DataImportManager @Inject constructor(
     private val dailyEntryDao: DailyEntryDao,
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
-    private val syncStateDao: SyncStateDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -62,9 +59,7 @@ class DataImportManager @Inject constructor(
                     throw DataImportError.InvalidJsonSyntax
                 }
 
-                if (payload.schemaVersion != 1) {
-                    throw DataImportError.UnsupportedSchemaVersion(payload.schemaVersion)
-                }
+                validateBackup(payload)
                 validateDates(payload)
 
                 val cycleDates = payload.cycles.mapNotNull { it.startDate.takeIf { d -> d.isNotBlank() } }.sorted()
@@ -93,9 +88,7 @@ class DataImportManager @Inject constructor(
     suspend fun restoreBackup(payload: LutealBackupPayload, strategy: ImportStrategy): Result<ImportSummary> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                if (payload.schemaVersion != 1) {
-                    throw DataImportError.UnsupportedSchemaVersion(payload.schemaVersion)
-                }
+                validateBackup(payload)
                 validateDates(payload)
 
                 var cyclesCount = 0
@@ -104,51 +97,15 @@ class DataImportManager @Inject constructor(
                 var biomarkersCount = 0
 
                 database.withTransaction {
-                    val previousStates = if (strategy == ImportStrategy.REPLACE_ALL) {
-                        syncStateDao.getAllStates()
-                    } else {
-                        emptyList()
-                    }
-                    val previousCycleIds = if (strategy == ImportStrategy.REPLACE_ALL) {
-                        (cycleDao.getAllCyclesOnce().map { it.id } +
-                            previousStates.filter { it.entityType == SyncStateEntity.TYPE_CYCLE }.map { it.entityId })
-                            .toSet()
-                    } else {
-                        emptySet()
-                    }
-                    val previousEntryDates = if (strategy == ImportStrategy.REPLACE_ALL) {
-                        (dailyEntryDao.getAllEntriesOnce().map { it.date } +
-                            previousStates.filter { it.entityType == SyncStateEntity.TYPE_DAILY_ENTRY }.map { it.entityId })
-                            .toSet()
-                    } else {
-                        emptySet()
-                    }
-                    val previousSymptomIds = if (strategy == ImportStrategy.REPLACE_ALL) {
-                        (symptomDao.getAllSymptomLogsOnce().map { it.id } +
-                            previousStates.filter { it.entityType == SyncStateEntity.TYPE_SYMPTOM_LOG }.map { it.entityId })
-                            .toSet()
-                    } else {
-                        emptySet()
-                    }
-                    val previousBiomarkerIds = if (strategy == ImportStrategy.REPLACE_ALL) {
-                        (biomarkerDao.getAllObservationsOnce().map { SyncStateEntity.biomarkerEntityId(it.date) } +
-                            previousStates.filter { it.entityType == SyncStateEntity.TYPE_BIOMARKER_OBSERVATION }.map { it.entityId })
-                            .toSet()
-                    } else {
-                        emptySet()
-                    }
-
                     if (strategy == ImportStrategy.REPLACE_ALL) {
                         cycleDao.deleteAllCycles()
                         dailyEntryDao.deleteAllEntries()
                         symptomDao.deleteAllSymptomLogs()
                         biomarkerDao.deleteAll()
-                        syncStateDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
 
-                    // Restore Cycles
                     for (cycleDto in payload.cycles) {
                         if (cycleDto.id.isBlank() || cycleDto.startDate.isBlank()) continue
 
@@ -166,34 +123,21 @@ class DataImportManager @Inject constructor(
                             periodDaysJsonArr.put(obj)
                         }
 
-                        val entity = CycleEntity(
-                            id = cycleDto.id,
-                            startDate = cycleDto.startDate,
-                            endDate = cycleDto.endDate,
-                            averageLengthDays = cycleDto.averageLengthDays,
-                            lutealPhaseLengthDays = cycleDto.lutealPhaseLengthDays,
-                            periodDaysJson = periodDaysJsonArr.toString(),
-                            isExcludedFromEstimates = cycleDto.isExcludedFromEstimates,
-                            exclusionReason = cycleDto.exclusionReason
-                        )
-
-                        cycleDao.insertCycle(entity)
-
-                        syncStateDao.upsert(
-                            SyncStateEntity(
-                                entityType = SyncStateEntity.TYPE_CYCLE,
-                                entityId = entity.id,
-                                clientRev = UUID.randomUUID().toString(),
-                                createdAtEpochMillis = now,
-                                updatedAtEpochMillis = now,
-                                dirty = true,
-                                lastPushError = null
+                        cycleDao.insertCycle(
+                            CycleEntity(
+                                id = cycleDto.id,
+                                startDate = cycleDto.startDate,
+                                endDate = cycleDto.endDate,
+                                averageLengthDays = cycleDto.averageLengthDays,
+                                lutealPhaseLengthDays = cycleDto.lutealPhaseLengthDays,
+                                periodDaysJson = periodDaysJsonArr.toString(),
+                                isExcludedFromEstimates = cycleDto.isExcludedFromEstimates,
+                                exclusionReason = cycleDto.exclusionReason
                             )
                         )
                         cyclesCount++
                     }
 
-                    // Restore Daily Entries
                     for (entryDto in payload.dailyEntries) {
                         if (entryDto.date.isBlank()) continue
 
@@ -221,37 +165,14 @@ class DataImportManager @Inject constructor(
                             val existing = dailyEntryDao.getEntryOnce(entryDto.date)
                             if (existing == null || updatedAtMillis >= existing.updatedAtEpochMillis) {
                                 dailyEntryDao.upsert(entity)
-                                syncStateDao.upsert(
-                                    SyncStateEntity(
-                                        entityType = SyncStateEntity.TYPE_DAILY_ENTRY,
-                                        entityId = entity.date,
-                                        clientRev = UUID.randomUUID().toString(),
-                                        createdAtEpochMillis = updatedAtMillis,
-                                        updatedAtEpochMillis = now,
-                                        dirty = true,
-                                        lastPushError = null
-                                    )
-                                )
                                 entriesCount++
                             }
                         } else {
                             dailyEntryDao.upsert(entity)
-                            syncStateDao.upsert(
-                                SyncStateEntity(
-                                    entityType = SyncStateEntity.TYPE_DAILY_ENTRY,
-                                    entityId = entity.date,
-                                    clientRev = UUID.randomUUID().toString(),
-                                    createdAtEpochMillis = updatedAtMillis,
-                                    updatedAtEpochMillis = now,
-                                    dirty = true,
-                                    lastPushError = null
-                                )
-                            )
                             entriesCount++
                         }
                     }
 
-                    // Restore Symptom Logs
                     for (logDto in payload.symptomLogs) {
                         if (logDto.id.isBlank() || logDto.date.isBlank()) continue
 
@@ -259,7 +180,7 @@ class DataImportManager @Inject constructor(
                             Instant.parse(logDto.timestamp).toEpochMilli()
                         }.getOrDefault(now)
 
-                         val entity = SymptomLogEntity(
+                        val entity = SymptomLogEntity(
                             id = logDto.id,
                             timestampEpochMillis = timestampMillis,
                             date = logDto.date,
@@ -276,18 +197,6 @@ class DataImportManager @Inject constructor(
                         }
 
                         symptomDao.insertSymptomLog(entity)
-
-                        syncStateDao.upsert(
-                            SyncStateEntity(
-                                entityType = SyncStateEntity.TYPE_SYMPTOM_LOG,
-                                entityId = entity.id,
-                                clientRev = UUID.randomUUID().toString(),
-                                createdAtEpochMillis = timestampMillis,
-                                updatedAtEpochMillis = now,
-                                dirty = true,
-                                lastPushError = null
-                            )
-                        )
                         symptomsCount++
                     }
 
@@ -317,62 +226,11 @@ class DataImportManager @Inject constructor(
                             val existing = biomarkerDao.getObservationOnce(biomarkerDto.date)
                             if (existing == null || updatedAtMillis >= existing.updatedAtEpochMillis) {
                                 biomarkerDao.upsert(entity)
-                                syncStateDao.upsert(
-                                    SyncStateEntity(
-                                        entityType = SyncStateEntity.TYPE_BIOMARKER_OBSERVATION,
-                                        entityId = SyncStateEntity.biomarkerEntityId(entity.date),
-                                        clientRev = UUID.randomUUID().toString(),
-                                        createdAtEpochMillis = updatedAtMillis,
-                                        updatedAtEpochMillis = now,
-                                        dirty = true,
-                                        lastPushError = null
-                                    )
-                                )
                                 biomarkersCount++
                             }
                         } else {
                             biomarkerDao.upsert(entity)
-                            syncStateDao.upsert(
-                                SyncStateEntity(
-                                    entityType = SyncStateEntity.TYPE_BIOMARKER_OBSERVATION,
-                                    entityId = SyncStateEntity.biomarkerEntityId(entity.date),
-                                    clientRev = UUID.randomUUID().toString(),
-                                    createdAtEpochMillis = updatedAtMillis,
-                                    updatedAtEpochMillis = now,
-                                    dirty = true,
-                                    lastPushError = null
-                                )
-                            )
                             biomarkersCount++
-                        }
-                    }
-
-                    if (strategy == ImportStrategy.REPLACE_ALL) {
-                        val importedCycleIds = payload.cycles.map { it.id }.toSet()
-                        val importedEntryDates = payload.dailyEntries.map { it.date }.toSet()
-                        val importedSymptomIds = payload.symptomLogs.map { it.id }.toSet()
-                        val importedBiomarkerIds = payload.biomarkerObservations
-                            .map { SyncStateEntity.biomarkerEntityId(it.date) }
-                            .toSet()
-                        suspend fun tombstone(entityId: String, entityType: String) {
-                            syncStateDao.upsert(
-                                SyncStateEntity(
-                                    entityId = entityId,
-                                    entityType = entityType,
-                                    clientRev = UUID.randomUUID().toString(),
-                                    createdAtEpochMillis = now,
-                                    updatedAtEpochMillis = now,
-                                    deletedAtEpochMillis = now,
-                                    dirty = true,
-                                    lastPushError = null
-                                )
-                            )
-                        }
-                        (previousCycleIds - importedCycleIds).forEach { tombstone(it, SyncStateEntity.TYPE_CYCLE) }
-                        (previousEntryDates - importedEntryDates).forEach { tombstone(it, SyncStateEntity.TYPE_DAILY_ENTRY) }
-                        (previousSymptomIds - importedSymptomIds).forEach { tombstone(it, SyncStateEntity.TYPE_SYMPTOM_LOG) }
-                        (previousBiomarkerIds - importedBiomarkerIds).forEach {
-                            tombstone(it, SyncStateEntity.TYPE_BIOMARKER_OBSERVATION)
                         }
                     }
                 }
@@ -405,12 +263,15 @@ class DataImportManager @Inject constructor(
         }
     }
 
-    /**
-     * Every persisted date string is parsed back with [LocalDate.parse] when
-     * read (entities store dates as text), so an unparseable date in a backup
-     * would crash all cycle reads forever after being restored. Reject such
-     * payloads up front instead.
-     */
+    private fun validateBackup(payload: LutealBackupPayload) {
+        if (payload.backupFormat != EndolutealBackup.FORMAT) {
+            throw DataImportError.UnsupportedSchemaVersion(payload.schemaVersion)
+        }
+        if (payload.schemaVersion != 1) {
+            throw DataImportError.UnsupportedSchemaVersion(payload.schemaVersion)
+        }
+    }
+
     private fun validateDates(payload: LutealBackupPayload) {
         fun requireDate(raw: String?, field: String) {
             if (raw.isNullOrBlank()) return

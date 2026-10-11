@@ -10,9 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
-import fr.luteal.core.data.local.DuoWidgetCacheDao
 import fr.luteal.core.data.local.LutealDatabase
-import fr.luteal.core.data.local.SyncStateDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.data.local.UserProfileDao
 import javax.inject.Singleton
@@ -29,58 +27,29 @@ object DatabaseModule {
         return Room.databaseBuilder(
             context,
             LutealDatabase::class.java,
-            "luteal.db"
-        ).addMigrations(
-                LutealDatabase.MIGRATION_1_2,
-                LutealDatabase.MIGRATION_2_3,
-                LutealDatabase.MIGRATION_3_4,
-                LutealDatabase.MIGRATION_4_5,
-                LutealDatabase.MIGRATION_5_6,
-                LutealDatabase.MIGRATION_6_7,
-                LutealDatabase.MIGRATION_7_8,
-                LutealDatabase.MIGRATION_8_9
-            ).build()
+            "endoluteal.db"
+        )
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .build()
     }
 
     @Provides
     @Singleton
-    fun provideCycleDao(database: LutealDatabase): CycleDao {
-        return database.cycleDao()
-    }
+    fun provideCycleDao(database: LutealDatabase): CycleDao = database.cycleDao()
 
     @Provides
     @Singleton
-    fun provideSyncStateDao(database: LutealDatabase): SyncStateDao {
-        return database.syncStateDao()
-    }
+    fun provideDailyEntryDao(database: LutealDatabase): DailyEntryDao = database.dailyEntryDao()
 
     @Provides
     @Singleton
-    fun provideDailyEntryDao(database: LutealDatabase): DailyEntryDao {
-        return database.dailyEntryDao()
-    }
+    fun provideSymptomDao(database: LutealDatabase): SymptomDao = database.symptomDao()
 
     @Provides
     @Singleton
-    fun provideDuoWidgetCacheDao(database: LutealDatabase): DuoWidgetCacheDao {
-        return database.duoWidgetCacheDao()
-    }
+    fun provideUserProfileDao(database: LutealDatabase): UserProfileDao = database.userProfileDao()
 
     @Provides
     @Singleton
-    fun provideSymptomDao(database: LutealDatabase): SymptomDao {
-        return database.symptomDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideUserProfileDao(database: LutealDatabase): UserProfileDao {
-        return database.userProfileDao()
-    }
-
-    @Provides
-    @Singleton
-    fun provideBiomarkerDao(database: LutealDatabase): BiomarkerDao {
-        return database.biomarkerDao()
-    }
+    fun provideBiomarkerDao(database: LutealDatabase): BiomarkerDao = database.biomarkerDao()
 }
