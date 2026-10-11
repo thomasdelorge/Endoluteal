@@ -26,6 +26,8 @@ data class LutealBackupPayload(
     @SerialName("medication_intakes") val medicationIntakes: List<MedicationIntakeBackupDto> = emptyList(),
     @SerialName("treatment_plans") val treatmentPlans: List<TreatmentPlanBackupDto> = emptyList(),
     @SerialName("care_types") val careTypes: List<CareTypeBackupDto> = emptyList(),
+    @SerialName("professionals") val professionals: List<ProfessionalBackupDto> = emptyList(),
+    @SerialName("appointments") val appointments: List<AppointmentBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -172,6 +174,27 @@ data class CareTypeBackupDto(
 data class CareProgramBackupDto(
     @SerialName("name") val name: String,
     @SerialName("default_duration_minutes") val defaultDurationMinutes: Int
+)
+
+@Serializable
+data class ProfessionalBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("specialty") val specialty: String,
+    @SerialName("custom_specialty") val customSpecialty: String = "",
+    @SerialName("place") val place: String = "",
+    @SerialName("phone") val phone: String = "",
+    @SerialName("notes") val notes: String = ""
+)
+
+@Serializable
+data class AppointmentBackupDto(
+    @SerialName("event_id") val eventId: String,
+    @SerialName("professional_id") val professionalId: String,
+    @SerialName("calendar_event_key") val calendarEventKey: String? = null,
+    @SerialName("location") val location: String = "",
+    @SerialName("report") val report: String = "",
+    @SerialName("report_status") val reportStatus: String = "PENDING"
 )
 
 @Serializable

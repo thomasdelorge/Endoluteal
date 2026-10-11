@@ -12,8 +12,12 @@ import fr.luteal.core.data.seed.TestDataSeederImpl
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.repository.BiomarkerRepository
 import fr.luteal.core.data.repository.BiomarkerRepositoryImpl
+import fr.luteal.core.data.repository.AppointmentRepository
+import fr.luteal.core.data.repository.AppointmentRepositoryImpl
 import fr.luteal.core.data.repository.CareTypeRepository
 import fr.luteal.core.data.repository.CareTypeRepositoryImpl
+import fr.luteal.core.data.repository.ProfessionalRepository
+import fr.luteal.core.data.repository.ProfessionalRepositoryImpl
 import fr.luteal.core.data.repository.CycleRepository
 import fr.luteal.core.data.repository.CycleRepositoryImpl
 import fr.luteal.core.data.repository.DailyEntryRepository
@@ -96,6 +100,18 @@ abstract class RepositoryModule {
     abstract fun bindCareTypeRepository(
         careTypeRepositoryImpl: CareTypeRepositoryImpl
     ): CareTypeRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProfessionalRepository(
+        professionalRepositoryImpl: ProfessionalRepositoryImpl
+    ): ProfessionalRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAppointmentRepository(
+        appointmentRepositoryImpl: AppointmentRepositoryImpl
+    ): AppointmentRepository
 
     @Binds
     @Singleton

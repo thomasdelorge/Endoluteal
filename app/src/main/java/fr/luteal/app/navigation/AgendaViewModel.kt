@@ -3,9 +3,11 @@ package fr.luteal.app.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.luteal.core.data.repository.AppointmentRepository
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.data.repository.MedicationIntakeRepository
 import fr.luteal.core.data.repository.MedicationRepository
+import fr.luteal.core.data.repository.ProfessionalRepository
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.JournalEvent
 import fr.luteal.core.model.JournalEventType
@@ -23,7 +25,9 @@ import kotlinx.coroutines.flow.stateIn
 class AgendaViewModel @Inject constructor(
     journalEventRepository: JournalEventRepository,
     medicationRepository: MedicationRepository,
-    intakeRepository: MedicationIntakeRepository
+    intakeRepository: MedicationIntakeRepository,
+    appointmentRepository: AppointmentRepository,
+    professionalRepository: ProfessionalRepository
 ) : ViewModel() {
     val events: StateFlow<List<JournalEvent>> = journalEventRepository
         .observeBetween(Instant.EPOCH, Instant.ofEpochMilli(Long.MAX_VALUE))
@@ -51,6 +55,23 @@ class AgendaViewModel @Inject constructor(
                 }
             }
             event.id to label
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val appointmentLabels: StateFlow<Map<String, String>> = combine(
+        professionalRepository.observeAll(),
+        appointmentRepository.observeAll()
+    ) { professionals, appointments ->
+        appointments.associate { row ->
+            val professional = professionals.find { it.id == row.professionalId }
+            val label = buildString {
+                if (professional != null) {
+                    append(professional.name)
+                    append(" · ")
+                    append(professional.displaySpecialty())
+                }
+            }
+            row.eventId to label
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 }

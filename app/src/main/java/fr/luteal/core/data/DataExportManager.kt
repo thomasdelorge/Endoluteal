@@ -2,7 +2,9 @@ package fr.luteal.core.data
 
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
+import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.local.CareTypeDao
+import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
@@ -12,7 +14,9 @@ import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.data.local.TreatmentPlanDao
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CareProgramBackupDto
+import fr.luteal.core.model.AppointmentBackupDto
 import fr.luteal.core.model.CareTypeBackupDto
+import fr.luteal.core.model.ProfessionalBackupDto
 import fr.luteal.core.model.CompositionBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
@@ -48,6 +52,8 @@ class DataExportManager @Inject constructor(
     private val medicationIntakeDao: MedicationIntakeDao,
     private val treatmentPlanDao: TreatmentPlanDao,
     private val careTypeDao: CareTypeDao,
+    private val professionalDao: ProfessionalDao,
+    private val appointmentDao: AppointmentDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -214,6 +220,27 @@ class DataExportManager @Inject constructor(
         val medicationIntakes = medicationIntakeDao.allOnce().map { entity ->
             MedicationIntakeBackupDto(entity.eventId, entity.medicationId, entity.units)
         }
+        val professionals = professionalDao.allOnce().map { entity ->
+            ProfessionalBackupDto(
+                id = entity.id,
+                name = entity.name,
+                specialty = entity.specialty,
+                customSpecialty = entity.customSpecialty,
+                place = entity.place,
+                phone = entity.phone,
+                notes = entity.notes
+            )
+        }
+        val appointments = appointmentDao.allOnce().map { entity ->
+            AppointmentBackupDto(
+                eventId = entity.eventId,
+                professionalId = entity.professionalId,
+                calendarEventKey = entity.calendarEventKey,
+                location = entity.location,
+                report = entity.report,
+                reportStatus = entity.reportStatus
+            )
+        }
         val careTypes = careTypeDao.allOnce().map { entity ->
             CareTypeBackupDto(
                 id = entity.id,
@@ -271,6 +298,8 @@ class DataExportManager @Inject constructor(
             medicationIntakes = medicationIntakes,
             treatmentPlans = treatmentPlans,
             careTypes = careTypes,
+            professionals = professionals,
+            appointments = appointments,
             preferences = preferencesDto
         )
     }

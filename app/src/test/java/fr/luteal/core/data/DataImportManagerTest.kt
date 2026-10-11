@@ -65,6 +65,8 @@ class DataImportManagerTest {
             medicationIntakeDao = database.medicationIntakeDao(),
             treatmentPlanDao = database.treatmentPlanDao(),
             careTypeDao = database.careTypeDao(),
+            professionalDao = database.professionalDao(),
+            appointmentDao = database.appointmentDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
@@ -79,6 +81,8 @@ class DataImportManagerTest {
             medicationIntakeDao = database.medicationIntakeDao(),
             treatmentPlanDao = database.treatmentPlanDao(),
             careTypeDao = database.careTypeDao(),
+            professionalDao = database.professionalDao(),
+            appointmentDao = database.appointmentDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }

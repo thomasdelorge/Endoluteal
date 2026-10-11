@@ -3,7 +3,9 @@ package fr.luteal.core.data
 import androidx.room.withTransaction
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
+import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.CareTypeEntity
+import fr.luteal.core.data.entity.ProfessionalEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.InteractionRuleEntity
@@ -16,7 +18,9 @@ import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.local.BiomarkerDao
+import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.local.CareTypeDao
+import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
@@ -56,6 +60,8 @@ class DataImportManager @Inject constructor(
     private val medicationIntakeDao: MedicationIntakeDao,
     private val treatmentPlanDao: TreatmentPlanDao,
     private val careTypeDao: CareTypeDao,
+    private val professionalDao: ProfessionalDao,
+    private val appointmentDao: AppointmentDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -143,6 +149,8 @@ class DataImportManager @Inject constructor(
                         medicationIntakeDao.deleteAll()
                         treatmentPlanDao.deleteAll()
                         careTypeDao.deleteAll()
+                        appointmentDao.deleteAll()
+                        professionalDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
@@ -408,6 +416,33 @@ class DataImportManager @Inject constructor(
                                 name = careType.name,
                                 programsJson = programs.toString(),
                                 archived = careType.archived
+                            )
+                        )
+                    }
+                    for (professional in payload.professionals) {
+                        if (professional.id.isBlank()) continue
+                        professionalDao.upsert(
+                            ProfessionalEntity(
+                                id = professional.id,
+                                name = professional.name,
+                                specialty = professional.specialty,
+                                customSpecialty = professional.customSpecialty,
+                                place = professional.place,
+                                phone = professional.phone,
+                                notes = professional.notes
+                            )
+                        )
+                    }
+                    for (appointment in payload.appointments) {
+                        if (appointment.eventId.isBlank() || appointment.professionalId.isBlank()) continue
+                        appointmentDao.upsert(
+                            AppointmentEntity(
+                                eventId = appointment.eventId,
+                                professionalId = appointment.professionalId,
+                                calendarEventKey = appointment.calendarEventKey,
+                                location = appointment.location,
+                                report = appointment.report,
+                                reportStatus = appointment.reportStatus
                             )
                         )
                     }
