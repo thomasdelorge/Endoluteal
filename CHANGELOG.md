@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Hard-fork identity (`io.github.thomasdelorge.endoluteal`), roadmap, and GitHub
   issue backlog.
+- Échelle de douleur 0-10 et silhouette de localisation.
 
 ### Changed
 

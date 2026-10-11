@@ -819,4 +819,16 @@
     <string name="pain_scale_anchor_worst">Pire douleur imaginable</string>
     <string name="pain_scale_value">%1$d, %2$s</string>
     <string name="pain_scale_value_only">%1$d</string>
+
+    <string name="body_region_head">Tête et cou</string>
+    <string name="body_region_torso">Tronc avant</string>
+    <string name="body_region_back">Dos</string>
+    <string name="body_region_limbs">Membres</string>
+    <string name="body_region_internal">Zones internes</string>
+    <string name="body_side_front">Avant</string>
+    <string name="body_side_back">Arrière</string>
+    <string name="body_map_list_mode">Saisir par liste</string>
+    <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
+    <string name="body_map_remove">Retirer</string>
+    <string name="body_map_sheet_title">%1$s</string>
 </resources>
