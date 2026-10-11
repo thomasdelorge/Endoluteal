@@ -6,9 +6,13 @@ import androidx.room.TypeConverters
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
+import fr.luteal.core.data.entity.InteractionRuleEntity
 import fr.luteal.core.data.entity.JournalEventEntity
+import fr.luteal.core.data.entity.MedicationEntity
+import fr.luteal.core.data.entity.MedicationSubstanceEntity
 import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.data.entity.ReminderEntity
+import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.entity.UserProfileEntity
 
@@ -21,9 +25,13 @@ import fr.luteal.core.data.entity.UserProfileEntity
         BiomarkerObservationEntity::class,
         JournalEventEntity::class,
         PainMarkEntity::class,
-        ReminderEntity::class
+        ReminderEntity::class,
+        SubstanceEntity::class,
+        MedicationEntity::class,
+        MedicationSubstanceEntity::class,
+        InteractionRuleEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -35,4 +43,5 @@ abstract class LutealDatabase : RoomDatabase() {
     abstract fun biomarkerDao(): BiomarkerDao
     abstract fun journalEventDao(): JournalEventDao
     abstract fun reminderDao(): ReminderDao
+    abstract fun medicationDao(): MedicationDao
 }

@@ -5,14 +5,19 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
+import fr.luteal.core.data.entity.InteractionRuleEntity
 import fr.luteal.core.data.entity.JournalEventEntity
+import fr.luteal.core.data.entity.MedicationEntity
+import fr.luteal.core.data.entity.MedicationSubstanceEntity
 import fr.luteal.core.data.entity.PainMarkEntity
+import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
+import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.DataImportError
 import fr.luteal.core.model.EndolutealBackup
@@ -41,6 +46,7 @@ class DataImportManager @Inject constructor(
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
     private val journalEventDao: JournalEventDao,
+    private val medicationDao: MedicationDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -84,6 +90,9 @@ class DataImportManager @Inject constructor(
                     biomarkerCount = payload.biomarkerObservations.size,
                     journalEventCount = payload.journalEvents.size,
                     painMarkCount = payload.painMarks.size,
+                    substanceCount = payload.substances.size,
+                    medicationCount = payload.medications.size,
+                    interactionRuleCount = payload.interactionRules.size,
                     preferences = payload.preferences
                 )
 
@@ -104,6 +113,9 @@ class DataImportManager @Inject constructor(
                 var biomarkersCount = 0
                 var journalEventsCount = 0
                 var painMarksCount = 0
+                var substancesCount = 0
+                var medicationsCount = 0
+                var rulesCount = 0
 
                 database.withTransaction {
                     if (strategy == ImportStrategy.REPLACE_ALL) {
@@ -113,6 +125,10 @@ class DataImportManager @Inject constructor(
                         biomarkerDao.deleteAll()
                         journalEventDao.deleteAllMarks()
                         journalEventDao.deleteAllEvents()
+                        medicationDao.deleteAllCompositions()
+                        medicationDao.deleteAllRules()
+                        medicationDao.deleteAllMedications()
+                        medicationDao.deleteAllSubstances()
                     }
 
                     val now = System.currentTimeMillis()
@@ -286,6 +302,58 @@ class DataImportManager @Inject constructor(
                         journalEventsCount++
                         painMarksCount += marks.size
                     }
+
+                    for (substance in payload.substances) {
+                        if (substance.id.isBlank()) continue
+                        medicationDao.upsertSubstance(
+                            SubstanceEntity(
+                                id = substance.id,
+                                name = substance.name,
+                                drugClass = substance.drugClass,
+                                maxDailyMg = substance.maxDailyMg,
+                                maxPerIntakeMg = substance.maxPerIntakeMg,
+                                minIntervalMinutes = substance.minIntervalMinutes,
+                                validated = substance.validated,
+                                notes = substance.notes
+                            )
+                        )
+                        substancesCount++
+                    }
+                    for (medication in payload.medications) {
+                        if (medication.id.isBlank()) continue
+                        medicationDao.replaceMedication(
+                            MedicationEntity(
+                                id = medication.id,
+                                name = medication.name,
+                                form = medication.form,
+                                contraindications = medication.contraindications,
+                                archived = medication.archived
+                            ),
+                            medication.compositions.map { composition ->
+                                MedicationSubstanceEntity(
+                                    medicationId = medication.id,
+                                    substanceId = composition.substanceId,
+                                    amountMgPerUnit = composition.amountMgPerUnit
+                                )
+                            }
+                        )
+                        medicationsCount++
+                    }
+                    for (rule in payload.interactionRules) {
+                        if (rule.id.isBlank()) continue
+                        medicationDao.upsertRule(
+                            InteractionRuleEntity(
+                                id = rule.id,
+                                targetAType = rule.targetAType,
+                                targetAId = rule.targetAId,
+                                targetBType = rule.targetBType,
+                                targetBId = rule.targetBId,
+                                severity = rule.severity,
+                                message = rule.message
+                            )
+                        )
+                        rulesCount++
+                    }
                 }
 
                 var preferencesRestored = false
@@ -312,6 +380,9 @@ class DataImportManager @Inject constructor(
                     biomarkersImported = biomarkersCount,
                     journalEventsImported = journalEventsCount,
                     painMarksImported = painMarksCount,
+                    substancesImported = substancesCount,
+                    medicationsImported = medicationsCount,
+                    interactionRulesImported = rulesCount,
                     preferencesRestored = preferencesRestored
                 )
             }

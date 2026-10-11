@@ -5,15 +5,20 @@ import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
+import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.BiomarkerBackupDto
+import fr.luteal.core.model.CompositionBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
 import fr.luteal.core.model.EndolutealBackup
+import fr.luteal.core.model.InteractionRuleBackupDto
 import fr.luteal.core.model.JournalEventBackupDto
 import fr.luteal.core.model.LutealBackupPayload
+import fr.luteal.core.model.MedicationBackupDto
 import fr.luteal.core.model.PainMarkBackupDto
 import fr.luteal.core.model.PeriodDayBackupDto
+import fr.luteal.core.model.SubstanceBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
 import fr.luteal.core.model.UserPreferencesBackupDto
 import kotlinx.coroutines.flow.first
@@ -32,6 +37,7 @@ class DataExportManager @Inject constructor(
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
     private val journalEventDao: JournalEventDao,
+    private val medicationDao: MedicationDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -159,7 +165,42 @@ class DataExportManager @Inject constructor(
                 painTypes = entity.painTypes.toStringList()
             )
         }
-
+        val compositions = medicationDao.compositionsOnce().groupBy { it.medicationId }
+        val substances = medicationDao.substancesOnce().map { entity ->
+            SubstanceBackupDto(
+                id = entity.id,
+                name = entity.name,
+                drugClass = entity.drugClass,
+                maxDailyMg = entity.maxDailyMg,
+                maxPerIntakeMg = entity.maxPerIntakeMg,
+                minIntervalMinutes = entity.minIntervalMinutes,
+                validated = entity.validated,
+                notes = entity.notes
+            )
+        }
+        val medications = medicationDao.medicationsOnce().map { entity ->
+            MedicationBackupDto(
+                id = entity.id,
+                name = entity.name,
+                form = entity.form,
+                contraindications = entity.contraindications,
+                archived = entity.archived,
+                compositions = compositions[entity.id].orEmpty().map { row ->
+                    CompositionBackupDto(row.substanceId, row.amountMgPerUnit)
+                }
+            )
+        }
+        val interactionRules = medicationDao.rulesOnce().map { entity ->
+            InteractionRuleBackupDto(
+                id = entity.id,
+                targetAType = entity.targetAType,
+                targetAId = entity.targetAId,
+                targetBType = entity.targetBType,
+                targetBId = entity.targetBId,
+                severity = entity.severity,
+                message = entity.message
+            )
+        }
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         val preferencesDto = UserPreferencesBackupDto(
             userRole = prefs.userRole,
@@ -185,6 +226,9 @@ class DataExportManager @Inject constructor(
             biomarkerObservations = biomarkerObservations,
             journalEvents = journalEvents,
             painMarks = painMarks,
+            substances = substances,
+            medications = medications,
+            interactionRules = interactionRules,
             preferences = preferencesDto
         )
     }

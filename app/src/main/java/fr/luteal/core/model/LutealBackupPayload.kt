@@ -20,6 +20,9 @@ data class LutealBackupPayload(
     @SerialName("biomarker_observations") val biomarkerObservations: List<BiomarkerBackupDto> = emptyList(),
     @SerialName("journal_events") val journalEvents: List<JournalEventBackupDto> = emptyList(),
     @SerialName("pain_marks") val painMarks: List<PainMarkBackupDto> = emptyList(),
+    @SerialName("substances") val substances: List<SubstanceBackupDto> = emptyList(),
+    @SerialName("medications") val medications: List<MedicationBackupDto> = emptyList(),
+    @SerialName("interaction_rules") val interactionRules: List<InteractionRuleBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -104,6 +107,45 @@ data class PainMarkBackupDto(
 )
 
 @Serializable
+data class SubstanceBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("drug_class") val drugClass: String,
+    @SerialName("max_daily_mg") val maxDailyMg: Double? = null,
+    @SerialName("max_per_intake_mg") val maxPerIntakeMg: Double? = null,
+    @SerialName("min_interval_minutes") val minIntervalMinutes: Int? = null,
+    @SerialName("validated") val validated: Boolean = false,
+    @SerialName("notes") val notes: String = ""
+)
+
+@Serializable
+data class MedicationBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("name") val name: String,
+    @SerialName("form") val form: String = "",
+    @SerialName("contraindications") val contraindications: String = "",
+    @SerialName("archived") val archived: Boolean = false,
+    @SerialName("compositions") val compositions: List<CompositionBackupDto> = emptyList()
+)
+
+@Serializable
+data class CompositionBackupDto(
+    @SerialName("substance_id") val substanceId: String,
+    @SerialName("amount_mg_per_unit") val amountMgPerUnit: Double
+)
+
+@Serializable
+data class InteractionRuleBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("target_a_type") val targetAType: String,
+    @SerialName("target_a_id") val targetAId: String,
+    @SerialName("target_b_type") val targetBType: String,
+    @SerialName("target_b_id") val targetBId: String,
+    @SerialName("severity") val severity: String,
+    @SerialName("message") val message: String
+)
+
+@Serializable
 data class UserPreferencesBackupDto(
     @SerialName("user_role") val userRole: String = "PRIMARY_TRACKER",
     @SerialName("locale") val locale: String = "fr",
@@ -136,6 +178,9 @@ data class LutealBackupPreview(
     val biomarkerCount: Int = 0,
     val journalEventCount: Int = 0,
     val painMarkCount: Int = 0,
+    val substanceCount: Int = 0,
+    val medicationCount: Int = 0,
+    val interactionRuleCount: Int = 0,
     val preferences: UserPreferencesBackupDto
 )
 
@@ -146,6 +191,9 @@ data class ImportSummary(
     val biomarkersImported: Int = 0,
     val journalEventsImported: Int = 0,
     val painMarksImported: Int = 0,
+    val substancesImported: Int = 0,
+    val medicationsImported: Int = 0,
+    val interactionRulesImported: Int = 0,
     val preferencesRestored: Boolean
 )
 

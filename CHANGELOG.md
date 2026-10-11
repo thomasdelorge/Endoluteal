@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Agenda d'accueil : calendrier, événements du jour et saisie du récap.
 - Échelle de douleur 0-10 et silhouette de localisation.
 - Rappels exacts reportables (+10 min, +30 min, +1 h).
+- Base de médicaments éditable, avec un préremplissage à valider.
 
 ### Changed
 

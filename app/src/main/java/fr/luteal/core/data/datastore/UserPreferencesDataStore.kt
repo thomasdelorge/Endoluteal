@@ -55,7 +55,9 @@ data class UserPreferences(
     val notificationVisibilityMode: String = "CONCEALED",
     val notificationCustomTitle: String = "",
     val notificationCustomBody: String = "",
-    val temperatureUnit: String = "CELSIUS"
+    val temperatureUnit: String = "CELSIUS",
+    val medicationsSeedOffered: Boolean = false,
+    val painFollowupDelayMinutes: Int = 45
 ) {
     /** Contexts the user declared during onboarding. */
     val declaredContexts: Set<TrackingContext>
@@ -119,6 +121,8 @@ class UserPreferencesDataStore @Inject constructor(
         val NOTIF_CUSTOM_TITLE = stringPreferencesKey("notif_custom_title")
         val NOTIF_CUSTOM_BODY = stringPreferencesKey("notif_custom_body")
         val TEMPERATURE_UNIT = stringPreferencesKey("temperature_unit")
+        val MEDICATIONS_SEED_OFFERED = booleanPreferencesKey("medications_seed_offered")
+        val PAIN_FOLLOWUP_DELAY_MINUTES = androidx.datastore.preferences.core.intPreferencesKey("pain_followup_delay_minutes")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -167,7 +171,9 @@ class UserPreferencesDataStore @Inject constructor(
                 notificationVisibilityMode = preferences[NOTIF_VISIBILITY_MODE] ?: "CONCEALED",
                 notificationCustomTitle = preferences[NOTIF_CUSTOM_TITLE] ?: "",
                 notificationCustomBody = preferences[NOTIF_CUSTOM_BODY] ?: "",
-                temperatureUnit = preferences[TEMPERATURE_UNIT] ?: "CELSIUS"
+                temperatureUnit = preferences[TEMPERATURE_UNIT] ?: "CELSIUS",
+                medicationsSeedOffered = preferences[MEDICATIONS_SEED_OFFERED] ?: false,
+                painFollowupDelayMinutes = preferences[PAIN_FOLLOWUP_DELAY_MINUTES] ?: 45
             )
         }
 
@@ -231,6 +237,8 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setNotificationCustomTitle(title: String) = edit { it[NOTIF_CUSTOM_TITLE] = title }
     suspend fun setNotificationCustomBody(body: String) = edit { it[NOTIF_CUSTOM_BODY] = body }
     suspend fun setTemperatureUnit(unit: String) = edit { it[TEMPERATURE_UNIT] = unit }
+    suspend fun setMedicationsSeedOffered(offered: Boolean) = edit { it[MEDICATIONS_SEED_OFFERED] = offered }
+    suspend fun setPainFollowupDelayMinutes(minutes: Int) = edit { it[PAIN_FOLLOWUP_DELAY_MINUTES] = minutes }
     suspend fun clear() = edit { it.clear() }
 
     private suspend fun edit(block: suspend (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

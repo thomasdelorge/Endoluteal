@@ -18,6 +18,8 @@ import fr.luteal.core.data.repository.DailyEntryRepository
 import fr.luteal.core.data.repository.DailyEntryRepositoryImpl
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.data.repository.JournalEventRepositoryImpl
+import fr.luteal.core.data.repository.MedicationRepository
+import fr.luteal.core.data.repository.MedicationRepositoryImpl
 import fr.luteal.core.data.repository.SymptomRepository
 import fr.luteal.core.data.repository.SymptomRepositoryImpl
 import fr.luteal.core.data.repository.UserRepository
@@ -64,6 +66,13 @@ abstract class RepositoryModule {
     abstract fun bindJournalEventRepository(
         journalEventRepositoryImpl: JournalEventRepositoryImpl
     ): JournalEventRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindMedicationRepository(
+        medicationRepositoryImpl: MedicationRepositoryImpl
+    ): MedicationRepository
+
     @Binds
     @Singleton
     abstract fun bindTestDataSeeder(

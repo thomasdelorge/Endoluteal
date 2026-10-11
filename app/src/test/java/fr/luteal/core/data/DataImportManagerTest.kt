@@ -61,6 +61,7 @@ class DataImportManagerTest {
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
             journalEventDao = database.journalEventDao(),
+            medicationDao = database.medicationDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
@@ -71,6 +72,7 @@ class DataImportManagerTest {
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
             journalEventDao = database.journalEventDao(),
+            medicationDao = database.medicationDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }

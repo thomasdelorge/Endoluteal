@@ -1,0 +1,159 @@
+{
+  "disclaimer": "Valeurs copiées des RCP adultes cités, marquées non validées. Aide à la prise, pas un avis médical.",
+  "substances": [
+    {
+      "id": "paracetamol",
+      "name": "Paracétamol",
+      "drug_class": "PARACETAMOL",
+      "max_daily_mg": 4000,
+      "max_per_intake_mg": 1000,
+      "min_interval_minutes": 240,
+      "notes": "RCP paracétamol 1000 mg, gélule (BDPM CIS 61903804) : ne pas prendre 2 unités de 1000 mg à la fois. Dose usuelle maximale 3000 mg/j ; le plafond de 4000 mg/j n'est possible que sur avis médical, sans facteur de risque. Intervalle minimum 4 h."
+    },
+    {
+      "id": "ibuprofen",
+      "name": "Ibuprofène",
+      "drug_class": "NSAID",
+      "max_daily_mg": 1200,
+      "max_per_intake_mg": 400,
+      "min_interval_minutes": 360,
+      "notes": "RCP ibuprofène 400 mg comprimé (base publique des médicaments) : 1 comprimé par prise, à renouveler au bout de 6 h, sans dépasser 3 comprimés soit 1200 mg par jour."
+    },
+    {
+      "id": "naproxen",
+      "name": "Naproxène sodique",
+      "drug_class": "NSAID",
+      "max_daily_mg": 1100,
+      "max_per_intake_mg": 1100,
+      "notes": "RCP APRANAX 550 mg (ANSM R0274432) : traitement d'attaque 1100 mg/j, entretien 550 mg/j, réparti en 1 ou 2 prises. Pas d'intervalle horaire minimal explicite."
+    },
+    {
+      "id": "ketoprofen",
+      "name": "Kétoprofène",
+      "drug_class": "NSAID",
+      "max_daily_mg": 200,
+      "max_per_intake_mg": 100,
+      "min_interval_minutes": 480,
+      "notes": "RCP kétoprofène 100 mg comprimé (base publique des médicaments) : 100 mg par prise, à renouveler au bout de 8 h, sans dépasser 200 mg par jour."
+    },
+    {
+      "id": "phloroglucinol",
+      "name": "Phloroglucinol",
+      "drug_class": "ANTISPASMODIC",
+      "max_daily_mg": 480,
+      "max_per_intake_mg": 160,
+      "min_interval_minutes": 120,
+      "notes": "RCP SPASFON comprimé enrobé (ANSM R0359926) : adulte, 2 comprimés de 80 mg par prise, 3 fois par jour, intervalle minimum 2 h, sans dépasser 6 comprimés soit 480 mg par 24 h."
+    },
+    {
+      "id": "tramadol",
+      "name": "Tramadol",
+      "drug_class": "OPIOID",
+      "max_daily_mg": 400,
+      "max_per_intake_mg": 100,
+      "min_interval_minutes": 240,
+      "notes": "RCP tramadol 50 mg gélule (base publique des médicaments) : 50 à 100 mg par prise, intervalle minimum 4 h, maximum 400 mg par jour."
+    },
+    {
+      "id": "nefopam",
+      "name": "Néfopam",
+      "drug_class": "OTHER",
+      "max_daily_mg": 120,
+      "max_per_intake_mg": 20,
+      "min_interval_minutes": 240,
+      "notes": "RCP ACUPAN 20 mg/2 ml (ANSM R0420671) : 20 mg par injection, maximum 120 mg/24 h. Intervalle retenu : 4 h (voie IV). La voie IM demande 6 h."
+    },
+    {
+      "id": "opium",
+      "name": "Poudre d'opium",
+      "drug_class": "OPIOID",
+      "max_daily_mg": 100,
+      "max_per_intake_mg": 20,
+      "min_interval_minutes": 240,
+      "notes": "Déduit du RCP LAMALINE gélule (BDPM CIS 62689634) : 10 mg par gélule, 1 à 2 gélules par prise, maximum 10 gélules par jour, prises espacées d'au moins 4 h."
+    },
+    {
+      "id": "caffeine",
+      "name": "Caféine",
+      "drug_class": "OTHER",
+      "max_daily_mg": 300,
+      "max_per_intake_mg": 60,
+      "min_interval_minutes": 240,
+      "notes": "Déduit du RCP LAMALINE gélule (BDPM CIS 62689634) : 30 mg par gélule, 1 à 2 gélules par prise, maximum 10 gélules par jour, intervalle 4 h."
+    }
+  ],
+  "medications": [
+    {
+      "id": "med-paracetamol",
+      "name": "Paracétamol 1000 mg",
+      "form": "comprimé",
+      "compositions": [{ "substance_id": "paracetamol", "amount_mg_per_unit": 1000 }]
+    },
+    {
+      "id": "med-ibuprofen",
+      "name": "Ibuprofène 400 mg",
+      "form": "comprimé",
+      "compositions": [{ "substance_id": "ibuprofen", "amount_mg_per_unit": 400 }]
+    },
+    {
+      "id": "med-naproxen",
+      "name": "Naproxène sodique 550 mg",
+      "form": "comprimé",
+      "compositions": [{ "substance_id": "naproxen", "amount_mg_per_unit": 550 }]
+    },
+    {
+      "id": "med-ketoprofen",
+      "name": "Kétoprofène 100 mg",
+      "form": "comprimé",
+      "compositions": [{ "substance_id": "ketoprofen", "amount_mg_per_unit": 100 }]
+    },
+    {
+      "id": "med-phloroglucinol",
+      "name": "Phloroglucinol 80 mg",
+      "form": "comprimé",
+      "compositions": [{ "substance_id": "phloroglucinol", "amount_mg_per_unit": 80 }]
+    },
+    {
+      "id": "med-tramadol",
+      "name": "Tramadol 50 mg",
+      "form": "gélule",
+      "compositions": [{ "substance_id": "tramadol", "amount_mg_per_unit": 50 }]
+    },
+    {
+      "id": "med-nefopam",
+      "name": "Néfopam 20 mg",
+      "form": "ampoule",
+      "compositions": [{ "substance_id": "nefopam", "amount_mg_per_unit": 20 }]
+    },
+    {
+      "id": "med-lamaline",
+      "name": "Lamaline",
+      "form": "gélule",
+      "compositions": [
+        { "substance_id": "paracetamol", "amount_mg_per_unit": 300 },
+        { "substance_id": "opium", "amount_mg_per_unit": 10 },
+        { "substance_id": "caffeine", "amount_mg_per_unit": 30 }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "id": "rule-nsaid-duplicate",
+      "target_a_type": "CLASS",
+      "target_a_id": "NSAID",
+      "target_b_type": "CLASS",
+      "target_b_id": "NSAID",
+      "severity": "DANGER",
+      "message": "Deux anti-inflammatoires non stéroïdiens en même temps augmentent le risque digestif et rénal."
+    },
+    {
+      "id": "rule-opioid-duplicate",
+      "target_a_type": "CLASS",
+      "target_a_id": "OPIOID",
+      "target_b_type": "CLASS",
+      "target_b_id": "OPIOID",
+      "severity": "DANGER",
+      "message": "Deux opioïdes en même temps augmentent le risque de sédation et de dépression respiratoire."
+    }
+  ]
+}
