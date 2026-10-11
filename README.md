@@ -72,21 +72,20 @@ Le SDK est trouvé via `ANDROID_HOME` ou `local.properties` (non versionné) :
 sdk.dir=/home/<user>/.local/share/mise/installs/android-sdk/13.0
 ```
 
-Commandes principales :
+À la racine du dépôt, [mise](https://mise.jdx.dev/) installe JDK 21 et le SDK
+(`mise install`). Puis :
 
 ```sh
-./gradlew assembleDebug                       # build debug
-./gradlew assembleDebug lintDebug testDebugUnitTest   # vérification d'une PR
-./gradlew installDebug                        # installation sur l'appareil connecté
+make avd          # crée l'AVD endoluteal_api35 une fois
+make emu          # démarre l'émulateur (autre terminal)
+make run          # build debug, installe et lance l'app
+make logcat       # logs filtrés sur le processus de l'app
 ```
 
-Émulateur dédié (Pixel 8, API 35, sans écran de verrouillage) :
+Vérification d'une PR :
 
 ```sh
-avdmanager create avd -n endoluteal_api35 \
-  -k "system-images;android-35;google_apis;x86_64" -d pixel_8
-emulator -avd endoluteal_api35 -gpu host &
-adb logcat --pid=$(adb shell pidof -s fr.luteal.app)
+./gradlew assembleDebug lintDebug testDebugUnitTest
 ```
 
 Sur un téléphone physique : activer le débogage sans fil, puis `adb pair` et

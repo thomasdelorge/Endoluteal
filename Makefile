@@ -1,5 +1,5 @@
 # ==============================================================================
-# Luteal - Build & Release Automation
+# Endoluteal - Build & Release Automation
 # ==============================================================================
 
 # Extract version metadata from app/build.gradle.kts
@@ -8,23 +8,35 @@ VERSION_CODE := $(shell grep -oP 'versionCode\s*=\s*\K[0-9]+' app/build.gradle.k
 COMMIT_HASH  := $(shell git rev-parse HEAD 2>/dev/null)
 BRANCH       := $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 
+APP_ID       := io.github.thomasdelorge.endoluteal
+APP_ID_DEV   := $(APP_ID).dev
+MAIN_ACTIVITY := fr.luteal.app.MainActivity
+AVD          ?= endoluteal_api35
+AVD_IMAGE    := system-images;android-35;google_apis;x86_64
+
 # Locate apksigner in Android SDK or system PATH
-APKSIGNER    := $(shell which apksigner 2>/dev/null || find $(ANDROID_HOME) $(ANDROID_SDK_ROOT) $(HOME)/Android/Sdk -name apksigner -type f 2>/dev/null | sort -V | tail -n 1)
+APKSIGNER    := $(shell which apksigner 2>/dev/null || find $(ANDROID_HOME) $(ANDROID_SDK_ROOT) $(HOME)/.local/share/mise/installs/android-sdk -name apksigner -type f 2>/dev/null | sort -V | tail -n 1)
+EMULATOR     := $(shell which emulator 2>/dev/null || find $(ANDROID_HOME) $(ANDROID_SDK_ROOT) $(HOME)/.local/share/mise/installs/android-sdk -name emulator -type f 2>/dev/null | head -n 1)
+AVDMANAGER   := $(shell which avdmanager 2>/dev/null || find $(ANDROID_HOME) $(ANDROID_SDK_ROOT) $(HOME)/.local/share/mise/installs/android-sdk -path '*/avdmanager' -type f 2>/dev/null | head -n 1)
 
 DIST_DIR     := dist
-RELEASE_APK  := $(DIST_DIR)/luteal-v$(VERSION).apk
+RELEASE_APK  := $(DIST_DIR)/endoluteal-v$(VERSION).apk
 ADB          ?= adb
 DEVICE       ?=
 ANCHOR_DATE  ?= $(shell date -u +%F)
 
-.PHONY: help dev dev-install release-seed release-build release-check bump test lint clean
+.PHONY: help dev dev-install avd emu run logcat release-seed release-build release-check bump test lint clean
 
 help:
-	@echo "Luteal Build & Release Targets:"
-	@echo "  make dev             - Build debug APK (fr.luteal.app.dev, Luteal Dev)"
+	@echo "Endoluteal Build & Release Targets:"
+	@echo "  make dev             - Build debug APK ($(APP_ID_DEV))"
 	@echo "  make dev-install     - Build and install debug APK onto connected device"
+	@echo "  make avd             - Create AVD $(AVD) if missing"
+	@echo "  make emu             - Start emulator $(AVD)"
+	@echo "  make run             - installDebug and launch on device/emulator"
+	@echo "  make logcat          - Logcat filtered to running app process"
 	@echo "  make release-seed    - Generate demo backup and open release import preview"
-	@echo "  make release-build   - Build signed release APK -> $(RELEASE_APK) and print F-Droid metadata"
+	@echo "  make release-build   - Build signed release APK -> $(RELEASE_APK)"
 	@echo "  make release-check   - Verify signature and Git metadata of $(RELEASE_APK)"
 	@echo "  make bump VERSION=1.x.y CODE=n - Update versionName and versionCode in build.gradle.kts"
 	@echo "  make test            - Run unit test suite"
@@ -34,16 +46,41 @@ help:
 # --- Development ---
 
 dev:
-	@echo "==> Building debug APK (Luteal Dev)..."
+	@echo "==> Building debug APK (Endoluteal Dev)..."
 	./gradlew assembleDebug
 
 dev-install:
-	@echo "==> Installing debug APK (Luteal Dev) on connected device..."
+	@echo "==> Installing debug APK on connected device..."
 	./gradlew installDebug
-	@echo "==> Installed package: fr.luteal.app.dev"
+	@echo "==> Installed package: $(APP_ID_DEV)"
+
+avd:
+	@if [ -d "$(HOME)/.android/avd/$(AVD).avd" ]; then \
+		echo "AVD $(AVD) already exists."; \
+	else \
+		echo "==> Creating AVD $(AVD)..."; \
+		echo no | $(AVDMANAGER) create avd -n $(AVD) -k "$(AVD_IMAGE)" -d pixel_8; \
+	fi
+
+emu:
+	@echo "==> Starting emulator $(AVD)..."
+	$(EMULATOR) -avd $(AVD) -gpu host -no-boot-anim
+
+run:
+	@echo "==> Installing and launching $(APP_ID_DEV)..."
+	./gradlew installDebug
+	$(ADB) shell am start -n $(APP_ID_DEV)/$(MAIN_ACTIVITY)
+
+logcat:
+	@pid=$$($(ADB) shell pidof -s $(APP_ID_DEV) 2>/dev/null | tr -d '\r'); \
+	if [ -z "$$pid" ]; then \
+		echo "App $(APP_ID_DEV) is not running."; \
+		exit 1; \
+	fi; \
+	$(ADB) logcat --pid=$$pid
 
 release-seed:
-	@bash ./scripts/seed-release.sh "$(ADB)" "$(DEVICE)" "fr.luteal.app" "$(ANCHOR_DATE)"
+	@bash ./scripts/seed-release.sh "$(ADB)" "$(DEVICE)" "$(APP_ID)" "$(ANCHOR_DATE)"
 
 # --- Testing ---
 
@@ -54,6 +91,7 @@ test:
 lint:
 	@echo "==> Running Android Lint..."
 	./gradlew lintDebug
+
 # --- Release ---
 
 release-build:
@@ -91,14 +129,12 @@ release-check:
 	fi
 	@echo ""
 	@echo "================================================================="
-	@echo "  F-Droid Metadata Block (for fdroiddata/metadata/fr.luteal.app.yml):"
+	@echo "  Release metadata:"
 	@echo "================================================================="
-	@echo "    - versionName: $(VERSION)"
-	@echo "      versionCode: $(VERSION_CODE)"
-	@echo "      commit: $(COMMIT_HASH)"
-	@echo "      subdir: app"
-	@echo "      gradle:"
-	@echo "        - yes"
+	@echo "    applicationId: $(APP_ID)"
+	@echo "    versionName: $(VERSION)"
+	@echo "    versionCode: $(VERSION_CODE)"
+	@echo "    commit: $(COMMIT_HASH)"
 	@echo "================================================================="
 
 # --- Version Bumping ---
