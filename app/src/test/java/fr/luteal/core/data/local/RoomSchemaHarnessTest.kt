@@ -19,13 +19,13 @@ class RoomSchemaHarnessTest {
 
     @Test
     fun latestSchemaCreatesAndValidates() {
-        helper.createDatabase(TEST_DB, 4).use { db ->
+        helper.createDatabase(TEST_DB, 5).use { db ->
             db.query("SELECT count(*) FROM sqlite_master WHERE type='table'").use { cursor ->
                 assertTrue(cursor.moveToFirst())
                 assertTrue(cursor.getInt(0) > 0)
             }
         }
-        helper.runMigrationsAndValidate(TEST_DB, 4, true).close()
+        helper.runMigrationsAndValidate(TEST_DB, 5, true).close()
     }
 
     companion object {

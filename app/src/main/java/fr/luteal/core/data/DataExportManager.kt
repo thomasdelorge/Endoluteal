@@ -6,6 +6,7 @@ import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.MedicationDao
+import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CompositionBackupDto
@@ -16,6 +17,7 @@ import fr.luteal.core.model.InteractionRuleBackupDto
 import fr.luteal.core.model.JournalEventBackupDto
 import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.model.MedicationBackupDto
+import fr.luteal.core.model.MedicationIntakeBackupDto
 import fr.luteal.core.model.PainMarkBackupDto
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SubstanceBackupDto
@@ -38,6 +40,7 @@ class DataExportManager @Inject constructor(
     private val biomarkerDao: BiomarkerDao,
     private val journalEventDao: JournalEventDao,
     private val medicationDao: MedicationDao,
+    private val medicationIntakeDao: MedicationIntakeDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -201,6 +204,9 @@ class DataExportManager @Inject constructor(
                 message = entity.message
             )
         }
+        val medicationIntakes = medicationIntakeDao.allOnce().map { entity ->
+            MedicationIntakeBackupDto(entity.eventId, entity.medicationId, entity.units)
+        }
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         val preferencesDto = UserPreferencesBackupDto(
             userRole = prefs.userRole,
@@ -229,6 +235,7 @@ class DataExportManager @Inject constructor(
             substances = substances,
             medications = medications,
             interactionRules = interactionRules,
+            medicationIntakes = medicationIntakes,
             preferences = preferencesDto
         )
     }

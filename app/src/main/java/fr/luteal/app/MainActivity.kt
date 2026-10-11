@@ -25,6 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.luteal.app.navigation.AppLockResolvingBarrier
 import fr.luteal.app.navigation.AppLockScreen
 import fr.luteal.app.navigation.LutealMainScaffold
+import fr.luteal.app.notification.ReminderAlarmReceiver
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.security.AppLockManager
 import fr.luteal.core.designsystem.theme.LutealTheme
@@ -42,10 +43,13 @@ class MainActivity : FragmentActivity() {
     lateinit var userPreferencesDataStore: UserPreferencesDataStore
 
     private var bufferedImportJson by mutableStateOf<String?>(null)
+    private var pendingPainEventId by mutableStateOf<String?>(null)
+    private var pendingMedicationId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         handleBackupImport(intent)
+        handleReminderIntent(intent)
         enableEdgeToEdge()
 
         lifecycle.addObserver(appLockManager)
@@ -86,7 +90,13 @@ class MainActivity : FragmentActivity() {
                     ) {
                         LutealMainScaffold(
                             pendingImportJson = if (!barrierUp) bufferedImportJson else null,
-                            onPendingImportConsumed = { bufferedImportJson = null }
+                            pendingPainEventId = if (!barrierUp) pendingPainEventId else null,
+                            pendingMedicationId = if (!barrierUp) pendingMedicationId else null,
+                            onPendingImportConsumed = { bufferedImportJson = null },
+                            onPendingReminderConsumed = {
+                                pendingPainEventId = null
+                                pendingMedicationId = null
+                            }
                         )
                     }
                     if (lockState is AppLockState.Resolving) {
@@ -111,6 +121,12 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         handleBackupImport(intent)
+        handleReminderIntent(intent)
+    }
+
+    private fun handleReminderIntent(intent: Intent?) {
+        pendingPainEventId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_PAIN_EVENT)
+        pendingMedicationId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION)
     }
 
     private fun showBiometricPrompt() {

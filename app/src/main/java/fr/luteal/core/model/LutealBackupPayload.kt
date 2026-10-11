@@ -23,6 +23,7 @@ data class LutealBackupPayload(
     @SerialName("substances") val substances: List<SubstanceBackupDto> = emptyList(),
     @SerialName("medications") val medications: List<MedicationBackupDto> = emptyList(),
     @SerialName("interaction_rules") val interactionRules: List<InteractionRuleBackupDto> = emptyList(),
+    @SerialName("medication_intakes") val medicationIntakes: List<MedicationIntakeBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -146,6 +147,13 @@ data class InteractionRuleBackupDto(
 )
 
 @Serializable
+data class MedicationIntakeBackupDto(
+    @SerialName("event_id") val eventId: String,
+    @SerialName("medication_id") val medicationId: String,
+    @SerialName("units") val units: Double
+)
+
+@Serializable
 data class UserPreferencesBackupDto(
     @SerialName("user_role") val userRole: String = "PRIMARY_TRACKER",
     @SerialName("locale") val locale: String = "fr",
@@ -181,6 +189,7 @@ data class LutealBackupPreview(
     val substanceCount: Int = 0,
     val medicationCount: Int = 0,
     val interactionRuleCount: Int = 0,
+    val medicationIntakeCount: Int = 0,
     val preferences: UserPreferencesBackupDto
 )
 
@@ -194,6 +203,7 @@ data class ImportSummary(
     val substancesImported: Int = 0,
     val medicationsImported: Int = 0,
     val interactionRulesImported: Int = 0,
+    val medicationIntakesImported: Int = 0,
     val preferencesRestored: Boolean
 )
 

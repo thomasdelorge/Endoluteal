@@ -12,9 +12,11 @@ import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.luteal.app.R
 import fr.luteal.core.data.entity.ReminderEntity
+import fr.luteal.core.model.MedsAlarmPayload
 import fr.luteal.core.model.ReminderType
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.serialization.json.Json
 
 @Singleton
 class ReminderNotifier @Inject constructor(
@@ -28,12 +30,22 @@ class ReminderNotifier @Inject constructor(
             return
         }
         val type = runCatching { ReminderType.valueOf(reminder.type) }.getOrDefault(ReminderType.RECAP)
+        val payload = runCatching {
+            Json { ignoreUnknownKeys = true }.decodeFromString(MedsAlarmPayload.serializer(), reminder.payloadJson)
+        }.getOrNull()
+        val body = payload?.name?.takeIf { it.isNotBlank() }
+            ?: context.getString(R.string.notif_reminder_body)
+        val primary = if (type == ReminderType.PAIN_FOLLOWUP) {
+            R.string.notif_action_pain_check
+        } else {
+            R.string.notif_action_open
+        }
         val notification = NotificationCompat.Builder(context, type.channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(context.getString(R.string.notif_reminder_title))
-            .setContentText(context.getString(R.string.notif_reminder_body))
+            .setContentText(body)
             .setAutoCancel(true)
-            .addAction(0, context.getString(R.string.notif_action_open), actionIntent(reminder.id, ReminderAlarmReceiver.ACTION_PRIMARY, 1))
+            .addAction(0, context.getString(primary), actionIntent(reminder.id, ReminderAlarmReceiver.ACTION_PRIMARY, 1))
             .addAction(0, context.getString(R.string.notif_action_snooze_10), snoozeIntent(reminder.id, 10))
             .addAction(0, context.getString(R.string.notif_action_snooze_30), snoozeIntent(reminder.id, 30))
             .addAction(0, context.getString(R.string.notif_action_snooze_60), snoozeIntent(reminder.id, 60))

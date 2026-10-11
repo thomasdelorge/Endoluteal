@@ -40,6 +40,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.luteal.app.EntrySaveState
 import fr.luteal.app.LutealViewModel
 import fr.luteal.app.R
+import fr.luteal.app.navigation.entry.MedicationIntakeSheet
+import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
+import fr.luteal.app.navigation.entry.PainCheckSheet
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.ObservationCatalog
 import java.time.LocalDate
@@ -47,14 +50,22 @@ import java.time.LocalDate
 @Composable
 fun LutealMainScaffold(
     pendingImportJson: String? = null,
+    pendingPainEventId: String? = null,
+    pendingMedicationId: String? = null,
     onPendingImportConsumed: () -> Unit = {},
+    onPendingReminderConsumed: () -> Unit = {},
     viewModel: LutealViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val agendaViewModel: AgendaViewModel = hiltViewModel()
+    val intakeViewModel: MedicationIntakeViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
+    val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
     var editorRequest by remember { mutableStateOf<EditorRequest?>(null) }
+    var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
+    var intakeMedicationId by remember { mutableStateOf<String?>(null) }
+    var painCheckEventId by remember { mutableStateOf<String?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -68,6 +79,19 @@ fun LutealMainScaffold(
         selectedDestination = LutealDestination.SETTINGS
         settingsViewModel.inspectBackupJson(json)
         onPendingImportConsumed()
+    }
+
+    LaunchedEffect(pendingPainEventId, pendingMedicationId) {
+        if (pendingPainEventId != null) {
+            selectedDestination = LutealDestination.AGENDA
+            painCheckEventId = pendingPainEventId
+            onPendingReminderConsumed()
+        } else if (pendingMedicationId != null) {
+            selectedDestination = LutealDestination.AGENDA
+            intakeMedicationId = pendingMedicationId
+            intakeDate = uiState.today
+            onPendingReminderConsumed()
+        }
     }
 
     LaunchedEffect(uiState.operationFailed) {
@@ -140,9 +164,14 @@ fun LutealMainScaffold(
                             LutealDestination.AGENDA -> AgendaScreen(
                                 state = uiState,
                                 events = events,
+                                intakeLabels = intakeLabels,
                                 onSelectDate = {
                                     viewModel.clearEntrySaveState()
                                     editorRequest = EditorRequest(it, startPeriodIntent = false)
+                                },
+                                onRecordMedication = { date ->
+                                    intakeMedicationId = null
+                                    intakeDate = date
                                 },
                                 onEditCycle = { cycleId, newStartDate ->
                                     viewModel.editCycleStartDate(cycleId, newStartDate)
@@ -191,6 +220,26 @@ fun LutealMainScaffold(
                 editorRequest = null
             },
             onSave = viewModel::saveEntry
+        )
+    }
+
+    intakeDate?.let { date ->
+        MedicationIntakeSheet(
+            initialDate = date,
+            initialMedicationId = intakeMedicationId,
+            viewModel = intakeViewModel,
+            onDismiss = {
+                intakeDate = null
+                intakeMedicationId = null
+            }
+        )
+    }
+
+    painCheckEventId?.let { eventId ->
+        PainCheckSheet(
+            linkedEventId = eventId,
+            viewModel = intakeViewModel,
+            onDismiss = { painCheckEventId = null }
         )
     }
 }

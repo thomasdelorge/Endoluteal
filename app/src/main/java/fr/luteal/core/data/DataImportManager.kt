@@ -8,6 +8,7 @@ import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.InteractionRuleEntity
 import fr.luteal.core.data.entity.JournalEventEntity
 import fr.luteal.core.data.entity.MedicationEntity
+import fr.luteal.core.data.entity.MedicationIntakeEntity
 import fr.luteal.core.data.entity.MedicationSubstanceEntity
 import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.data.entity.SubstanceEntity
@@ -18,6 +19,7 @@ import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.MedicationDao
+import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.DataImportError
 import fr.luteal.core.model.EndolutealBackup
@@ -47,6 +49,7 @@ class DataImportManager @Inject constructor(
     private val biomarkerDao: BiomarkerDao,
     private val journalEventDao: JournalEventDao,
     private val medicationDao: MedicationDao,
+    private val medicationIntakeDao: MedicationIntakeDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -93,6 +96,7 @@ class DataImportManager @Inject constructor(
                     substanceCount = payload.substances.size,
                     medicationCount = payload.medications.size,
                     interactionRuleCount = payload.interactionRules.size,
+                    medicationIntakeCount = payload.medicationIntakes.size,
                     preferences = payload.preferences
                 )
 
@@ -116,6 +120,7 @@ class DataImportManager @Inject constructor(
                 var substancesCount = 0
                 var medicationsCount = 0
                 var rulesCount = 0
+                var intakesCount = 0
 
                 database.withTransaction {
                     if (strategy == ImportStrategy.REPLACE_ALL) {
@@ -129,6 +134,7 @@ class DataImportManager @Inject constructor(
                         medicationDao.deleteAllRules()
                         medicationDao.deleteAllMedications()
                         medicationDao.deleteAllSubstances()
+                        medicationIntakeDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
@@ -354,6 +360,13 @@ class DataImportManager @Inject constructor(
                         )
                         rulesCount++
                     }
+                    for (intake in payload.medicationIntakes) {
+                        if (intake.eventId.isBlank() || intake.medicationId.isBlank()) continue
+                        medicationIntakeDao.upsert(
+                            MedicationIntakeEntity(intake.eventId, intake.medicationId, intake.units)
+                        )
+                        intakesCount++
+                    }
                 }
 
                 var preferencesRestored = false
@@ -383,6 +396,7 @@ class DataImportManager @Inject constructor(
                     substancesImported = substancesCount,
                     medicationsImported = medicationsCount,
                     interactionRulesImported = rulesCount,
+                    medicationIntakesImported = intakesCount,
                     preferencesRestored = preferencesRestored
                 )
             }

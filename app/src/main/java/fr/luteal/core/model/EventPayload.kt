@@ -12,7 +12,7 @@ import kotlinx.serialization.json.Json
 sealed interface EventPayload {
     @Serializable
     @SerialName("MEDICATION_INTAKE")
-    data object MedicationIntake : EventPayload
+    data class MedicationIntake(val dangerAcknowledged: Boolean = false) : EventPayload
 
     @Serializable
     @SerialName("PAIN_CHECK")
@@ -36,7 +36,7 @@ sealed interface EventPayload {
 
     companion object {
         fun of(type: JournalEventType): EventPayload = when (type) {
-            JournalEventType.MEDICATION_INTAKE -> MedicationIntake
+            JournalEventType.MEDICATION_INTAKE -> MedicationIntake()
             JournalEventType.PAIN_CHECK -> PainCheck
             JournalEventType.SYMPTOM -> Symptom
             JournalEventType.CARE_SESSION -> CareSession

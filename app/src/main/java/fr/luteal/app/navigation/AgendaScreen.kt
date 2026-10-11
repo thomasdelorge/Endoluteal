@@ -81,6 +81,7 @@ import fr.luteal.core.model.CervicalMucusSensation
 import fr.luteal.core.model.CervicalMucusTexture
 import fr.luteal.core.model.PhaseCertainty
 import fr.luteal.core.model.BleedingIntensity
+import fr.luteal.core.model.CycleEstimateResult
 import fr.luteal.core.model.DailyEntry
 import fr.luteal.core.model.MonthCalendarProjectionCalculator
 import java.time.Instant
@@ -95,7 +96,9 @@ import java.time.temporal.WeekFields
 fun AgendaScreen(
     state: LutealUiState,
     events: List<JournalEvent> = emptyList(),
+    intakeLabels: Map<String, String> = emptyMap(),
     onSelectDate: (LocalDate) -> Unit,
+    onRecordMedication: (LocalDate) -> Unit = {},
     onEditCycle: (cycleId: String, newStartDate: LocalDate) -> Unit = { _, _ -> },
     onDeleteCycle: (cycleId: String) -> Unit = {},
     onBackfillCycle: () -> Unit = {}
@@ -117,18 +120,20 @@ fun AgendaScreen(
     val eventCounts = remember(events) { eventCountsByDay(events) }
     val dayEvents = eventsOnDay(events, selectedDate)
     val dailyRecapLabel = stringResource(R.string.agenda_action_daily_recap)
+    val medicationLabel = stringResource(R.string.agenda_action_medication)
+    val displayedEstimate = state.estimateResult
 
     val entriesByDate = remember(state.entries) {
         state.entries.associateBy(DailyEntry::date)
     }
 
-    val calendarProjection = remember(currentMonth, state.today, state.cycles, state.entries, state.biomarkers, state.estimateResult, locale) {
+    val calendarProjection = remember(currentMonth, state.today, state.cycles, state.entries, state.biomarkers, displayedEstimate, locale) {
         MonthCalendarProjectionCalculator.project(
             targetMonth = currentMonth,
             today = state.today,
             cycles = state.cycles,
             entries = state.entries,
-            estimateResult = state.estimateResult,
+            estimateResult = displayedEstimate,
             biomarkers = state.biomarkers,
             firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
         )
@@ -137,7 +142,7 @@ fun AgendaScreen(
         state.biomarkers.associateBy(BiomarkerObservation::date)
     }
     val selectedMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
-    val selectedDayProjection = remember(selectedDate, selectedMonth, currentMonth, calendarProjection, state.cycles, state.entries, state.biomarkers, state.estimateResult, locale) {
+    val selectedDayProjection = remember(selectedDate, selectedMonth, currentMonth, calendarProjection, state.cycles, state.entries, state.biomarkers, displayedEstimate, locale) {
         if (selectedMonth == currentMonth) {
             calendarProjection.weeks.flatten().firstOrNull { it.date == selectedDate }
         } else {
@@ -146,7 +151,7 @@ fun AgendaScreen(
                 today = state.today,
                 cycles = state.cycles,
                 entries = state.entries,
-                estimateResult = state.estimateResult,
+                estimateResult = displayedEstimate,
                 biomarkers = state.biomarkers,
                 firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
             ).weeks.flatten().firstOrNull { it.date == selectedDate }
@@ -237,13 +242,13 @@ fun AgendaScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) { page ->
                     val pageMonth = baseMonth.plusMonths((page - 1200).toLong())
-                    val pageProjection = remember(pageMonth, state.today, state.cycles, state.entries, state.biomarkers, state.estimateResult, locale) {
+                    val pageProjection = remember(pageMonth, state.today, state.cycles, state.entries, state.biomarkers, displayedEstimate, locale) {
                         MonthCalendarProjectionCalculator.project(
                             targetMonth = pageMonth,
                             today = state.today,
                             cycles = state.cycles,
                             entries = state.entries,
-                            estimateResult = state.estimateResult,
+                            estimateResult = displayedEstimate,
                             biomarkers = state.biomarkers,
                             firstDayOfWeek = WeekFields.of(locale).firstDayOfWeek
                         )
@@ -289,17 +294,22 @@ fun AgendaScreen(
                 )
             }
             item {
-                DayEventList(events = dayEvents)
+                DayEventList(events = dayEvents, intakeLabels = intakeLabels)
             }
     }
         AgendaSpeedDial(
             expanded = fabExpanded,
-            actionLabel = dailyRecapLabel,
+            actions = listOf(
+                SpeedDialAction("agenda_action_daily_recap", dailyRecapLabel) {
+                    fabExpanded = false
+                    onSelectDate(selectedDate)
+                },
+                SpeedDialAction("agenda_action_medication", medicationLabel) {
+                    fabExpanded = false
+                    onRecordMedication(selectedDate)
+                }
+            ),
             onToggle = { fabExpanded = !fabExpanded },
-            onAction = {
-                fabExpanded = false
-                onSelectDate(selectedDate)
-            },
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(LutealSpacing.md)
@@ -331,28 +341,23 @@ fun AgendaScreen(
 }
 
 @Composable
-private fun DayEventList(events: List<JournalEvent>) {
+private fun DayEventList(events: List<JournalEvent>, intakeLabels: Map<String, String>) {
+    val children = events.filter { it.linkedEventId != null }.groupBy { it.linkedEventId }
+    val roots = events.filter { event ->
+        event.linkedEventId == null || events.none { it.id == event.linkedEventId }
+    }
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-        if (events.isEmpty()) {
+        if (roots.isEmpty()) {
             Text(
                 text = stringResource(R.string.agenda_events_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         } else {
-            events.forEach { event ->
-                val label = stringResource(event.type.labelRes())
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.semantics { contentDescription = label }
-                )
-                if (event.notes.isNotBlank()) {
-                    Text(
-                        text = event.notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            roots.forEach { event ->
+                EventLine(event, intakeLabels[event.id])
+                children[event.id].orEmpty().forEach { child ->
+                    EventLine(child, intakeLabels[child.id], nested = true)
                 }
             }
         }
@@ -360,11 +365,40 @@ private fun DayEventList(events: List<JournalEvent>) {
 }
 
 @Composable
+private fun EventLine(event: JournalEvent, intakeLabel: String?, nested: Boolean = false) {
+    val typeLabel = stringResource(event.type.labelRes())
+    val pain = event.marks.maxOfOrNull { it.intensity }
+    val text = buildString {
+        if (nested) append("· ")
+        append(typeLabel)
+        if (!intakeLabel.isNullOrBlank()) append(" · ").append(intakeLabel)
+        if (pain != null) append(" · ").append(pain)
+    }
+    Text(
+        text = text,
+        style = if (nested) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.semantics { contentDescription = text }
+    )
+    if (event.notes.isNotBlank()) {
+        Text(
+            text = event.notes,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private data class SpeedDialAction(
+    val tag: String,
+    val label: String,
+    val onClick: () -> Unit
+)
+
+@Composable
 private fun AgendaSpeedDial(
     expanded: Boolean,
-    actionLabel: String,
+    actions: List<SpeedDialAction>,
     onToggle: () -> Unit,
-    onAction: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -373,13 +407,15 @@ private fun AgendaSpeedDial(
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
     ) {
         if (expanded) {
-            SmallFloatingActionButton(
-                onClick = onAction,
-                modifier = Modifier
-                    .testTag("agenda_action_daily_recap")
-                    .semantics { contentDescription = actionLabel }
-            ) {
-                Text(text = actionLabel, modifier = Modifier.padding(horizontal = LutealSpacing.sm))
+            actions.forEach { action ->
+                SmallFloatingActionButton(
+                    onClick = action.onClick,
+                    modifier = Modifier
+                        .testTag(action.tag)
+                        .semantics { contentDescription = action.label }
+                ) {
+                    Text(text = action.label, modifier = Modifier.padding(horizontal = LutealSpacing.sm))
+                }
             }
         }
         val fabDescription = stringResource(

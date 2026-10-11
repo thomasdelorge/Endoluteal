@@ -123,6 +123,7 @@ class MedicationCatalogTest {
             database.biomarkerDao(),
             database.journalEventDao(),
             database.medicationDao(),
+            database.medicationIntakeDao(),
             preferences
         )
         val json = exportManager.exportToJsonString()
@@ -138,6 +139,7 @@ class MedicationCatalogTest {
             database.biomarkerDao(),
             database.journalEventDao(),
             database.medicationDao(),
+            database.medicationIntakeDao(),
             preferences
         )
         val payload = importManager.inspectBackup(json.byteInputStream()).getOrThrow().second

@@ -37,6 +37,7 @@ class AgendaSpeedDialTest {
         assertEquals(0, composeRule.onAllNodesWithTag("agenda_action_daily_recap").fetchSemanticsNodes().size)
         composeRule.onNodeWithTag("agenda_fab").performClick()
         composeRule.onNodeWithText("Récap du jour").assertIsDisplayed()
+        composeRule.onNodeWithText("Médicament").assertIsDisplayed()
         composeRule.onNodeWithTag("agenda_action_daily_recap").performClick()
         composeRule.runOnIdle { assertEquals(today, opened) }
         assertEquals(

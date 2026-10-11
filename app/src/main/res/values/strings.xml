@@ -841,6 +841,7 @@
     <string name="agenda_title">Agenda</string>
     <string name="agenda_subtitle">Ce qui a été enregistré, jour par jour</string>
     <string name="agenda_action_daily_recap">Récap du jour</string>
+    <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_fab_open">Ouvrir les saisies</string>
     <string name="agenda_fab_close">Fermer les saisies</string>
     <string name="agenda_events_empty">Aucun événement ce jour</string>
@@ -909,4 +910,27 @@
     <string name="drug_class_triptan">Triptan</string>
     <string name="drug_class_hormonal">Hormonal</string>
     <string name="drug_class_other">Autre</string>
+
+    <string name="intake_title">Prise de médicament</string>
+    <string name="intake_search">Rechercher</string>
+    <string name="intake_units">Nombre d’unités</string>
+    <string name="intake_pain_before">Douleur avant la prise</string>
+    <string name="intake_body_map">Localiser sur le corps</string>
+    <string name="intake_danger_title">Alerte</string>
+    <string name="intake_danger_body">Cette prise dépasse une limite ou une incompatibilité. Confirmez seulement si vous décidez de l’enregistrer quand même.</string>
+    <string name="intake_confirm">Enregistrer quand même</string>
+    <string name="intake_cancel">Annuler</string>
+    <string name="intake_next_title">Prochaine prise possible</string>
+    <string name="intake_next_possible">Prochaine prise possible à %1$s</string>
+    <string name="intake_next_now">Vous pouvez reprendre maintenant.</string>
+    <string name="intake_ok">OK</string>
+    <string name="intake_schedule">Programmer une alarme</string>
+    <string name="pain_check_title">Contrôle de douleur</string>
+    <string name="meds_alert_daily">Maximum sur 24 h dépassé (%1$.0f mg / %2$.0f mg).</string>
+    <string name="meds_alert_intake">Maximum par prise dépassé (%1$.0f mg / %2$.0f mg).</string>
+    <string name="meds_alert_interval">Intervalle minimum non écoulé.</string>
+    <string name="meds_alert_class">Deux substances de la même classe sont trop rapprochées.</string>
+    <string name="meds_alert_rule">Incompatibilité signalée.</string>
+    <string name="meds_alert_unvalidated">Basée sur des valeurs non validées.</string>
+    <string name="notif_action_pain_check">Contrôler</string>
 </resources>
