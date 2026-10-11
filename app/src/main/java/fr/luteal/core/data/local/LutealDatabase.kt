@@ -4,6 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
+import fr.luteal.core.data.entity.CareTypeEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.InteractionRuleEntity
@@ -33,9 +34,10 @@ import fr.luteal.core.data.entity.UserProfileEntity
         MedicationSubstanceEntity::class,
         InteractionRuleEntity::class,
         MedicationIntakeEntity::class,
-        TreatmentPlanEntity::class
+        TreatmentPlanEntity::class,
+        CareTypeEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -50,4 +52,5 @@ abstract class LutealDatabase : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
     abstract fun medicationIntakeDao(): MedicationIntakeDao
     abstract fun treatmentPlanDao(): TreatmentPlanDao
+    abstract fun careTypeDao(): CareTypeDao
 }

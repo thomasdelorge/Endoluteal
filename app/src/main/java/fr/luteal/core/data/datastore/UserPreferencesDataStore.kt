@@ -57,6 +57,7 @@ data class UserPreferences(
     val notificationCustomBody: String = "",
     val temperatureUnit: String = "CELSIUS",
     val medicationsSeedOffered: Boolean = false,
+    val careTypesSeedOffered: Boolean = false,
     val painFollowupDelayMinutes: Int = 45,
     val autoBackupEnabled: Boolean = false,
     val autoBackupUri: String = "",
@@ -128,6 +129,7 @@ class UserPreferencesDataStore @Inject constructor(
         val NOTIF_CUSTOM_BODY = stringPreferencesKey("notif_custom_body")
         val TEMPERATURE_UNIT = stringPreferencesKey("temperature_unit")
         val MEDICATIONS_SEED_OFFERED = booleanPreferencesKey("medications_seed_offered")
+        val CARE_TYPES_SEED_OFFERED = booleanPreferencesKey("care_types_seed_offered")
         val PAIN_FOLLOWUP_DELAY_MINUTES = androidx.datastore.preferences.core.intPreferencesKey("pain_followup_delay_minutes")
         val AUTO_BACKUP_ENABLED = booleanPreferencesKey("auto_backup_enabled")
         val AUTO_BACKUP_URI = stringPreferencesKey("auto_backup_uri")
@@ -185,6 +187,7 @@ class UserPreferencesDataStore @Inject constructor(
                 notificationCustomBody = preferences[NOTIF_CUSTOM_BODY] ?: "",
                 temperatureUnit = preferences[TEMPERATURE_UNIT] ?: "CELSIUS",
                 medicationsSeedOffered = preferences[MEDICATIONS_SEED_OFFERED] ?: false,
+                careTypesSeedOffered = preferences[CARE_TYPES_SEED_OFFERED] ?: false,
                 painFollowupDelayMinutes = preferences[PAIN_FOLLOWUP_DELAY_MINUTES] ?: 45,
                 autoBackupEnabled = preferences[AUTO_BACKUP_ENABLED] ?: false,
                 autoBackupUri = preferences[AUTO_BACKUP_URI] ?: "",
@@ -256,6 +259,7 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setNotificationCustomBody(body: String) = edit { it[NOTIF_CUSTOM_BODY] = body }
     suspend fun setTemperatureUnit(unit: String) = edit { it[TEMPERATURE_UNIT] = unit }
     suspend fun setMedicationsSeedOffered(offered: Boolean) = edit { it[MEDICATIONS_SEED_OFFERED] = offered }
+    suspend fun setCareTypesSeedOffered(offered: Boolean) = edit { it[CARE_TYPES_SEED_OFFERED] = offered }
     suspend fun setPainFollowupDelayMinutes(minutes: Int) = edit { it[PAIN_FOLLOWUP_DELAY_MINUTES] = minutes }
     suspend fun setAutoBackupEnabled(enabled: Boolean) = edit { it[AUTO_BACKUP_ENABLED] = enabled }
     suspend fun setAutoBackupUri(uri: String) = edit { it[AUTO_BACKUP_URI] = uri }

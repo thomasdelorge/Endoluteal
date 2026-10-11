@@ -43,6 +43,8 @@ import fr.luteal.app.R
 import fr.luteal.app.navigation.entry.MedicationIntakeSheet
 import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
 import fr.luteal.app.navigation.entry.PainCheckSheet
+import fr.luteal.app.navigation.entry.CareSessionEntryViewModel
+import fr.luteal.app.navigation.entry.CareSessionSheet
 import fr.luteal.app.navigation.entry.SymptomEntryViewModel
 import fr.luteal.app.navigation.entry.SymptomSheet
 import fr.luteal.core.model.JournalEventType
@@ -64,8 +66,11 @@ fun LutealMainScaffold(
     val agendaViewModel: AgendaViewModel = hiltViewModel()
     val intakeViewModel: MedicationIntakeViewModel = hiltViewModel()
     val symptomViewModel: SymptomEntryViewModel = hiltViewModel()
+    val careViewModel: CareSessionEntryViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
+    val careLabels by agendaViewModel.careLabels.collectAsStateWithLifecycle()
+    val eventDetailLabels = intakeLabels + careLabels
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
     var editorRequest by remember { mutableStateOf<EditorRequest?>(null) }
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -73,6 +78,8 @@ fun LutealMainScaffold(
     var painCheckEventId by remember { mutableStateOf<String?>(null) }
     var symptomDate by remember { mutableStateOf<LocalDate?>(null) }
     var symptomEventId by remember { mutableStateOf<String?>(null) }
+    var careDate by remember { mutableStateOf<LocalDate?>(null) }
+    var careEventId by remember { mutableStateOf<String?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -171,7 +178,7 @@ fun LutealMainScaffold(
                             LutealDestination.AGENDA -> AgendaScreen(
                                 state = uiState,
                                 events = events,
-                                intakeLabels = intakeLabels,
+                                intakeLabels = eventDetailLabels,
                                 onSelectDate = {
                                     viewModel.clearEntrySaveState()
                                     editorRequest = EditorRequest(it, startPeriodIntent = false)
@@ -184,13 +191,20 @@ fun LutealMainScaffold(
                                     symptomEventId = null
                                     symptomDate = date
                                 },
+                                onRecordCare = { date ->
+                                    careEventId = null
+                                    careDate = date
+                                },
                                 onOpenEvent = { event ->
+                                    val zone = java.time.ZoneId.of(event.zoneId)
                                     when (event.type) {
                                         JournalEventType.SYMPTOM -> {
-                                            symptomDate = event.startAt.atZone(
-                                                java.time.ZoneId.of(event.zoneId)
-                                            ).toLocalDate()
+                                            symptomDate = event.startAt.atZone(zone).toLocalDate()
                                             symptomEventId = event.id
+                                        }
+                                        JournalEventType.CARE_SESSION -> {
+                                            careDate = event.startAt.atZone(zone).toLocalDate()
+                                            careEventId = event.id
                                         }
                                         else -> Unit
                                     }
@@ -278,6 +292,18 @@ fun LutealMainScaffold(
             onDismiss = {
                 symptomDate = null
                 symptomEventId = null
+            }
+        )
+    }
+
+    careDate?.let { date ->
+        CareSessionSheet(
+            initialDate = date,
+            existingEventId = careEventId,
+            viewModel = careViewModel,
+            onDismiss = {
+                careDate = null
+                careEventId = null
             }
         )
     }

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.HealthAndSafety
+import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.Medication
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Shield
@@ -64,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.luteal.app.BuildConfig
 import fr.luteal.app.R
 import fr.luteal.app.backup.AutoBackupCard
+import fr.luteal.app.navigation.settings.care.CareSettingsScreen
 import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
@@ -127,6 +129,7 @@ fun SettingsScreen(
     var showDisableLockDialog by remember { mutableStateOf(false) }
     var showTimeoutDialog by remember { mutableStateOf(false) }
     var showMeds by remember { mutableStateOf(false) }
+    var showCare by remember { mutableStateOf(false) }
     var showClinicalReportDialog by remember { mutableStateOf(false) }
     var pendingReportConfig by remember { mutableStateOf<ClinicalReportConfig?>(null) }
 
@@ -250,6 +253,11 @@ fun SettingsScreen(
         return
     }
 
+    if (showCare) {
+        CareSettingsScreen(onBack = { showCare = false })
+        return
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -277,6 +285,28 @@ fun SettingsScreen(
                     Text(stringResource(R.string.settings_meds_open), style = MaterialTheme.typography.titleMedium)
                     Text(
                         stringResource(R.string.settings_meds_open_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+
+        SettingsSectionHeader(title = stringResource(R.string.settings_care_title))
+        LutealCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showCare = true }
+                    .padding(vertical = LutealSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Rounded.Spa, contentDescription = null)
+                Column {
+                    Text(stringResource(R.string.settings_care_open), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.settings_care_open_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

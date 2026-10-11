@@ -52,6 +52,7 @@ class DataExportManagerTest {
             medicationDao = database.medicationDao(),
             medicationIntakeDao = database.medicationIntakeDao(),
             treatmentPlanDao = database.treatmentPlanDao(),
+            careTypeDao = database.careTypeDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 

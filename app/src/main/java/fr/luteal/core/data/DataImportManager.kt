@@ -3,6 +3,7 @@ package fr.luteal.core.data
 import androidx.room.withTransaction
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
+import fr.luteal.core.data.entity.CareTypeEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.InteractionRuleEntity
@@ -15,6 +16,7 @@ import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.local.BiomarkerDao
+import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
@@ -53,6 +55,7 @@ class DataImportManager @Inject constructor(
     private val medicationDao: MedicationDao,
     private val medicationIntakeDao: MedicationIntakeDao,
     private val treatmentPlanDao: TreatmentPlanDao,
+    private val careTypeDao: CareTypeDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -139,6 +142,7 @@ class DataImportManager @Inject constructor(
                         medicationDao.deleteAllSubstances()
                         medicationIntakeDao.deleteAll()
                         treatmentPlanDao.deleteAll()
+                        careTypeDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
@@ -385,6 +389,25 @@ class DataImportManager @Inject constructor(
                                 endDate = plan.endDate,
                                 active = plan.active,
                                 continuousHormonal = plan.continuousHormonal
+                            )
+                        )
+                    }
+                    for (careType in payload.careTypes) {
+                        if (careType.id.isBlank()) continue
+                        val programs = JSONArray()
+                        careType.programs.forEach { program ->
+                            programs.put(
+                                JSONObject()
+                                    .put("name", program.name)
+                                    .put("defaultDurationMinutes", program.defaultDurationMinutes)
+                            )
+                        }
+                        careTypeDao.upsert(
+                            CareTypeEntity(
+                                id = careType.id,
+                                name = careType.name,
+                                programsJson = programs.toString(),
+                                archived = careType.archived
                             )
                         )
                     }

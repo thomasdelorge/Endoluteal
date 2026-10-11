@@ -24,7 +24,13 @@ sealed interface EventPayload {
 
     @Serializable
     @SerialName("CARE_SESSION")
-    data object CareSession : EventPayload
+    data class CareSession(
+        val careTypeId: String = "",
+        val careTypeName: String = "",
+        val programName: String = "",
+        val durationMinutes: Int = 0,
+        val painBefore: Int? = null
+    ) : EventPayload
 
     @Serializable
     @SerialName("HOSPITALIZATION")
@@ -39,7 +45,7 @@ sealed interface EventPayload {
             JournalEventType.MEDICATION_INTAKE -> MedicationIntake()
             JournalEventType.PAIN_CHECK -> PainCheck
             JournalEventType.SYMPTOM -> Symptom
-            JournalEventType.CARE_SESSION -> CareSession
+            JournalEventType.CARE_SESSION -> CareSession()
             JournalEventType.HOSPITALIZATION -> Hospitalization
             JournalEventType.APPOINTMENT -> Appointment
         }

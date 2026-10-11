@@ -8,6 +8,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import fr.luteal.core.data.local.BiomarkerDao
+import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
 import fr.luteal.core.data.local.JournalEventDao
@@ -77,4 +78,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideTreatmentPlanDao(database: LutealDatabase): TreatmentPlanDao = database.treatmentPlanDao()
+
+    @Provides
+    @Singleton
+    fun provideCareTypeDao(database: LutealDatabase): CareTypeDao = database.careTypeDao()
 }

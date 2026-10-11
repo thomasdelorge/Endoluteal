@@ -12,6 +12,8 @@ import fr.luteal.core.data.seed.TestDataSeederImpl
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.repository.BiomarkerRepository
 import fr.luteal.core.data.repository.BiomarkerRepositoryImpl
+import fr.luteal.core.data.repository.CareTypeRepository
+import fr.luteal.core.data.repository.CareTypeRepositoryImpl
 import fr.luteal.core.data.repository.CycleRepository
 import fr.luteal.core.data.repository.CycleRepositoryImpl
 import fr.luteal.core.data.repository.DailyEntryRepository
@@ -88,6 +90,13 @@ abstract class RepositoryModule {
     abstract fun bindTreatmentPlanRepository(
         treatmentPlanRepositoryImpl: TreatmentPlanRepositoryImpl
     ): TreatmentPlanRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCareTypeRepository(
+        careTypeRepositoryImpl: CareTypeRepositoryImpl
+    ): CareTypeRepository
+
     @Binds
     @Singleton
     abstract fun bindTestDataSeeder(
