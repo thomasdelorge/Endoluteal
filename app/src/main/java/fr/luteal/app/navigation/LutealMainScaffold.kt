@@ -43,6 +43,7 @@ import fr.luteal.app.R
 import fr.luteal.app.navigation.entry.MedicationIntakeSheet
 import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
 import fr.luteal.app.navigation.entry.PainCheckSheet
+import fr.luteal.app.navigation.meds.MedsScreen
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.ObservationCatalog
 import java.time.LocalDate
@@ -182,7 +183,12 @@ fun LutealMainScaffold(
                                 onBackfillCycle = { showBackfillDialog = true }
                             )
                             LutealDestination.TIMELINE -> ComingSoonScreen(R.string.nav_timeline)
-                            LutealDestination.MEDICATIONS -> ComingSoonScreen(R.string.nav_medications)
+                            LutealDestination.MEDICATIONS -> MedsScreen(
+                                onTake = { medicationId ->
+                                    intakeMedicationId = medicationId
+                                    intakeDate = uiState.today
+                                }
+                            )
                             LutealDestination.SETTINGS -> SettingsScreen(viewModel = settingsViewModel)
                         }
                     }

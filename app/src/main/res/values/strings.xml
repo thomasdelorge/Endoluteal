@@ -935,4 +935,15 @@
     <string name="notif_action_pain_check">Contrôler</string>
     <string name="notif_action_take_all">Tout pris</string>
     <string name="agenda_hormonal_hidden">Prédiction masquée : traitement hormonal continu en cours.</string>
+    <string name="meds_plans">Plans en cours</string>
+    <string name="meds_add_plan">Ajouter un plan</string>
+    <string name="meds_recent">Prises récentes</string>
+    <string name="meds_next_slot">Prochain horaire : %1$s</string>
+    <string name="meds_last_intake">Dernière prise : %1$s</string>
+    <string name="meds_next_possible">Prochaine prise possible : %1$s</string>
+    <string name="meds_take">Prendre</string>
+    <string name="meds_times">Horaires (HH:mm, séparés par une virgule)</string>
+    <string name="meds_start">Début (AAAA-MM-JJ)</string>
+    <string name="meds_end">Fin, optionnelle (AAAA-MM-JJ)</string>
+    <string name="meds_hormonal">Traitement hormonal continu</string>
 </resources>
