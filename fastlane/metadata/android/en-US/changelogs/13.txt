@@ -1,5 +1,0 @@
-- Calendar phases: all four phases (menstrual, follicular, ovulatory transition, luteal) now differ across the grid.
-- Spotting distinction: spotting is separated from menstrual flow so period boundaries stay accurate.
-- Biomarker tracking: basal body temperature, cervical fluid, and LH tests appear in day cells.
-- Calendar navigation: horizontal swipe between months plus a fast month and year picker.
-- Inspection depth: cycle day numbers, individual symptom chips, and a collapsible legend.
