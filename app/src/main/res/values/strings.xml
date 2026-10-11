@@ -483,6 +483,7 @@
     <string name="settings_import_dialog_cycles_no_dates">Cycles : %1$d</string>
     <string name="settings_import_dialog_entries">Observations quotidiennes : %1$d</string>
     <string name="settings_import_dialog_symptoms">Symptômes enregistrés : %1$d</string>
+    <string name="settings_import_dialog_events">Événements : %1$d</string>
     <string name="settings_import_dialog_strategy_title">Mode de restauration</string>
     <string name="settings_import_strategy_merge">Fusionner avec les données actuelles</string>
     <string name="settings_import_strategy_merge_desc">Conserve vos données existantes et ajoute ou met à jour les données de la sauvegarde.</string>

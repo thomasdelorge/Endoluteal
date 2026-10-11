@@ -5,10 +5,13 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
+import fr.luteal.core.data.entity.JournalEventEntity
+import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
+import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.DataImportError
@@ -21,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
@@ -36,6 +40,7 @@ class DataImportManager @Inject constructor(
     private val dailyEntryDao: DailyEntryDao,
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
+    private val journalEventDao: JournalEventDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -77,6 +82,8 @@ class DataImportManager @Inject constructor(
                     latestEntryDate = entryDates.lastOrNull(),
                     symptomLogCount = payload.symptomLogs.size,
                     biomarkerCount = payload.biomarkerObservations.size,
+                    journalEventCount = payload.journalEvents.size,
+                    painMarkCount = payload.painMarks.size,
                     preferences = payload.preferences
                 )
 
@@ -95,6 +102,8 @@ class DataImportManager @Inject constructor(
                 var entriesCount = 0
                 var symptomsCount = 0
                 var biomarkersCount = 0
+                var journalEventsCount = 0
+                var painMarksCount = 0
 
                 database.withTransaction {
                     if (strategy == ImportStrategy.REPLACE_ALL) {
@@ -102,6 +111,8 @@ class DataImportManager @Inject constructor(
                         dailyEntryDao.deleteAllEntries()
                         symptomDao.deleteAllSymptomLogs()
                         biomarkerDao.deleteAll()
+                        journalEventDao.deleteAllMarks()
+                        journalEventDao.deleteAllEvents()
                     }
 
                     val now = System.currentTimeMillis()
@@ -233,6 +244,48 @@ class DataImportManager @Inject constructor(
                             biomarkersCount++
                         }
                     }
+
+                    val marksByEvent = payload.painMarks.groupBy { it.eventId }
+                    for (eventDto in payload.journalEvents) {
+                        if (eventDto.id.isBlank()) continue
+                        val updatedAtMillis = runCatching {
+                            Instant.parse(eventDto.updatedAt).toEpochMilli()
+                        }.getOrDefault(now)
+                        val createdAtMillis = runCatching {
+                            Instant.parse(eventDto.createdAt).toEpochMilli()
+                        }.getOrDefault(updatedAtMillis)
+                        val entity = JournalEventEntity(
+                            id = eventDto.id,
+                            type = eventDto.type,
+                            startAt = Instant.parse(eventDto.startAt).toEpochMilli(),
+                            endAt = eventDto.endAt?.let { Instant.parse(it).toEpochMilli() },
+                            zoneId = eventDto.zoneId,
+                            notes = eventDto.notes,
+                            linkedEventId = eventDto.linkedEventId,
+                            payloadJson = eventDto.payload.toPayloadJson(),
+                            createdAt = createdAtMillis,
+                            updatedAt = updatedAtMillis
+                        )
+                        if (strategy == ImportStrategy.MERGE_UPSERT) {
+                            val existing = journalEventDao.getEventOnce(eventDto.id)
+                            if (existing != null && updatedAtMillis < existing.updatedAt) continue
+                        }
+                        val marks = marksByEvent[eventDto.id].orEmpty().mapNotNull { mark ->
+                            if (mark.id.isBlank() || mark.intensity !in 0..10) return@mapNotNull null
+                            val types = JSONArray()
+                            mark.painTypes.forEach(types::put)
+                            PainMarkEntity(
+                                id = mark.id,
+                                eventId = eventDto.id,
+                                zone = mark.zone,
+                                intensity = mark.intensity,
+                                painTypes = types.toString()
+                            )
+                        }
+                        journalEventDao.upsert(entity, marks)
+                        journalEventsCount++
+                        painMarksCount += marks.size
+                    }
                 }
 
                 var preferencesRestored = false
@@ -257,6 +310,8 @@ class DataImportManager @Inject constructor(
                     dailyEntriesImported = entriesCount,
                     symptomLogsImported = symptomsCount,
                     biomarkersImported = biomarkersCount,
+                    journalEventsImported = journalEventsCount,
+                    painMarksImported = painMarksCount,
                     preferencesRestored = preferencesRestored
                 )
             }
@@ -287,5 +342,17 @@ class DataImportManager @Inject constructor(
         payload.dailyEntries.forEach { requireDate(it.date, "daily entry ${it.date}") }
         payload.symptomLogs.forEach { requireDate(it.date, "symptom log ${it.id}") }
         payload.biomarkerObservations.forEach { requireDate(it.date, "biomarker ${it.date}") }
+        payload.journalEvents.forEach { event ->
+            runCatching { Instant.parse(event.startAt) }.getOrElse {
+                throw DataImportError.CorruptedPayload("unparseable instant '${event.startAt}' in event ${event.id}")
+            }
+            event.endAt?.let { endAt ->
+                runCatching { Instant.parse(endAt) }.getOrElse {
+                    throw DataImportError.CorruptedPayload("unparseable instant '$endAt' in event ${event.id}")
+                }
+            }
+        }
     }
+
+    private fun JsonElement.toPayloadJson(): String = json.encodeToString(JsonElement.serializer(), this)
 }

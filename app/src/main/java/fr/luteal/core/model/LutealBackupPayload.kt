@@ -2,6 +2,7 @@ package fr.luteal.core.model
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 object EndolutealBackup {
     const val FORMAT = "endoluteal/v1"
@@ -17,6 +18,8 @@ data class LutealBackupPayload(
     @SerialName("daily_entries") val dailyEntries: List<DailyEntryBackupDto> = emptyList(),
     @SerialName("symptom_logs") val symptomLogs: List<SymptomLogBackupDto> = emptyList(),
     @SerialName("biomarker_observations") val biomarkerObservations: List<BiomarkerBackupDto> = emptyList(),
+    @SerialName("journal_events") val journalEvents: List<JournalEventBackupDto> = emptyList(),
+    @SerialName("pain_marks") val painMarks: List<PainMarkBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -78,6 +81,29 @@ data class BiomarkerBackupDto(
 )
 
 @Serializable
+data class JournalEventBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("type") val type: String,
+    @SerialName("start_at") val startAt: String,
+    @SerialName("end_at") val endAt: String? = null,
+    @SerialName("zone_id") val zoneId: String,
+    @SerialName("notes") val notes: String = "",
+    @SerialName("linked_event_id") val linkedEventId: String? = null,
+    @SerialName("payload") val payload: JsonElement,
+    @SerialName("created_at") val createdAt: String,
+    @SerialName("updated_at") val updatedAt: String
+)
+
+@Serializable
+data class PainMarkBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("event_id") val eventId: String,
+    @SerialName("zone") val zone: String,
+    @SerialName("intensity") val intensity: Int,
+    @SerialName("pain_types") val painTypes: List<String> = emptyList()
+)
+
+@Serializable
 data class UserPreferencesBackupDto(
     @SerialName("user_role") val userRole: String = "PRIMARY_TRACKER",
     @SerialName("locale") val locale: String = "fr",
@@ -108,6 +134,8 @@ data class LutealBackupPreview(
     val latestEntryDate: String?,
     val symptomLogCount: Int,
     val biomarkerCount: Int = 0,
+    val journalEventCount: Int = 0,
+    val painMarkCount: Int = 0,
     val preferences: UserPreferencesBackupDto
 )
 
@@ -116,6 +144,8 @@ data class ImportSummary(
     val dailyEntriesImported: Int,
     val symptomLogsImported: Int,
     val biomarkersImported: Int = 0,
+    val journalEventsImported: Int = 0,
+    val painMarksImported: Int = 0,
     val preferencesRestored: Boolean
 )
 

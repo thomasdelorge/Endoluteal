@@ -10,6 +10,7 @@ import dagger.hilt.components.SingletonComponent
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
+import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.data.local.UserProfileDao
@@ -52,4 +53,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideBiomarkerDao(database: LutealDatabase): BiomarkerDao = database.biomarkerDao()
+
+    @Provides
+    @Singleton
+    fun provideJournalEventDao(database: LutealDatabase): JournalEventDao = database.journalEventDao()
 }

@@ -4,12 +4,15 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
+import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.SymptomDao
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
 import fr.luteal.core.model.EndolutealBackup
+import fr.luteal.core.model.JournalEventBackupDto
 import fr.luteal.core.model.LutealBackupPayload
+import fr.luteal.core.model.PainMarkBackupDto
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
 import fr.luteal.core.model.UserPreferencesBackupDto
@@ -28,6 +31,7 @@ class DataExportManager @Inject constructor(
     private val dailyEntryDao: DailyEntryDao,
     private val symptomDao: SymptomDao,
     private val biomarkerDao: BiomarkerDao,
+    private val journalEventDao: JournalEventDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -132,6 +136,30 @@ class DataExportManager @Inject constructor(
             )
         }
 
+        val journalEvents = journalEventDao.getAllOnce().map { entity ->
+            JournalEventBackupDto(
+                id = entity.id,
+                type = entity.type,
+                startAt = Instant.ofEpochMilli(entity.startAt).toString(),
+                endAt = entity.endAt?.let { Instant.ofEpochMilli(it).toString() },
+                zoneId = entity.zoneId,
+                notes = entity.notes,
+                linkedEventId = entity.linkedEventId,
+                payload = json.parseToJsonElement(entity.payloadJson),
+                createdAt = Instant.ofEpochMilli(entity.createdAt).toString(),
+                updatedAt = Instant.ofEpochMilli(entity.updatedAt).toString()
+            )
+        }
+        val painMarks = journalEventDao.getAllMarksOnce().map { entity ->
+            PainMarkBackupDto(
+                id = entity.id,
+                eventId = entity.eventId,
+                zone = entity.zone,
+                intensity = entity.intensity,
+                painTypes = entity.painTypes.toStringList()
+            )
+        }
+
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         val preferencesDto = UserPreferencesBackupDto(
             userRole = prefs.userRole,
@@ -155,9 +183,16 @@ class DataExportManager @Inject constructor(
             dailyEntries = dailyEntries,
             symptomLogs = symptomLogs,
             biomarkerObservations = biomarkerObservations,
+            journalEvents = journalEvents,
+            painMarks = painMarks,
             preferences = preferencesDto
         )
     }
+
+    private fun String.toStringList(): List<String> = runCatching {
+        val array = JSONArray(this)
+        List(array.length()) { index -> array.getString(index) }
+    }.getOrDefault(emptyList())
 
     suspend fun exportToJsonString(appVersion: String = "1.3.0"): String {
         val payload = createBackupPayload(appVersion)

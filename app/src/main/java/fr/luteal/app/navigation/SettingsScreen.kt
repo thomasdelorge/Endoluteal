@@ -1157,6 +1157,11 @@ private fun ImportBackupDialog(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
+                Text(
+                    text = stringResource(R.string.settings_import_dialog_events, preview.journalEventCount),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
                 Text(

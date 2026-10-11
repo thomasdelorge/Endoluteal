@@ -9,24 +9,29 @@ import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
+import fr.luteal.core.data.entity.JournalEventEntity
+import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CycleBackupDto
 import fr.luteal.core.model.DailyEntryBackupDto
 import fr.luteal.core.model.DataImportError
 import fr.luteal.core.model.ImportStrategy
 import fr.luteal.core.model.EndolutealBackup
+import fr.luteal.core.model.JournalEventBackupDto
 import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
 import fr.luteal.core.model.UserPreferencesBackupDto
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.json.JSONArray
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
@@ -55,6 +60,7 @@ class DataImportManagerTest {
             dailyEntryDao = database.dailyEntryDao(),
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
+            journalEventDao = database.journalEventDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
@@ -64,6 +70,7 @@ class DataImportManagerTest {
             dailyEntryDao = database.dailyEntryDao(),
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
+            journalEventDao = database.journalEventDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }
@@ -452,5 +459,97 @@ class DataImportManagerTest {
         val result = importManager.inspectBackup(ByteArrayInputStream(json.toByteArray()))
         assertTrue(result.isFailure)
         assertTrue(result.exceptionOrNull() is DataImportError.UnsupportedSchemaVersion)
+    }
+
+    @Test
+    fun exportThenImportRestoresJournalEventsAndMarks() = runTest {
+        val start = Instant.parse("2026-08-01T10:00:00Z")
+        database.journalEventDao().upsert(
+            JournalEventEntity(
+                id = "evt-1",
+                type = "PAIN_CHECK",
+                startAt = start.toEpochMilli(),
+                endAt = null,
+                zoneId = "Europe/Paris",
+                notes = "matin",
+                linkedEventId = null,
+                payloadJson = """{"type":"PAIN_CHECK"}""",
+                createdAt = start.toEpochMilli(),
+                updatedAt = start.toEpochMilli()
+            ),
+            listOf(
+                PainMarkEntity("m1", "evt-1", "hypogastre", 6, """["crampe"]"""),
+                PainMarkEntity("m2", "evt-1", "lombaire_g", 4, "[]"),
+                PainMarkEntity("m3", "evt-1", "sacrum", 2, "[]")
+            )
+        )
+
+        val exported = exportManager.exportToJsonString()
+        database.journalEventDao().deleteAllMarks()
+        database.journalEventDao().deleteAllEvents()
+
+        val inspected = importManager.inspectBackup(ByteArrayInputStream(exported.toByteArray()))
+        assertTrue(inspected.isSuccess)
+        val (preview, payload) = inspected.getOrThrow()
+        assertEquals(1, preview.journalEventCount)
+        assertEquals(3, preview.painMarkCount)
+
+        val restored = importManager.restoreBackup(payload, ImportStrategy.REPLACE_ALL)
+        assertTrue(restored.isSuccess)
+        assertEquals(1, restored.getOrThrow().journalEventsImported)
+        assertEquals(3, restored.getOrThrow().painMarksImported)
+
+        val event = database.journalEventDao().get("evt-1")
+        assertNotNull(event)
+        assertEquals("PAIN_CHECK", event!!.event.type)
+        assertEquals("matin", event.event.notes)
+        assertEquals(3, event.marks.size)
+        assertEquals(listOf("crampe"), JSONArray(event.marks.first { it.id == "m1" }.painTypes).let { array ->
+            List(array.length()) { array.getString(it) }
+        })
+    }
+
+    @Test
+    fun mergeKeepsNewerJournalEvent() = runTest {
+        val start = Instant.parse("2026-08-01T10:00:00Z")
+        val newer = start.plusSeconds(3600)
+        database.journalEventDao().upsert(
+            JournalEventEntity(
+                id = "evt-1",
+                type = "SYMPTOM",
+                startAt = start.toEpochMilli(),
+                endAt = null,
+                zoneId = "Europe/Paris",
+                notes = "local",
+                linkedEventId = null,
+                payloadJson = """{"type":"SYMPTOM"}""",
+                createdAt = start.toEpochMilli(),
+                updatedAt = newer.toEpochMilli()
+            ),
+            emptyList()
+        )
+        val older = LutealBackupPayload(
+            backupFormat = EndolutealBackup.FORMAT,
+            schemaVersion = 1,
+            exportedAt = start.toString(),
+            appVersion = "0.1.0-dev",
+            journalEvents = listOf(
+                JournalEventBackupDto(
+                    id = "evt-1",
+                    type = "SYMPTOM",
+                    startAt = start.toString(),
+                    zoneId = "Europe/Paris",
+                    notes = "backup",
+                    payload = Json.parseToJsonElement("""{"type":"SYMPTOM"}"""),
+                    createdAt = start.toString(),
+                    updatedAt = start.toString()
+                )
+            )
+        )
+
+        val restored = importManager.restoreBackup(older, ImportStrategy.MERGE_UPSERT)
+        assertTrue(restored.isSuccess)
+        assertEquals(0, restored.getOrThrow().journalEventsImported)
+        assertEquals("local", database.journalEventDao().getEventOnce("evt-1")?.notes)
     }
 }

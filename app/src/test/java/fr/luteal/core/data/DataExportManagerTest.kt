@@ -48,6 +48,7 @@ class DataExportManagerTest {
             dailyEntryDao = database.dailyEntryDao(),
             symptomDao = database.symptomDao(),
             biomarkerDao = database.biomarkerDao(),
+            journalEventDao = database.journalEventDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
