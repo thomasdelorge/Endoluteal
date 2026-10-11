@@ -8,6 +8,7 @@ import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.SymptomDao
+import fr.luteal.core.data.local.TreatmentPlanDao
 import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CompositionBackupDto
 import fr.luteal.core.model.CycleBackupDto
@@ -22,6 +23,7 @@ import fr.luteal.core.model.PainMarkBackupDto
 import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SubstanceBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
+import fr.luteal.core.model.TreatmentPlanBackupDto
 import fr.luteal.core.model.UserPreferencesBackupDto
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
@@ -41,6 +43,7 @@ class DataExportManager @Inject constructor(
     private val journalEventDao: JournalEventDao,
     private val medicationDao: MedicationDao,
     private val medicationIntakeDao: MedicationIntakeDao,
+    private val treatmentPlanDao: TreatmentPlanDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -207,6 +210,24 @@ class DataExportManager @Inject constructor(
         val medicationIntakes = medicationIntakeDao.allOnce().map { entity ->
             MedicationIntakeBackupDto(entity.eventId, entity.medicationId, entity.units)
         }
+        val treatmentPlans = treatmentPlanDao.allOnce().map { entity ->
+            TreatmentPlanBackupDto(
+                id = entity.id,
+                medicationId = entity.medicationId,
+                unitsPerDose = entity.unitsPerDose,
+                timesOfDay = entity.timesOfDay.let { raw ->
+                    runCatching {
+                        val array = JSONArray(raw)
+                        List(array.length()) { index -> array.getString(index) }
+                    }.getOrDefault(emptyList())
+                },
+                startDate = entity.startDate,
+                endDate = entity.endDate,
+                active = entity.active,
+                continuousHormonal = entity.continuousHormonal
+            )
+        }
+
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         val preferencesDto = UserPreferencesBackupDto(
             userRole = prefs.userRole,
@@ -236,6 +257,7 @@ class DataExportManager @Inject constructor(
             medications = medications,
             interactionRules = interactionRules,
             medicationIntakes = medicationIntakes,
+            treatmentPlans = treatmentPlans,
             preferences = preferencesDto
         )
     }

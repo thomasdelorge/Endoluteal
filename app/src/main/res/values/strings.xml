@@ -933,4 +933,5 @@
     <string name="meds_alert_rule">Incompatibilité signalée.</string>
     <string name="meds_alert_unvalidated">Basée sur des valeurs non validées.</string>
     <string name="notif_action_pain_check">Contrôler</string>
+    <string name="notif_action_take_all">Tout pris</string>
 </resources>

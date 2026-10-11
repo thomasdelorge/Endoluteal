@@ -13,6 +13,7 @@ import fr.luteal.core.data.entity.MedicationSubstanceEntity
 import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
+import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
@@ -21,6 +22,7 @@ import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.SymptomDao
+import fr.luteal.core.data.local.TreatmentPlanDao
 import fr.luteal.core.model.DataImportError
 import fr.luteal.core.model.EndolutealBackup
 import fr.luteal.core.model.ImportStrategy
@@ -50,6 +52,7 @@ class DataImportManager @Inject constructor(
     private val journalEventDao: JournalEventDao,
     private val medicationDao: MedicationDao,
     private val medicationIntakeDao: MedicationIntakeDao,
+    private val treatmentPlanDao: TreatmentPlanDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -135,6 +138,7 @@ class DataImportManager @Inject constructor(
                         medicationDao.deleteAllMedications()
                         medicationDao.deleteAllSubstances()
                         medicationIntakeDao.deleteAll()
+                        treatmentPlanDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
@@ -366,6 +370,23 @@ class DataImportManager @Inject constructor(
                             MedicationIntakeEntity(intake.eventId, intake.medicationId, intake.units)
                         )
                         intakesCount++
+                    }
+                    for (plan in payload.treatmentPlans) {
+                        if (plan.id.isBlank() || plan.medicationId.isBlank()) continue
+                        val times = JSONArray()
+                        plan.timesOfDay.forEach(times::put)
+                        treatmentPlanDao.upsert(
+                            TreatmentPlanEntity(
+                                id = plan.id,
+                                medicationId = plan.medicationId,
+                                unitsPerDose = plan.unitsPerDose,
+                                timesOfDay = times.toString(),
+                                startDate = plan.startDate,
+                                endDate = plan.endDate,
+                                active = plan.active,
+                                continuousHormonal = plan.continuousHormonal
+                            )
+                        )
                     }
                 }
 

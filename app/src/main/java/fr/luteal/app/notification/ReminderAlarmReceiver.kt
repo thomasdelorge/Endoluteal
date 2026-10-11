@@ -20,6 +20,8 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
     @Inject lateinit var reminderDao: ReminderDao
     @Inject lateinit var reminderScheduler: ReminderScheduler
     @Inject lateinit var reminderNotifier: ReminderNotifier
+    @Inject lateinit var medsDoseTaker: MedsDoseTaker
+    @Inject lateinit var treatmentPlanScheduler: TreatmentPlanScheduler
 
     override fun onReceive(context: Context, intent: Intent) {
         val id = intent.getStringExtra(EXTRA_ID) ?: return
@@ -67,7 +69,15 @@ private suspend fun ReminderAlarmReceiver.handlePrimary(context: Context, id: St
                 Json { ignoreUnknownKeys = true }.decodeFromString(MedsAlarmPayload.serializer(), reminder.payloadJson)
             }.getOrNull()
             val medicationId = payload?.medicationId
-            if (!medicationId.isNullOrBlank()) {
+            if (payload != null && payload.items.isNotEmpty()) {
+                val recorded = medsDoseTaker.takeAll(payload.items)
+                if (!recorded) {
+                    context.openEndoluteal {
+                        putExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION, payload.items.first().medicationId)
+                    }
+                }
+                treatmentPlanScheduler.sync()
+            } else if (!medicationId.isNullOrBlank()) {
                 context.openEndoluteal {
                     putExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION, medicationId)
                 }

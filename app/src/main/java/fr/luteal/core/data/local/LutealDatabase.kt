@@ -15,6 +15,7 @@ import fr.luteal.core.data.entity.PainMarkEntity
 import fr.luteal.core.data.entity.ReminderEntity
 import fr.luteal.core.data.entity.SubstanceEntity
 import fr.luteal.core.data.entity.SymptomLogEntity
+import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.entity.UserProfileEntity
 
 @Database(
@@ -31,9 +32,10 @@ import fr.luteal.core.data.entity.UserProfileEntity
         MedicationEntity::class,
         MedicationSubstanceEntity::class,
         InteractionRuleEntity::class,
-        MedicationIntakeEntity::class
+        MedicationIntakeEntity::class,
+        TreatmentPlanEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -47,4 +49,5 @@ abstract class LutealDatabase : RoomDatabase() {
     abstract fun reminderDao(): ReminderDao
     abstract fun medicationDao(): MedicationDao
     abstract fun medicationIntakeDao(): MedicationIntakeDao
+    abstract fun treatmentPlanDao(): TreatmentPlanDao
 }

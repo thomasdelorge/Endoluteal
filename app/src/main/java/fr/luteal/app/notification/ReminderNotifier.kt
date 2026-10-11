@@ -33,12 +33,13 @@ class ReminderNotifier @Inject constructor(
         val payload = runCatching {
             Json { ignoreUnknownKeys = true }.decodeFromString(MedsAlarmPayload.serializer(), reminder.payloadJson)
         }.getOrNull()
-        val body = payload?.name?.takeIf { it.isNotBlank() }
+        val body = payload?.items?.joinToString { it.name }?.takeIf { it.isNotBlank() }
+            ?: payload?.name?.takeIf { it.isNotBlank() }
             ?: context.getString(R.string.notif_reminder_body)
-        val primary = if (type == ReminderType.PAIN_FOLLOWUP) {
-            R.string.notif_action_pain_check
-        } else {
-            R.string.notif_action_open
+        val primary = when {
+            type == ReminderType.PAIN_FOLLOWUP -> R.string.notif_action_pain_check
+            payload != null && payload.items.isNotEmpty() -> R.string.notif_action_take_all
+            else -> R.string.notif_action_open
         }
         val notification = NotificationCompat.Builder(context, type.channelId)
             .setSmallIcon(R.mipmap.ic_launcher)

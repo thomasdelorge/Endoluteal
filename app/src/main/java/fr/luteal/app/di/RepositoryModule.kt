@@ -24,6 +24,8 @@ import fr.luteal.core.data.repository.MedicationRepository
 import fr.luteal.core.data.repository.MedicationRepositoryImpl
 import fr.luteal.core.data.repository.SymptomRepository
 import fr.luteal.core.data.repository.SymptomRepositoryImpl
+import fr.luteal.core.data.repository.TreatmentPlanRepository
+import fr.luteal.core.data.repository.TreatmentPlanRepositoryImpl
 import fr.luteal.core.data.repository.UserRepository
 import fr.luteal.core.data.repository.UserRepositoryImpl
 import java.time.Clock
@@ -81,6 +83,11 @@ abstract class RepositoryModule {
         medicationIntakeRepositoryImpl: MedicationIntakeRepositoryImpl
     ): MedicationIntakeRepository
 
+    @Binds
+    @Singleton
+    abstract fun bindTreatmentPlanRepository(
+        treatmentPlanRepositoryImpl: TreatmentPlanRepositoryImpl
+    ): TreatmentPlanRepository
     @Binds
     @Singleton
     abstract fun bindTestDataSeeder(

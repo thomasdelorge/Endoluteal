@@ -16,6 +16,7 @@ import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.ReminderDao
 import fr.luteal.core.data.local.SymptomDao
+import fr.luteal.core.data.local.TreatmentPlanDao
 import fr.luteal.core.data.local.UserProfileDao
 import javax.inject.Singleton
 
@@ -72,4 +73,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideMedicationIntakeDao(database: LutealDatabase): MedicationIntakeDao = database.medicationIntakeDao()
+
+    @Provides
+    @Singleton
+    fun provideTreatmentPlanDao(database: LutealDatabase): TreatmentPlanDao = database.treatmentPlanDao()
 }

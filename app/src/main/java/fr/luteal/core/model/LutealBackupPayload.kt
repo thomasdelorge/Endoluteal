@@ -24,6 +24,7 @@ data class LutealBackupPayload(
     @SerialName("medications") val medications: List<MedicationBackupDto> = emptyList(),
     @SerialName("interaction_rules") val interactionRules: List<InteractionRuleBackupDto> = emptyList(),
     @SerialName("medication_intakes") val medicationIntakes: List<MedicationIntakeBackupDto> = emptyList(),
+    @SerialName("treatment_plans") val treatmentPlans: List<TreatmentPlanBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -144,6 +145,18 @@ data class InteractionRuleBackupDto(
     @SerialName("target_b_id") val targetBId: String,
     @SerialName("severity") val severity: String,
     @SerialName("message") val message: String
+)
+
+@Serializable
+data class TreatmentPlanBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("medication_id") val medicationId: String,
+    @SerialName("units_per_dose") val unitsPerDose: Double,
+    @SerialName("times_of_day") val timesOfDay: List<String> = emptyList(),
+    @SerialName("start_date") val startDate: String,
+    @SerialName("end_date") val endDate: String? = null,
+    @SerialName("active") val active: Boolean = true,
+    @SerialName("continuous_hormonal") val continuousHormonal: Boolean = false
 )
 
 @Serializable

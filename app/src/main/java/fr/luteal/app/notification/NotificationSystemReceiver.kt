@@ -18,6 +18,9 @@ class NotificationSystemReceiver : BroadcastReceiver() {
     @Inject
     lateinit var reminderScheduler: ReminderScheduler
 
+    @Inject
+    lateinit var treatmentPlanScheduler: TreatmentPlanScheduler
+
     override fun onReceive(context: Context, intent: Intent) {
         val action = intent.action ?: return
         if (action == Intent.ACTION_BOOT_COMPLETED ||
@@ -30,6 +33,7 @@ class NotificationSystemReceiver : BroadcastReceiver() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     notificationScheduler.reconcileAllSchedules()
+                    treatmentPlanScheduler.sync()
                     reminderScheduler.rescheduleAll()
                 } finally {
                     pendingResult.finish()
