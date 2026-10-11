@@ -31,7 +31,6 @@ import fr.luteal.core.model.CurrentCyclePhase
 import fr.luteal.core.model.CurrentCyclePhaseCalculator
 import fr.luteal.core.model.BiomarkerObservation
 import fr.luteal.core.model.DailyEntry
-import fr.luteal.core.model.DuoSharingField
 import fr.luteal.core.model.UserRole
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -167,12 +166,6 @@ class LutealViewModel @Inject constructor(
         }
     }
 
-    fun updateDuoSharing(field: DuoSharingField, enabled: Boolean) {
-        viewModelScope.launch {
-            runCatching { userRepository.updateDuoSharing(field, enabled) }
-                .onFailure { operationState.update { state -> state.copy(failed = true) } }
-        }
-    }
     fun completeOnboarding(
         role: UserRole = UserRole.PRIMARY_TRACKER,
         disorderTracking: Map<String, Boolean> = emptyMap(),

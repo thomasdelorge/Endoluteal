@@ -58,7 +58,6 @@ fun OnboardingScreen(
     modifier: Modifier = Modifier
 ) {
     var step by remember { mutableIntStateOf(0) }
-    var selectedRole by remember { mutableStateOf(UserRole.PRIMARY_TRACKER) }
     // Null is a real answer here, not an unset value: declining to give an age
     // band is offered as an explicit option.
     var selectedAgeBand by remember { mutableStateOf<AgeBand?>(null) }
@@ -73,7 +72,7 @@ fun OnboardingScreen(
         )
     }
 
-    val totalSteps = 5
+    val totalSteps = 4
 
     Surface(
         modifier = modifier.fillMaxSize(),
@@ -135,10 +134,9 @@ fun OnboardingScreen(
                     Column(modifier = Modifier.padding(vertical = LutealSpacing.lg)) {
                         when (step) {
                             0 -> WelcomeStep()
-                            1 -> RoleStep(selectedRole) { selectedRole = it }
-                            2 -> FocusStep(focusMap) { key, value -> focusMap[key] = value }
-                            3 -> AgeBandStep(selectedAgeBand) { selectedAgeBand = it }
-                            4 -> PrivacySummaryStep()
+                            1 -> FocusStep(focusMap) { key, value -> focusMap[key] = value }
+                            2 -> AgeBandStep(selectedAgeBand) { selectedAgeBand = it }
+                            3 -> PrivacySummaryStep()
                         }
                     }
                 }
@@ -153,7 +151,7 @@ fun OnboardingScreen(
                         },
                         onClick = {
                             if (step == totalSteps - 1) {
-                                onComplete(selectedRole, focusMap.toMap(), selectedAgeBand?.id)
+                                onComplete(UserRole.PRIMARY_TRACKER, focusMap.toMap(), selectedAgeBand?.id)
                             } else {
                                 step++
                             }
@@ -176,7 +174,9 @@ fun OnboardingScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             TextButton(
-                                onClick = { onComplete(selectedRole, focusMap.toMap(), selectedAgeBand?.id) }
+                                onClick = {
+                                    onComplete(UserRole.PRIMARY_TRACKER, focusMap.toMap(), selectedAgeBand?.id)
+                                }
                             ) {
                                 Text(
                                     text = stringResource(R.string.onboarding_button_skip),
@@ -218,58 +218,6 @@ private fun WelcomeStep() {
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun RoleStep(
-    currentRole: UserRole,
-    onRoleSelected: (UserRole) -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-        Text(
-            text = stringResource(R.string.onboarding_role_step_title),
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = stringResource(R.string.onboarding_role_step_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(LutealSpacing.xs))
-
-        RoleSelectionCard(
-            title = stringResource(R.string.onboarding_role_tracker_title),
-            description = stringResource(R.string.onboarding_role_tracker_desc),
-            selected = currentRole == UserRole.PRIMARY_TRACKER,
-            onClick = { onRoleSelected(UserRole.PRIMARY_TRACKER) }
-        )
-
-        RoleSelectionCard(
-            title = stringResource(R.string.onboarding_role_partner_title),
-            description = stringResource(R.string.onboarding_role_partner_desc),
-            selected = currentRole == UserRole.PARTNER_VIEWER,
-            onClick = { onRoleSelected(UserRole.PARTNER_VIEWER) }
-        )
-    }
-}
-
-@Composable
-private fun RoleSelectionCard(
-    title: String,
-    description: String,
-    selected: Boolean,
-    onClick: () -> Unit
-) {
-    LutealCard(modifier = Modifier.fillMaxWidth()) {
-        LutealRadioRow(
-            title = title,
-            description = description,
-            selected = selected,
-            onClick = onClick
-        )
     }
 }
 

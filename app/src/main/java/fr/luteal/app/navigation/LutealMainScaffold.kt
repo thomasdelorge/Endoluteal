@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.rounded.CalendarToday
-import androidx.compose.material.icons.rounded.FavoriteBorder
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Icon
@@ -33,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -47,8 +44,6 @@ import java.time.LocalDate
 
 @Composable
 fun LutealMainScaffold(
-    widgetDestination: String? = null,
-    onWidgetDestinationConsumed: () -> Unit = {},
     pendingImportJson: String? = null,
     onPendingImportConsumed: () -> Unit = {},
     viewModel: LutealViewModel = hiltViewModel()
@@ -59,7 +54,6 @@ fun LutealMainScaffold(
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
-    val context = LocalContext.current
     val saveError = stringResource(R.string.save_error)
     val saveSuccess = stringResource(R.string.save_success_local)
     val useCompactNavigationLabels = LocalDensity.current.fontScale >= 1.5f
@@ -71,28 +65,6 @@ fun LutealMainScaffold(
         selectedDestination = LutealDestination.SETTINGS
         settingsViewModel.inspectBackupJson(json)
         onPendingImportConsumed()
-    }
-
-    // Widget requests survive a cold start and wait until onboarding is
-    // complete. They navigate only; health data is still edited and confirmed
-    // inside the app.
-    LaunchedEffect(widgetDestination, uiState.preferences.hasCompletedOnboarding) {
-        val destination = widgetDestination ?: return@LaunchedEffect
-        if (!uiState.preferences.hasCompletedOnboarding) return@LaunchedEffect
-        when (destination) {
-            fr.luteal.app.MainActivity.WIDGET_DESTINATION_TODAY -> {
-                selectedDestination = LutealDestination.TODAY
-            }
-            fr.luteal.app.MainActivity.WIDGET_DESTINATION_TODAY_EDITOR -> {
-                selectedDestination = LutealDestination.TODAY
-                viewModel.clearEntrySaveState()
-                editorRequest = EditorRequest(uiState.today, startPeriodIntent = false)
-            }
-            fr.luteal.app.MainActivity.WIDGET_DESTINATION_DUO -> {
-                selectedDestination = LutealDestination.DUO
-            }
-        }
-        onWidgetDestinationConsumed()
     }
 
     LaunchedEffect(uiState.operationFailed) {
@@ -142,11 +114,6 @@ fun LutealMainScaffold(
                                         contentDescription = stringResource(destination.labelRes)
                                     )
                                 },
-                                // A second line does not fit the navigation
-                                // bar's height, so wrapping pushed "Reglages"
-                                // out of the bar entirely at large font
-                                // scales. The icon and the unchanged
-                                // contentDescription still carry the meaning.
                                 label = {
                                     Text(
                                         text = stringResource(visibleLabelRes),
@@ -207,11 +174,6 @@ fun LutealMainScaffold(
                                     editorRequest = EditorRequest(uiState.today, startPeriodIntent = true)
                                 }
                             )
-                            LutealDestination.DUO -> DuoScreen(
-                                onOpenSettings = {
-                                    selectedDestination = LutealDestination.SETTINGS
-                                }
-                            )
                             LutealDestination.SETTINGS -> SettingsScreen(viewModel = settingsViewModel)
                         }
                     }
@@ -267,6 +229,5 @@ private enum class LutealDestination(
 ) {
     TODAY(R.string.nav_today, Icons.Rounded.Today),
     JOURNAL(R.string.nav_journal, Icons.AutoMirrored.Rounded.MenuBook),
-    DUO(R.string.nav_duo, Icons.Rounded.FavoriteBorder),
     SETTINGS(R.string.nav_settings, Icons.Rounded.Settings)
 }

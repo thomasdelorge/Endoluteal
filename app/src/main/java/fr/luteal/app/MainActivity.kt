@@ -41,12 +41,10 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var userPreferencesDataStore: UserPreferencesDataStore
 
-    private var widgetDestination by mutableStateOf<String?>(null)
     private var bufferedImportJson by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        widgetDestination = intent.widgetDestination()
         handleBackupImport(intent)
         enableEdgeToEdge()
 
@@ -87,8 +85,6 @@ class MainActivity : FragmentActivity() {
                         }
                     ) {
                         LutealMainScaffold(
-                            widgetDestination = widgetDestination,
-                            onWidgetDestinationConsumed = { widgetDestination = null },
                             pendingImportJson = if (!barrierUp) bufferedImportJson else null,
                             onPendingImportConsumed = { bufferedImportJson = null }
                         )
@@ -114,7 +110,6 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        widgetDestination = intent.widgetDestination()
         handleBackupImport(intent)
     }
 
@@ -137,10 +132,6 @@ class MainActivity : FragmentActivity() {
         prompt.authenticate(promptInfo)
     }
 
-    private fun Intent.widgetDestination(): String? =
-        takeIf { action == ACTION_OPEN_WIDGET_DESTINATION }
-            ?.getStringExtra(EXTRA_WIDGET_DESTINATION)
-
     private fun handleBackupImport(intent: Intent) {
         if (intent.action == ACTION_IMPORT_BACKUP && !intent.hasExtra(EXTRA_IMPORT_JSON)) {
             bufferedImportJson = PendingBackupStore.consume()
@@ -148,13 +139,8 @@ class MainActivity : FragmentActivity() {
         intent.removeExtra(EXTRA_IMPORT_JSON)
     }
     companion object {
-        const val ACTION_OPEN_WIDGET_DESTINATION = "fr.luteal.app.action.OPEN_WIDGET_DESTINATION"
         const val ACTION_IMPORT_BACKUP = "fr.luteal.app.action.IMPORT_BACKUP"
         const val EXTRA_IMPORT_JSON = "fr.luteal.app.extra.IMPORT_JSON"
         const val EXTRA_IMPORT_JSON_BASE64 = "fr.luteal.app.extra.IMPORT_JSON_BASE64"
-        const val EXTRA_WIDGET_DESTINATION = "fr.luteal.app.extra.WIDGET_DESTINATION"
-        const val WIDGET_DESTINATION_TODAY = "today"
-        const val WIDGET_DESTINATION_TODAY_EDITOR = "today_editor"
-        const val WIDGET_DESTINATION_DUO = "duo"
     }
 }

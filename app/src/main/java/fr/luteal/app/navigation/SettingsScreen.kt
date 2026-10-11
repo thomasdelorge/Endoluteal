@@ -267,12 +267,6 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_backup_title),
                 body = stringResource(R.string.settings_backup_body)
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingsInformationRow(
-                icon = Icons.Rounded.VisibilityOff,
-                title = stringResource(R.string.settings_widgets_privacy_title),
-                body = stringResource(R.string.widget_privacy_notice)
-            )
         }
 
         // Online cloud sync
