@@ -813,4 +813,10 @@
     <string name="pain_type_heaviness">Lourdeur</string>
     <string name="pain_type_pelvic_heaviness">Pesanteur pelvienne</string>
     <string name="pain_type_dull">Sourde</string>
+
+    <string name="pain_scale_anchor_none">Aucune douleur</string>
+    <string name="pain_scale_anchor_moderate">Modérée</string>
+    <string name="pain_scale_anchor_worst">Pire douleur imaginable</string>
+    <string name="pain_scale_value">%1$d, %2$s</string>
+    <string name="pain_scale_value_only">%1$d</string>
 </resources>
