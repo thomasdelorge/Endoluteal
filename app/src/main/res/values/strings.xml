@@ -831,4 +831,26 @@
     <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
     <string name="body_map_remove">Retirer</string>
     <string name="body_map_sheet_title">%1$s</string>
+
+    <string name="event_type_medication_intake">Prise de médicament</string>
+    <string name="event_type_pain_check">Contrôle de douleur</string>
+    <string name="event_type_symptom">Symptôme</string>
+    <string name="event_type_care_session">Soin</string>
+    <string name="event_type_hospitalization">Hospitalisation</string>
+    <string name="event_type_appointment">Rendez-vous</string>
+    <string name="nav_agenda">Agenda</string>
+    <string name="nav_timeline">Frise</string>
+    <string name="nav_medications">Médicaments</string>
+    <string name="agenda_title">Agenda</string>
+    <string name="agenda_subtitle">Ce qui a été enregistré, jour par jour</string>
+    <string name="agenda_action_daily_recap">Récap du jour</string>
+    <string name="agenda_fab_open">Ouvrir les saisies</string>
+    <string name="agenda_fab_close">Fermer les saisies</string>
+    <string name="agenda_events_empty">Aucun événement ce jour</string>
+    <string name="agenda_event_count">%1$d événement(s)</string>
+    <string name="screen_coming_soon_title">Bientôt</string>
+    <string name="screen_coming_soon_body">Cet écran arrivera dans une prochaine version.</string>
+    <string name="datetime_field_date">Date</string>
+    <string name="datetime_field_time">Heure</string>
+    <string name="calendar_event_dot">Événements enregistrés</string>
 </resources>

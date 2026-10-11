@@ -61,7 +61,8 @@ fun MonthCalendarGrid(
     projection: MonthCalendarProjection,
     selectedDate: LocalDate?,
     onSelectDate: (LocalDate) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    eventCounts: Map<LocalDate, Int> = emptyMap()
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -78,6 +79,7 @@ fun MonthCalendarGrid(
                     CalendarDayCell(
                         day = day,
                         isSelected = day.date == selectedDate,
+                        eventCount = eventCounts[day.date] ?: 0,
                         onClick = { onSelectDate(day.date) },
                         modifier = Modifier.weight(1f)
                     )
@@ -121,7 +123,8 @@ fun CalendarDayCell(
     day: CalendarDayProjection,
     isSelected: Boolean,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    eventCount: Int = 0
 ) {
     val phaseColors = LocalPhaseColors.current
 
@@ -214,6 +217,10 @@ fun CalendarDayCell(
             append(", ")
             append(stringResource(R.string.calendar_legend_biomarkers))
         }
+        if (eventCount > 0) {
+            append(", ")
+            append(stringResource(R.string.calendar_event_dot))
+        }
     }
 
     Box(
@@ -271,6 +278,9 @@ fun CalendarDayCell(
                     }
                     if (day.hasBiomarkers) {
                         CalendarDot(color = MaterialTheme.colorScheme.tertiary, size = 5.dp)
+                    }
+                    if (eventCount > 0) {
+                        CalendarDot(color = MaterialTheme.colorScheme.primary, size = 5.dp)
                     }
                 }
             }

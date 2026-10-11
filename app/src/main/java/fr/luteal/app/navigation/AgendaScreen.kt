@@ -1,7 +1,5 @@
 package fr.luteal.app.navigation
 
-import android.content.Context
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,32 +13,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.rounded.Description
 import androidx.compose.material3.IconButton
-import androidx.compose.ui.platform.LocalContext
-import fr.luteal.core.model.ClinicalReportConfig
-import fr.luteal.core.model.ReportFormat
-import fr.luteal.core.model.CycleExclusionReason
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.SmallFloatingActionButton
+import androidx.compose.ui.platform.testTag
+import fr.luteal.core.model.JournalEvent
+import fr.luteal.core.model.JournalEventType
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
-import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Today
@@ -48,20 +41,12 @@ import androidx.compose.material.icons.rounded.WaterDrop
 import fr.luteal.core.model.Cycle
 import fr.luteal.core.model.CyclePhase
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ScrollableTabRow
-import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,22 +64,17 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import fr.luteal.app.LutealUiState
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
-import fr.luteal.core.designsystem.component.AdaptiveActionGroup
 import fr.luteal.core.designsystem.component.CalendarLegendCard
 import fr.luteal.core.designsystem.component.LutealCard
-import fr.luteal.core.designsystem.component.LutealEmptyState
 import fr.luteal.core.designsystem.component.LutealPrimaryButton
-import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.MonthCalendarGrid
 import fr.luteal.core.designsystem.component.StatusPill
 import fr.luteal.core.designsystem.component.StatusTone
-import fr.luteal.core.designsystem.theme.LocalPhaseColors
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.BiomarkerObservation
 import fr.luteal.core.model.CervicalMucusSensation
@@ -111,25 +91,15 @@ import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 import java.time.temporal.WeekFields
 
-enum class JournalViewMode {
-    CALENDAR,
-    TIMELINE
-}
-
 @Composable
-fun JournalScreen(
+fun AgendaScreen(
     state: LutealUiState,
+    events: List<JournalEvent> = emptyList(),
     onSelectDate: (LocalDate) -> Unit,
     onEditCycle: (cycleId: String, newStartDate: LocalDate) -> Unit = { _, _ -> },
     onDeleteCycle: (cycleId: String) -> Unit = {},
-    onToggleCycleExclusion: (cycleId: String, isExcluded: Boolean, reason: CycleExclusionReason?) -> Unit = { _, _, _ -> },
-    onExportClinicalReport: (Context, android.net.Uri, ClinicalReportConfig) -> Unit = { _, _, _ -> },
-    onStartPeriod: () -> Unit = {},
-    onBackfillCycle: () -> Unit = {},
-    initialViewMode: JournalViewMode = JournalViewMode.CALENDAR
+    onBackfillCycle: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    var viewMode by rememberSaveable { mutableStateOf(initialViewMode) }
     val baseMonth = remember { YearMonth.from(state.today) }
     val pagerState = rememberPagerState(initialPage = 1200, pageCount = { 2400 })
     val pagerMonth = remember(pagerState.currentPage) { baseMonth.plusMonths((pagerState.currentPage - 1200).toLong()) }
@@ -139,55 +109,14 @@ fun JournalScreen(
     }
     var selectedDate by rememberSaveable { mutableStateOf(state.today) }
     var showMonthPicker by remember { mutableStateOf(false) }
+    var fabExpanded by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
-    var showDatePicker by remember { mutableStateOf(false) }
     var cycleToEdit by remember { mutableStateOf<Cycle?>(null) }
     var cycleToDelete by remember { mutableStateOf<Cycle?>(null) }
-    var cycleToManageExclusion by remember { mutableStateOf<Cycle?>(null) }
-    var showReportDialog by remember { mutableStateOf(false) }
-    var pendingReportConfig by remember { mutableStateOf<ClinicalReportConfig?>(null) }
-    val reportPdfLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/pdf")
-    ) { uri ->
-        val config = pendingReportConfig
-        if (uri != null && config != null) {
-            onExportClinicalReport(context, uri, config)
-        }
-        pendingReportConfig = null
-    }
-    val reportHtmlLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/html")
-    ) { uri ->
-        val config = pendingReportConfig
-        if (uri != null && config != null) {
-            onExportClinicalReport(context, uri, config)
-        }
-        pendingReportConfig = null
-    }
-
-    if (showReportDialog) {
-        ClinicalReportDialog(
-            onDismiss = { showReportDialog = false },
-            onExport = { config ->
-                showReportDialog = false
-                pendingReportConfig = config
-                val ext = if (config.format == ReportFormat.HTML) "html" else "pdf"
-                val name = "luteal_recapitulatif_medical_${LocalDate.now()}.$ext"
-                if (config.format == ReportFormat.HTML) {
-                    reportHtmlLauncher.launch(name)
-                } else {
-                    reportPdfLauncher.launch(name)
-                }
-            }
-        )
-    }
-
-    val recordedEntries = remember(state.entries) {
-        state.entries
-            .filter(DailyEntry::hasObservations)
-            .sortedByDescending(DailyEntry::date)
-    }
+    val eventCounts = remember(events) { eventCountsByDay(events) }
+    val dayEvents = eventsOnDay(events, selectedDate)
+    val dailyRecapLabel = stringResource(R.string.agenda_action_daily_recap)
 
     val entriesByDate = remember(state.entries) {
         state.entries.associateBy(DailyEntry::date)
@@ -237,6 +166,7 @@ fun JournalScreen(
     }
 
 
+    Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(
@@ -246,23 +176,10 @@ fun JournalScreen(
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.md)
     ) {
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                ScreenHeader(
-                    title = stringResource(R.string.journal_title),
-                    subtitle = stringResource(R.string.journal_subtitle)
-                )
-                IconButton(onClick = { showReportDialog = true }) {
-                    Icon(
-                        imageVector = Icons.Rounded.Description,
-                        contentDescription = stringResource(R.string.report_dialog_title),
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
+            ScreenHeader(
+                title = stringResource(R.string.agenda_title),
+                subtitle = stringResource(R.string.agenda_subtitle)
+            )
         }
 
         item {
@@ -270,51 +187,6 @@ fun JournalScreen(
         }
 
         item {
-            @Suppress("DEPRECATION")
-            ScrollableTabRow(
-                selectedTabIndex = viewMode.ordinal,
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
-                edgePadding = 0.dp,
-                divider = { HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant) }
-            ) {
-                Tab(
-                    selected = viewMode == JournalViewMode.CALENDAR,
-                    onClick = { viewMode = JournalViewMode.CALENDAR },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.calendar_view_calendar),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.CalendarMonth,
-                            contentDescription = null
-                        )
-                    }
-                )
-                Tab(
-                    selected = viewMode == JournalViewMode.TIMELINE,
-                    onClick = { viewMode = JournalViewMode.TIMELINE },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.calendar_view_list),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.FormatListBulleted,
-                            contentDescription = null
-                        )
-                    }
-                )
-            }
-        }
-
-        if (viewMode == JournalViewMode.CALENDAR) {
-            item {
                 MonthNavigationBar(
                     currentMonth = currentMonth,
                     isCurrentMonthToday = currentMonth == YearMonth.from(state.today),
@@ -379,6 +251,7 @@ fun JournalScreen(
                     MonthCalendarGrid(
                         projection = pageProjection,
                         selectedDate = selectedDate,
+                        eventCounts = eventCounts,
                         onSelectDate = { date ->
                             selectedDate = date
                             val targetMonth = YearMonth.from(date)
@@ -415,94 +288,21 @@ fun JournalScreen(
                     onEditOrAdd = { onSelectDate(selectedDate) }
                 )
             }
-        } else if (viewMode == JournalViewMode.TIMELINE) {
-            if (recordedEntries.isEmpty()) {
-                item {
-                    LutealEmptyState(
-                        title = stringResource(R.string.journal_empty_title),
-                        body = stringResource(R.string.journal_empty_body),
-                        actionText = stringResource(R.string.action_log_today),
-                        onAction = { onSelectDate(state.today) },
-                        icon = Icons.Rounded.CalendarMonth,
-                        modifier = Modifier.padding(
-                            horizontal = LutealSpacing.lg,
-                            vertical = LutealSpacing.xl
-                        )
-                    )
-                }
-                item {
-                    LutealSecondaryButton(
-                        text = stringResource(R.string.journal_choose_date),
-                        onClick = { showDatePicker = true },
-                        icon = Icons.Rounded.CalendarMonth,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            } else {
-                item {
-                    AdaptiveActionGroup(
-                        primary = { actionModifier ->
-                            LutealPrimaryButton(
-                                text = if (state.todayEntry?.hasObservations == true) {
-                                    stringResource(R.string.action_edit_today)
-                                } else {
-                                    stringResource(R.string.action_log_today)
-                                },
-                                onClick = { onSelectDate(state.today) },
-                                icon = if (state.todayEntry?.hasObservations == true) {
-                                    Icons.Rounded.Edit
-                                } else {
-                                    Icons.Rounded.Today
-                                },
-                                modifier = actionModifier
-                            )
-                        },
-                        secondary = { actionModifier ->
-                            LutealSecondaryButton(
-                                text = stringResource(R.string.journal_choose_date),
-                                onClick = { showDatePicker = true },
-                                icon = Icons.Rounded.CalendarMonth,
-                                modifier = actionModifier
-                            )
-                        }
-                    )
-                }
-                recordedEntries
-                    .groupBy { YearMonth.from(it.date) }
-                    .forEach { (_, monthEntries) ->
-                        item(key = "month-${monthEntries.first().date}") {
-                            Text(
-                                text = LocalizedDateFormatter.formatMonthYear(monthEntries.first().date, locale),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(top = LutealSpacing.xs)
-                            )
-                        }
-                        items(monthEntries, key = { it.date.toString() }) { entry ->
-                            val cycleAtDate = state.cycles.firstOrNull { it.startDate == entry.date }
-                            JournalEntryRow(
-                                entry = entry,
-                                isToday = entry.date == state.today,
-                                cycleStart = cycleAtDate,
-                                onEditCycle = { cycleToEdit = it },
-                                onDeleteCycle = { cycleToDelete = it },
-                                onClick = { onSelectDate(entry.date) }
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        }
-                    }
+            item {
+                DayEventList(events = dayEvents)
             }
-        }
     }
-
-    if (showDatePicker) {
-        JournalDatePickerDialog(
-            today = state.today,
-            onSelect = {
-                showDatePicker = false
-                onSelectDate(it)
+        AgendaSpeedDial(
+            expanded = fabExpanded,
+            actionLabel = dailyRecapLabel,
+            onToggle = { fabExpanded = !fabExpanded },
+            onAction = {
+                fabExpanded = false
+                onSelectDate(selectedDate)
             },
-            onDismiss = { showDatePicker = false }
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(LutealSpacing.md)
         )
     }
 
@@ -528,6 +328,84 @@ fun JournalScreen(
             }
         )
     }
+}
+
+@Composable
+private fun DayEventList(events: List<JournalEvent>) {
+    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+        if (events.isEmpty()) {
+            Text(
+                text = stringResource(R.string.agenda_events_empty),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            events.forEach { event ->
+                val label = stringResource(event.type.labelRes())
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.semantics { contentDescription = label }
+                )
+                if (event.notes.isNotBlank()) {
+                    Text(
+                        text = event.notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun AgendaSpeedDial(
+    expanded: Boolean,
+    actionLabel: String,
+    onToggle: () -> Unit,
+    onAction: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+    ) {
+        if (expanded) {
+            SmallFloatingActionButton(
+                onClick = onAction,
+                modifier = Modifier
+                    .testTag("agenda_action_daily_recap")
+                    .semantics { contentDescription = actionLabel }
+            ) {
+                Text(text = actionLabel, modifier = Modifier.padding(horizontal = LutealSpacing.sm))
+            }
+        }
+        val fabDescription = stringResource(
+            if (expanded) R.string.agenda_fab_close else R.string.agenda_fab_open
+        )
+        FloatingActionButton(
+            onClick = onToggle,
+            modifier = Modifier
+                .testTag("agenda_fab")
+                .semantics { contentDescription = fabDescription }
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.Rounded.Close else Icons.Rounded.Add,
+                contentDescription = null
+            )
+        }
+    }
+}
+
+private fun JournalEventType.labelRes(): Int = when (this) {
+    JournalEventType.MEDICATION_INTAKE -> R.string.event_type_medication_intake
+    JournalEventType.PAIN_CHECK -> R.string.event_type_pain_check
+    JournalEventType.SYMPTOM -> R.string.event_type_symptom
+    JournalEventType.CARE_SESSION -> R.string.event_type_care_session
+    JournalEventType.HOSPITALIZATION -> R.string.event_type_hospitalization
+    JournalEventType.APPOINTMENT -> R.string.event_type_appointment
 }
 
 @Composable
@@ -973,130 +851,6 @@ private fun SelectedDayInspectionCard(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun JournalEntryRow(
-    entry: DailyEntry,
-    isToday: Boolean,
-    cycleStart: Cycle?,
-    onEditCycle: (Cycle) -> Unit,
-    onDeleteCycle: (Cycle) -> Unit,
-    onClick: () -> Unit
-) {
-    val locale = LocalConfiguration.current.locales[0]
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(LutealSpacing.xxs)
-    ) {
-        if (cycleStart != null) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = LutealSpacing.xs),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                ) {
-                    Text(
-                        text = stringResource(R.string.cycle_start_badge),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = LutealSpacing.xs, vertical = 2.dp)
-                    )
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                    IconButton(
-                        onClick = { onEditCycle(cycleStart) },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Edit,
-                            contentDescription = stringResource(R.string.cycle_action_edit),
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                    IconButton(
-                        onClick = { onDeleteCycle(cycleStart) },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Delete,
-                            contentDescription = stringResource(R.string.cycle_action_delete),
-                            tint = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        Surface(
-            onClick = onClick,
-            modifier = Modifier.fillMaxWidth(),
-            color = androidx.compose.ui.graphics.Color.Transparent
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = LutealSpacing.xxl)
-                    .padding(vertical = LutealSpacing.sm),
-                horizontalArrangement = Arrangement.spacedBy(LutealSpacing.md),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                BleedingMark(intensity = entry.bleedingIntensity)
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-                ) {
-                    Text(
-                        text = if (isToday) {
-                            stringResource(R.string.journal_today)
-                        } else {
-                            LocalizedDateFormatter.formatFullDate(entry.date, locale)
-                        },
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    // Levels are drawn rather than spelled out, so a heavy day and
-                    // a mild one no longer render as the same block of grey text.
-                    val levels = listOfNotNull(
-                        entry.painLevel?.let { stringResource(R.string.level_label_pain) to it },
-                        entry.moodLevel?.let { stringResource(R.string.level_label_mood) to it },
-                        entry.energyLevel?.let { stringResource(R.string.level_label_energy) to it }
-                    )
-                    if (levels.isNotEmpty()) {
-                        FlowRow(
-                            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.md),
-                            verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-                        ) {
-                            levels.forEach { (label, level) ->
-                                MiniLevel(label = label, level = level)
-                            }
-                        }
-                    }
-                    val trailing = journalEntryTrailingSummary(entry)
-                    if (trailing.isNotEmpty()) {
-                        Text(
-                            text = trailing,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
 
 /**
  * Recorded flow for the day, as a drop that fills with intensity.
@@ -1170,6 +924,7 @@ private fun MiniLevel(label: String, level: Int) {
     }
 }
 
+
 @Composable
 private fun journalEntryTrailingSummary(entry: DailyEntry): String {
     val parts = buildList {
@@ -1198,51 +953,6 @@ private fun bleedingLabel(intensity: BleedingIntensity): String = stringResource
     }
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun JournalDatePickerDialog(
-    today: LocalDate,
-    onSelect: (LocalDate) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val zone = java.time.ZoneOffset.UTC
-    val state = rememberDatePickerState(
-        initialSelectedDateMillis = today.atStartOfDay(zone).toInstant().toEpochMilli(),
-        selectableDates = remember(today) {
-            object : SelectableDates {
-                override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                    val date = Instant.ofEpochMilli(utcTimeMillis).atZone(zone).toLocalDate()
-                    return !date.isAfter(today)
-                }
-
-                override fun isSelectableYear(year: Int): Boolean = year <= today.year
-            }
-        }
-    )
-
-    DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    state.selectedDateMillis?.let { millis ->
-                        onSelect(Instant.ofEpochMilli(millis).atZone(zone).toLocalDate())
-                    }
-                },
-                enabled = state.selectedDateMillis != null
-            ) {
-                Text(stringResource(R.string.journal_open_date))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_close))
-            }
-        }
-    ) {
-        DatePicker(state = state)
-    }
-}
 
 @Composable
 private fun symptomDisplayName(id: String): String = when (id) {

@@ -2,12 +2,16 @@ package fr.luteal.app.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.rounded.CalendarMonth
+import androidx.compose.material.icons.rounded.Medication
 import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Timeline
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -36,8 +40,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.luteal.app.EntrySaveState
 import fr.luteal.app.LutealViewModel
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.ObservationCatalog
-import fr.luteal.core.model.TemperatureUnit
 import java.time.LocalDate
 
 @Composable
@@ -47,7 +51,9 @@ fun LutealMainScaffold(
     viewModel: LutealViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.JOURNAL) }
+    val agendaViewModel: AgendaViewModel = hiltViewModel()
+    val events by agendaViewModel.events.collectAsStateWithLifecycle()
+    var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
     var editorRequest by remember { mutableStateOf<EditorRequest?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -131,8 +137,9 @@ fun LutealMainScaffold(
                 ) {
                     Box(modifier = Modifier.fillMaxSize().widthIn(max = 760.dp)) {
                         when (selectedDestination) {
-                            LutealDestination.JOURNAL -> JournalScreen(
+                            LutealDestination.AGENDA -> AgendaScreen(
                                 state = uiState,
+                                events = events,
                                 onSelectDate = {
                                     viewModel.clearEntrySaveState()
                                     editorRequest = EditorRequest(it, startPeriodIntent = false)
@@ -143,16 +150,10 @@ fun LutealMainScaffold(
                                 onDeleteCycle = { cycleId ->
                                     viewModel.deleteCycle(cycleId)
                                 },
-                                onToggleCycleExclusion = { cycleId, isExcluded, reason ->
-                                    viewModel.toggleCycleExclusion(cycleId, isExcluded, reason)
-                                },
-                                onExportClinicalReport = viewModel::exportClinicalReport,
-                                onStartPeriod = {
-                                    viewModel.clearEntrySaveState()
-                                    editorRequest = EditorRequest(uiState.today, startPeriodIntent = true)
-                                },
                                 onBackfillCycle = { showBackfillDialog = true }
                             )
+                            LutealDestination.TIMELINE -> ComingSoonScreen(R.string.nav_timeline)
+                            LutealDestination.MEDICATIONS -> ComingSoonScreen(R.string.nav_medications)
                             LutealDestination.SETTINGS -> SettingsScreen(viewModel = settingsViewModel)
                         }
                     }
@@ -203,6 +204,28 @@ private enum class LutealDestination(
     @StringRes val labelRes: Int,
     val icon: ImageVector
 ) {
-    JOURNAL(R.string.nav_journal, Icons.AutoMirrored.Rounded.MenuBook),
+    AGENDA(R.string.nav_agenda, Icons.Rounded.CalendarMonth),
+    TIMELINE(R.string.nav_timeline, Icons.Rounded.Timeline),
+    MEDICATIONS(R.string.nav_medications, Icons.Rounded.Medication),
     SETTINGS(R.string.nav_settings, Icons.Rounded.Settings)
+}
+
+@Composable
+private fun ComingSoonScreen(@StringRes titleRes: Int) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(LutealSpacing.lg),
+        verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+    ) {
+        ScreenHeader(
+            title = stringResource(titleRes),
+            subtitle = stringResource(R.string.screen_coming_soon_title)
+        )
+        Text(
+            text = stringResource(R.string.screen_coming_soon_body),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
