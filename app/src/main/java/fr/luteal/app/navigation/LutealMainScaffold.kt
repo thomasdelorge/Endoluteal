@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.Settings
-import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -30,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -49,14 +47,13 @@ fun LutealMainScaffold(
     viewModel: LutealViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.TODAY) }
+    var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.JOURNAL) }
     var editorRequest by remember { mutableStateOf<EditorRequest?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val saveError = stringResource(R.string.save_error)
     val saveSuccess = stringResource(R.string.save_success_local)
-    val useCompactNavigationLabels = LocalDensity.current.fontScale >= 1.5f
 
     LaunchedEffect(pendingImportJson, uiState.preferences.hasCompletedOnboarding) {
         val json = pendingImportJson ?: return@LaunchedEffect
@@ -98,13 +95,6 @@ fun LutealMainScaffold(
                 bottomBar = {
                     NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
                         LutealDestination.entries.forEach { destination ->
-                            val visibleLabelRes = if (
-                                useCompactNavigationLabels && destination == LutealDestination.TODAY
-                            ) {
-                                R.string.nav_today_compact
-                            } else {
-                                destination.labelRes
-                            }
                             NavigationBarItem(
                                 selected = destination == selectedDestination,
                                 onClick = { selectedDestination = destination },
@@ -116,7 +106,7 @@ fun LutealMainScaffold(
                                 },
                                 label = {
                                     Text(
-                                        text = stringResource(visibleLabelRes),
+                                        text = stringResource(destination.labelRes),
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
@@ -141,18 +131,6 @@ fun LutealMainScaffold(
                 ) {
                     Box(modifier = Modifier.fillMaxSize().widthIn(max = 760.dp)) {
                         when (selectedDestination) {
-                            LutealDestination.TODAY -> TodayScreen(
-                                state = uiState,
-                                onStartPeriod = {
-                                    viewModel.clearEntrySaveState()
-                                    editorRequest = EditorRequest(uiState.today, startPeriodIntent = true)
-                                },
-                                onEditToday = {
-                                    viewModel.clearEntrySaveState()
-                                    editorRequest = EditorRequest(uiState.today, startPeriodIntent = false)
-                                },
-                                onBackfillCycle = { showBackfillDialog = true }
-                            )
                             LutealDestination.JOURNAL -> JournalScreen(
                                 state = uiState,
                                 onSelectDate = {
@@ -172,7 +150,8 @@ fun LutealMainScaffold(
                                 onStartPeriod = {
                                     viewModel.clearEntrySaveState()
                                     editorRequest = EditorRequest(uiState.today, startPeriodIntent = true)
-                                }
+                                },
+                                onBackfillCycle = { showBackfillDialog = true }
                             )
                             LutealDestination.SETTINGS -> SettingsScreen(viewModel = settingsViewModel)
                         }
@@ -199,9 +178,6 @@ fun LutealMainScaffold(
             existingEntry = uiState.entries.firstOrNull { it.date == req.date },
             previousDayEntry = uiState.entries.firstOrNull { it.date == req.date.minusDays(1) },
             existingBiomarker = uiState.biomarkers.firstOrNull { it.date == req.date },
-            temperatureUnit = TemperatureUnit.entries.firstOrNull {
-                it.name == uiState.preferences.temperatureUnit
-            } ?: TemperatureUnit.CELSIUS,
             currentCycle = uiState.currentCycle,
             offeredSymptomIds = ObservationCatalog.symptomIdsFor(
                 uiState.preferences.declaredContexts
@@ -227,7 +203,6 @@ private enum class LutealDestination(
     @StringRes val labelRes: Int,
     val icon: ImageVector
 ) {
-    TODAY(R.string.nav_today, Icons.Rounded.Today),
     JOURNAL(R.string.nav_journal, Icons.AutoMirrored.Rounded.MenuBook),
     SETTINGS(R.string.nav_settings, Icons.Rounded.Settings)
 }

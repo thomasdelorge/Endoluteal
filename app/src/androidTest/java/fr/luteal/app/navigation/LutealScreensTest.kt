@@ -1,30 +1,16 @@
 package fr.luteal.app.navigation
 
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import fr.luteal.app.LutealUiState
 import fr.luteal.app.R
-import fr.luteal.core.data.datastore.UserPreferences
 import fr.luteal.core.designsystem.theme.LutealTheme
-import fr.luteal.core.model.Cycle
-import fr.luteal.core.model.CycleEstimate
-import fr.luteal.core.model.CycleEstimateCalculator
-import fr.luteal.core.model.CycleEstimateResult
 import fr.luteal.core.model.DailyEntry
-import fr.luteal.core.model.DuoSharingPreferences
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import java.time.LocalDate
@@ -41,146 +27,6 @@ class LutealScreensTest {
      */
     private fun string(id: Int, vararg args: Any): String =
         InstrumentationRegistry.getInstrumentation().targetContext.getString(id, *args)
-
-    @Test
-    fun emptyTodayExplainsAndOpensPeriodEntry() {
-        var clicked = false
-        val today = LocalDate.parse("2026-07-20")
-
-        composeRule.setContent {
-            LutealTheme(darkTheme = false) {
-                TodayScreen(
-                    state = LutealUiState(today = today),
-                    onStartPeriod = { clicked = true },
-                    onEditToday = {},
-                    onBackfillCycle = {}
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(string(R.string.cycle_no_history_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(string(R.string.action_start_period_short)).performClick()
-        assertTrue(clicked)
-    }
-
-    @Test
-    fun recordedCycleAndEstimateRemainExplicitlyDistinct() {
-        val today = LocalDate.parse("2026-07-20")
-        val cycles = listOf(
-            Cycle("1", LocalDate.parse("2026-05-25"), LocalDate.parse("2026-06-21")),
-            Cycle("2", LocalDate.parse("2026-06-22"), LocalDate.parse("2026-07-19")),
-            Cycle("3", LocalDate.parse("2026-07-20"))
-        )
-
-        composeRule.setContent {
-            LutealTheme(darkTheme = false) {
-                TodayScreen(
-                    state = LutealUiState(
-                        today = today,
-                        cycles = cycles,
-                        currentCycle = cycles.last(),
-                        estimateResult = CycleEstimateCalculator.evaluate(cycles)
-                    ),
-                    onStartPeriod = {},
-                    onEditToday = {},
-                    onBackfillCycle = {}
-                )
-            }
-        }
-
-        composeRule.onAllNodesWithText(string(R.string.recorded_label)).assertCountEquals(2)
-        composeRule.onAllNodesWithText(string(R.string.estimated_label)).assertCountEquals(1)
-        // The day count is rendered as a numeral inside the cycle ring, which
-        // carries the full phrase as its accessible name.
-        composeRule.onNodeWithContentDescription(string(R.string.cycle_day, 1)).assertIsDisplayed()
-        // Clinical framing the product deliberately avoids: a literal, because
-        // the point is that this word appears in no resource at all.
-        composeRule.onNodeWithText("Menstruations").assertDoesNotExist()
-    }
-
-    @Test
-    fun todayShowsAnEstimatedPhaseWithAdaptedSourcedTip() {
-        val today = LocalDate.parse("2026-07-09")
-        val cycle = Cycle("current", LocalDate.parse("2026-07-01"))
-        val estimate = CycleEstimateResult.Available(
-            CycleEstimate(
-                earliestDate = LocalDate.parse("2026-07-28"),
-                centralDate = LocalDate.parse("2026-07-30"),
-                latestDate = LocalDate.parse("2026-08-01"),
-                cycleCount = 4,
-                variabilityDays = 3
-            )
-        )
-
-        composeRule.setContent {
-            LutealTheme(darkTheme = false) {
-                TodayScreen(
-                    state = LutealUiState(
-                        today = today,
-                        cycles = listOf(cycle),
-                        currentCycle = cycle,
-                        estimateResult = estimate
-                    ),
-                    onStartPeriod = {},
-                    onEditToday = {},
-                    onBackfillCycle = {}
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(string(R.string.phase_follicular)).assertIsDisplayed()
-        composeRule.onAllNodesWithText(string(R.string.estimated_label)).assertCountEquals(2)
-        composeRule.onNodeWithText(string(R.string.phase_tip_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(string(R.string.fact_view_source)).assertIsDisplayed()
-    }
-
-    @Test
-    fun todayKeepsEarlyCyclePhaseIndeterminateWithoutBleedingDetail() {
-        val today = LocalDate.parse("2026-07-04")
-        val cycle = Cycle("current", LocalDate.parse("2026-07-01"))
-
-        composeRule.setContent {
-            LutealTheme(darkTheme = false) {
-                TodayScreen(
-                    state = LutealUiState(
-                        today = today,
-                        cycles = listOf(cycle),
-                        currentCycle = cycle
-                    ),
-                    onStartPeriod = {},
-                    onEditToday = {},
-                    onBackfillCycle = {}
-                )
-            }
-        }
-
-        composeRule.onNodeWithText(string(R.string.phase_indeterminate)).assertIsDisplayed()
-        composeRule.onNodeWithText(string(R.string.phase_reason_early_cycle)).assertIsDisplayed()
-        composeRule.onNodeWithText(string(R.string.phase_tip_title)).assertDoesNotExist()
-    }
-
-    @Test
-    fun todayPrimaryActionRemainsVisibleAtLargeText() {
-        val today = LocalDate.parse("2026-07-20")
-
-        composeRule.setContent {
-            val density = LocalDensity.current
-            CompositionLocalProvider(
-                LocalDensity provides Density(density.density, fontScale = 2f)
-            ) {
-                LutealTheme(darkTheme = false) {
-                    TodayScreen(
-                        state = LutealUiState(today = today),
-                        onStartPeriod = {},
-                        onEditToday = {},
-                        onBackfillCycle = {}
-                    )
-                }
-            }
-        }
-
-        composeRule.onNodeWithText(string(R.string.action_start_period_short)).assertIsDisplayed()
-    }
 
     @Test
     fun emptyJournalUsesTeachingEmptyStateInsteadOfEmptyDayRows() {

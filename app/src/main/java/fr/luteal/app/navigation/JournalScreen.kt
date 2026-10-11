@@ -28,9 +28,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.platform.LocalContext
 import fr.luteal.core.model.ClinicalReportConfig
 import fr.luteal.core.model.ReportFormat
-import androidx.compose.material.icons.automirrored.rounded.ShowChart
 import fr.luteal.core.model.CycleExclusionReason
-import fr.luteal.core.model.LongitudinalCycleStatsCalculator
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -41,17 +39,14 @@ import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.CalendarMonth
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.DeviceThermostat
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
-import androidx.compose.material.icons.rounded.Insights
 import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material.icons.rounded.WaterDrop
 import fr.luteal.core.model.Cycle
 import fr.luteal.core.model.CyclePhase
-import fr.luteal.core.model.SymptomPatternCalculator
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -97,22 +92,16 @@ import fr.luteal.core.designsystem.component.LutealEmptyState
 import fr.luteal.core.designsystem.component.LutealPrimaryButton
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.MonthCalendarGrid
-import fr.luteal.core.designsystem.component.ThermalShiftChart
 import fr.luteal.core.designsystem.component.StatusPill
 import fr.luteal.core.designsystem.component.StatusTone
 import fr.luteal.core.designsystem.theme.LocalPhaseColors
 import fr.luteal.core.designsystem.theme.LutealSpacing
-import fr.luteal.core.model.BasalBodyTemperature
 import fr.luteal.core.model.BiomarkerObservation
 import fr.luteal.core.model.CervicalMucusSensation
 import fr.luteal.core.model.CervicalMucusTexture
-import fr.luteal.core.model.LhTestResult
 import fr.luteal.core.model.PhaseCertainty
 import fr.luteal.core.model.BleedingIntensity
 import fr.luteal.core.model.DailyEntry
-import fr.luteal.core.model.TemperatureUnit
-import fr.luteal.core.model.ThermalShiftCalculator
-import fr.luteal.core.model.ThermalShiftResult
 import fr.luteal.core.model.MonthCalendarProjectionCalculator
 import java.time.Instant
 import java.time.LocalDate
@@ -124,10 +113,7 @@ import java.time.temporal.WeekFields
 
 enum class JournalViewMode {
     CALENDAR,
-    TIMELINE,
-    VARIABILITY,
-    THERMAL,
-    PATTERNS
+    TIMELINE
 }
 
 @Composable
@@ -139,6 +125,7 @@ fun JournalScreen(
     onToggleCycleExclusion: (cycleId: String, isExcluded: Boolean, reason: CycleExclusionReason?) -> Unit = { _, _, _ -> },
     onExportClinicalReport: (Context, android.net.Uri, ClinicalReportConfig) -> Unit = { _, _, _ -> },
     onStartPeriod: () -> Unit = {},
+    onBackfillCycle: () -> Unit = {},
     initialViewMode: JournalViewMode = JournalViewMode.CALENDAR
 ) {
     val context = LocalContext.current
@@ -220,9 +207,6 @@ fun JournalScreen(
     val biomarkersByDate = remember(state.biomarkers) {
         state.biomarkers.associateBy(BiomarkerObservation::date)
     }
-    val temperatureUnit = remember(state.preferences.temperatureUnit) {
-        TemperatureUnit.entries.firstOrNull { it.name == state.preferences.temperatureUnit } ?: TemperatureUnit.CELSIUS
-    }
     val selectedMonth = remember(selectedDate) { YearMonth.from(selectedDate) }
     val selectedDayProjection = remember(selectedDate, selectedMonth, currentMonth, calendarProjection, state.cycles, state.entries, state.biomarkers, state.estimateResult, locale) {
         if (selectedMonth == currentMonth) {
@@ -282,6 +266,10 @@ fun JournalScreen(
         }
 
         item {
+            CycleEstimateSection(state = state, onBackfillCycle = onBackfillCycle)
+        }
+
+        item {
             @Suppress("DEPRECATION")
             ScrollableTabRow(
                 selectedTabIndex = viewMode.ordinal,
@@ -318,54 +306,6 @@ fun JournalScreen(
                     icon = {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.FormatListBulleted,
-                            contentDescription = null
-                        )
-                    }
-                )
-                Tab(
-                    selected = viewMode == JournalViewMode.VARIABILITY,
-                    onClick = { viewMode = JournalViewMode.VARIABILITY },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.journal_view_variability),
-                            style = MaterialTheme.typography.titleSmall
-                         )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ShowChart,
-                            contentDescription = null
-                        )
-                    }
-                )
-                Tab(
-                    selected = viewMode == JournalViewMode.THERMAL,
-                    onClick = { viewMode = JournalViewMode.THERMAL },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.journal_view_thermal),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.DeviceThermostat,
-                            contentDescription = null
-                        )
-                    }
-                )
-                Tab(
-                    selected = viewMode == JournalViewMode.PATTERNS,
-                    onClick = { viewMode = JournalViewMode.PATTERNS },
-                    text = {
-                        Text(
-                            text = stringResource(R.string.journal_view_patterns),
-                            style = MaterialTheme.typography.titleSmall
-                        )
-                    },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Rounded.Insights,
                             contentDescription = null
                         )
                     }
@@ -470,7 +410,6 @@ fun JournalScreen(
                     phaseCertainty = selectedDayProjection?.phaseCertainty,
                     isToday = selectedDate == state.today,
                     cycleStart = cycleStart,
-                    temperatureUnit = temperatureUnit,
                     onEditCycle = { cycleToEdit = it },
                     onDeleteCycle = { cycleToDelete = it },
                     onEditOrAdd = { onSelectDate(selectedDate) }
@@ -552,27 +491,6 @@ fun JournalScreen(
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         }
                     }
-            }
-        } else if (viewMode == JournalViewMode.VARIABILITY) {
-            item {
-                val stats = remember(state.cycles) {
-                    LongitudinalCycleStatsCalculator.calculate(state.cycles)
-                }
-                CycleVariabilityVisualizer(
-                    stats = stats,
-                    onManageExclusion = { cycleId ->
-                        cycleToManageExclusion = state.cycles.firstOrNull { it.id == cycleId }
-                    },
-                    onStartPeriod = onStartPeriod
-                )
-            }
-        } else if (viewMode == JournalViewMode.THERMAL) {
-            item {
-                ThermalHistoryCard(state = state)
-            }
-        } else {
-            item {
-                ObservationPatternsCard(state = state)
             }
         }
     }
@@ -820,7 +738,6 @@ private fun SelectedDayInspectionCard(
     phaseCertainty: PhaseCertainty?,
     isToday: Boolean,
     cycleStart: Cycle?,
-    temperatureUnit: TemperatureUnit,
     onEditCycle: (Cycle) -> Unit,
     onDeleteCycle: (Cycle) -> Unit,
     onEditOrAdd: () -> Unit,
@@ -957,25 +874,6 @@ private fun SelectedDayInspectionCard(
             // Biomarkers section
             if (biomarker != null && !biomarker.isEmpty) {
                 Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xxs)) {
-                    biomarker.bbt?.let { bbt ->
-                        val unitLabel = if (temperatureUnit == TemperatureUnit.CELSIUS) {
-                            stringResource(R.string.bbt_unit_celsius)
-                        } else {
-                            stringResource(R.string.bbt_unit_fahrenheit)
-                        }
-                        val formattedTemp = String.format(
-                            locale,
-                            "%.2f %s",
-                            bbt.valueInUnit(temperatureUnit),
-                            unitLabel
-                        )
-                        Text(
-                            text = stringResource(R.string.inspection_biomarker_bbt, formattedTemp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
                     biomarker.cervicalFluid?.let { fluid ->
                         if (fluid.hasObservation) {
                             val parts = mutableListOf<String>()
@@ -993,18 +891,6 @@ private fun SelectedDayInspectionCard(
                                 )
                             }
                         }
-                    }
-
-                    biomarker.rapidTests?.lhTest?.let { lhTest ->
-                        val lhStatus = when (lhTest) {
-                            LhTestResult.PEAK_POSITIVE -> stringResource(R.string.inspection_lh_positive)
-                            else -> stringResource(R.string.inspection_lh_negative)
-                        }
-                        Text(
-                            text = stringResource(R.string.inspection_biomarker_lh, lhStatus),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
                     }
                 }
             }
@@ -1312,79 +1198,6 @@ private fun bleedingLabel(intensity: BleedingIntensity): String = stringResource
     }
 )
 
-@Composable
-private fun ThermalHistoryCard(state: LutealUiState) {
-    val cycle = state.currentCycle
-    val unit = TemperatureUnit.entries.firstOrNull {
-        it.name == state.preferences.temperatureUnit
-    } ?: TemperatureUnit.CELSIUS
-    if (cycle == null) {
-        LutealCard(modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                Text(text = stringResource(R.string.thermal_empty_title), style = MaterialTheme.typography.titleMedium)
-                Text(
-                    text = stringResource(R.string.thermal_empty_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-        return
-    }
-    val observations = state.biomarkers.filter { it.date >= cycle.startDate }
-    val shift = remember(cycle.startDate, observations) {
-        ThermalShiftCalculator.evaluateCycle(cycle.startDate, observations)
-    }
-    LutealCard(modifier = Modifier.fillMaxWidth()) {
-        Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-            Text(
-                text = stringResource(R.string.thermal_chart_title),
-                style = MaterialTheme.typography.titleMedium
-            )
-            Text(
-                text = stringResource(R.string.thermal_chart_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (observations.none { it.bbt != null }) {
-                Text(
-                    text = stringResource(R.string.thermal_empty_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                ThermalShiftChart(
-                    cycleStart = cycle.startDate,
-                    observations = observations,
-                    shift = shift,
-                    unit = unit,
-                    contentDescription = stringResource(
-                        R.string.thermal_chart_summary,
-                        observations.count { it.bbt != null },
-                        observations.count { it.bbt?.isDisturbed == true },
-                        if (shift is ThermalShiftResult.Confirmed) {
-                            stringResource(R.string.thermal_shift_confirmed)
-                        } else {
-                            stringResource(R.string.thermal_chart_no_shift)
-                        }
-                    )
-                )
-                if (shift is ThermalShiftResult.Confirmed) {
-                    Text(
-                        text = stringResource(R.string.thermal_shift_confirmed),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.coverline_label),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        }
-    }
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun JournalDatePickerDialog(
@@ -1428,97 +1241,6 @@ private fun JournalDatePickerDialog(
         }
     ) {
         DatePicker(state = state)
-    }
-}
-
-@Composable
-private fun ObservationPatternsCard(state: LutealUiState) {
-    val patterns = remember(state.cycles, state.entries) {
-        SymptomPatternCalculator.calculate(state.cycles, state.entries)
-    }
-
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.md)) {
-        LutealCard(modifier = Modifier.fillMaxWidth()) {
-            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                Text(
-                    text = stringResource(R.string.journal_patterns_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = stringResource(R.string.journal_patterns_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-
-        if (patterns.isEmpty()) {
-            LutealCard(modifier = Modifier.fillMaxWidth()) {
-                Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                    Text(
-                        text = stringResource(R.string.journal_patterns_empty_title),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = stringResource(R.string.journal_patterns_empty_body),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        } else {
-            patterns.forEach { pattern ->
-                val label = symptomDisplayName(pattern.symptomId)
-                LutealCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = label,
-                                style = MaterialTheme.typography.titleSmall
-                            )
-                            Text(
-                                text = stringResource(
-                                    R.string.journal_patterns_total_occurrences,
-                                    pattern.totalOccurrences,
-                                    pattern.cycleCount
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-
-                        Text(
-                            text = stringResource(
-                                R.string.journal_patterns_phase_breakdown,
-                                pattern.phaseBreakdown[CyclePhase.MENSTRUAL] ?: 0,
-                                pattern.phaseBreakdown[CyclePhase.FOLLICULAR] ?: 0,
-                                pattern.phaseBreakdown[CyclePhase.OVULATORY] ?: 0,
-                                pattern.phaseBreakdown[CyclePhase.LUTEAL] ?: 0
-                            ),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-
-                        pattern.mostFrequentPhase?.let { topPhase ->
-                            Text(
-                                text = stringResource(
-                                    R.string.journal_patterns_most_frequent_phase,
-                                    journalPhaseLabel(topPhase),
-                                    pattern.phaseBreakdown[topPhase] ?: 0
-                                ),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 }
 

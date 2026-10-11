@@ -57,8 +57,6 @@ import fr.luteal.core.designsystem.component.ObservationScaleType
 import fr.luteal.core.designsystem.component.StatusPill
 import fr.luteal.core.designsystem.component.StatusTone
 import fr.luteal.core.designsystem.theme.LutealSpacing
-import fr.luteal.core.model.BasalBodyTemperature
-import fr.luteal.core.model.BbtDisturbance
 import fr.luteal.core.model.BiomarkerObservation
 import fr.luteal.core.model.BleedingIntensity
 import fr.luteal.core.model.CervicalFluidObservation
@@ -66,14 +64,8 @@ import fr.luteal.core.model.CervicalMucusSensation
 import fr.luteal.core.model.CervicalMucusTexture
 import fr.luteal.core.model.Cycle
 import fr.luteal.core.model.DailyEntry
-import fr.luteal.core.model.HcgTestResult
-import fr.luteal.core.model.LhTestResult
-import fr.luteal.core.model.RapidTestLogs
-import fr.luteal.core.model.TemperatureInput
-import fr.luteal.core.model.TemperatureUnit
 import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalTime
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -83,7 +75,6 @@ fun DailyEntrySheet(
     existingEntry: DailyEntry?,
     previousDayEntry: DailyEntry? = null,
     existingBiomarker: BiomarkerObservation? = null,
-    temperatureUnit: TemperatureUnit = TemperatureUnit.CELSIUS,
     currentCycle: Cycle?,
     /** Observations offered, derived from declared contexts. */
     offeredSymptomIds: List<String>,
@@ -121,28 +112,11 @@ fun DailyEntrySheet(
     var showBiomarkers by rememberSaveable(stateKey) {
         mutableStateOf(existingBiomarker != null && !existingBiomarker.isEmpty)
     }
-    var bbtHundredths by rememberSaveable(stateKey) {
-        mutableStateOf(
-            existingBiomarker?.bbt?.valueInUnit(temperatureUnit)?.let(TemperatureInput::toHundredths)
-        )
-    }
-    var bbtTime by rememberSaveable(stateKey) {
-        mutableStateOf(existingBiomarker?.bbt?.measuredTime?.toString()?.take(5).orEmpty())
-    }
-    var disturbanceNames by rememberSaveable(stateKey) {
-        mutableStateOf(existingBiomarker?.bbt?.disturbances.orEmpty().map { it.name }.sorted())
-    }
     var sensationName by rememberSaveable(stateKey) {
         mutableStateOf(existingBiomarker?.cervicalFluid?.sensation?.name)
     }
     var textureName by rememberSaveable(stateKey) {
         mutableStateOf(existingBiomarker?.cervicalFluid?.texture?.name)
-    }
-    var lhName by rememberSaveable(stateKey) {
-        mutableStateOf(existingBiomarker?.rapidTests?.lhTest?.name)
-    }
-    var hcgName by rememberSaveable(stateKey) {
-        mutableStateOf(existingBiomarker?.rapidTests?.hcgTest?.name)
     }
     var showDiscardConfirmation by remember { mutableStateOf(false) }
 
@@ -151,22 +125,9 @@ fun DailyEntrySheet(
     val previousDaySymptoms = remember(previousDayEntry) {
         previousDayEntry?.symptomIds.orEmpty()
     }
-    val currentBiomarker = remember(
-        date, bbtHundredths, bbtTime, disturbanceNames, sensationName, textureName, lhName, hcgName, temperatureUnit
-    ) {
-        val temperature = bbtHundredths?.let { hundredths ->
-            BasalBodyTemperature.fromUnit(hundredths / 100.0, temperatureUnit)?.copy(
-                measuredTime = bbtTime.takeIf { it.isNotBlank() }?.let {
-                    runCatching { LocalTime.parse(it) }.getOrNull()
-                },
-                disturbances = disturbanceNames.mapNotNull { name ->
-                    BbtDisturbance.entries.firstOrNull { it.name == name }
-                }.toSet()
-            )
-        }
+    val currentBiomarker = remember(date, sensationName, textureName) {
         BiomarkerObservation(
             date = date,
-            bbt = temperature,
             cervicalFluid = CervicalFluidObservation(
                 sensation = sensationName?.let { name ->
                     CervicalMucusSensation.entries.firstOrNull { it.name == name }
@@ -175,10 +136,6 @@ fun DailyEntrySheet(
                     CervicalMucusTexture.entries.firstOrNull { it.name == name }
                 }
             ).takeIf { it.hasObservation },
-            rapidTests = RapidTestLogs(
-                lhTest = lhName?.let { name -> LhTestResult.entries.firstOrNull { it.name == name } },
-                hcgTest = hcgName?.let { name -> HcgTestResult.entries.firstOrNull { it.name == name } }
-            ).takeIf { it.hasLogs },
             updatedAt = Instant.now()
         )
     }
@@ -323,28 +280,11 @@ fun DailyEntrySheet(
 
                 if (showBiomarkers) {
                     item {
-                        BiomarkerEditor(
-                            temperatureUnit = temperatureUnit,
-                            bbtHundredths = bbtHundredths,
-                            onBbtHundredthsChange = { bbtHundredths = it },
-                            bbtTime = bbtTime,
-                            onBbtTimeChange = { bbtTime = it },
-                            disturbanceNames = disturbanceNames.toSet(),
-                            onToggleDisturbance = { name ->
-                                disturbanceNames = if (name in disturbanceNames) {
-                                    (disturbanceNames - name).sorted()
-                                } else {
-                                    (disturbanceNames + name).sorted()
-                                }
-                            },
+                        CervicalFluidEditor(
                             sensationName = sensationName,
                             onSensationChange = { sensationName = it },
                             textureName = textureName,
-                            onTextureChange = { textureName = it },
-                            lhName = lhName,
-                            onLhChange = { lhName = it },
-                            hcgName = hcgName,
-                            onHcgChange = { hcgName = it }
+                            onTextureChange = { textureName = it }
                         )
                     }
                 }
@@ -725,100 +665,17 @@ private fun SymptomSelector(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun BiomarkerEditor(
-    temperatureUnit: TemperatureUnit,
-    bbtHundredths: Int?,
-    onBbtHundredthsChange: (Int?) -> Unit,
-    bbtTime: String,
-    onBbtTimeChange: (String) -> Unit,
-    disturbanceNames: Set<String>,
-    onToggleDisturbance: (String) -> Unit,
+private fun CervicalFluidEditor(
     sensationName: String?,
     onSensationChange: (String?) -> Unit,
     textureName: String?,
-    onTextureChange: (String?) -> Unit,
-    lhName: String?,
-    onLhChange: (String?) -> Unit,
-    hcgName: String?,
-    onHcgChange: (String?) -> Unit
+    onTextureChange: (String?) -> Unit
 ) {
-    val step = TemperatureInput.step(temperatureUnit)
-    val defaultHundredths = TemperatureInput.defaultHundredths(temperatureUnit)
-    val unitLabel = if (temperatureUnit == TemperatureUnit.CELSIUS) {
-        stringResource(R.string.bbt_unit_celsius)
-    } else {
-        stringResource(R.string.bbt_unit_fahrenheit)
-    }
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.md)) {
         Text(
             text = stringResource(R.string.biomarker_section_title),
             style = MaterialTheme.typography.titleSmall
         )
-        Text(
-            text = stringResource(R.string.bbt_title),
-            style = MaterialTheme.typography.labelLarge
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            IconButton(
-                onClick = {
-                    val current = bbtHundredths ?: defaultHundredths
-                    onBbtHundredthsChange(TemperatureInput.clampHundredths(current - step, temperatureUnit))
-                },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(Icons.Rounded.Remove, contentDescription = stringResource(R.string.bbt_decrease))
-            }
-            Text(
-                text = bbtHundredths?.let {
-                    String.format(java.util.Locale.getDefault(), "%.2f %s", it / 100.0, unitLabel)
-                } ?: stringResource(R.string.bbt_unset),
-                style = MaterialTheme.typography.titleMedium
-            )
-            IconButton(
-                onClick = {
-                    val current = bbtHundredths ?: defaultHundredths
-                    onBbtHundredthsChange(TemperatureInput.clampHundredths(current + step, temperatureUnit))
-                },
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.bbt_increase))
-            }
-            TextButton(onClick = { onBbtHundredthsChange(null) }) {
-                Text(stringResource(R.string.bbt_clear))
-            }
-        }
-        OutlinedTextField(
-            value = bbtTime,
-            onValueChange = { onBbtTimeChange(it.take(5)) },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(R.string.bbt_time_label)) },
-            placeholder = { Text(stringResource(R.string.bbt_time_placeholder)) },
-            singleLine = true
-        )
-        Text(
-            text = stringResource(R.string.bbt_disturbances_title),
-            style = MaterialTheme.typography.labelMedium
-        )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-        ) {
-            BbtDisturbance.entries.forEach { disturbance ->
-                val selected = disturbance.name in disturbanceNames
-                FilterChip(
-                    selected = selected,
-                    onClick = { onToggleDisturbance(disturbance.name) },
-                    label = { Text(disturbanceLabel(disturbance)) },
-                    leadingIcon = if (selected) {
-                        { Icon(Icons.Rounded.Check, contentDescription = null) }
-                    } else null,
-                    shape = MaterialTheme.shapes.small
-                )
-            }
-        }
         Text(
             text = stringResource(R.string.cervical_fluid_title),
             style = MaterialTheme.typography.labelLarge
@@ -859,61 +716,8 @@ private fun BiomarkerEditor(
                 )
             }
         }
-        Text(
-            text = stringResource(R.string.rapid_tests_title),
-            style = MaterialTheme.typography.labelLarge
-        )
-        Text(stringResource(R.string.lh_test_title), style = MaterialTheme.typography.labelMedium)
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-        ) {
-            LhTestResult.entries.forEach { result ->
-                val selected = lhName == result.name
-                FilterChip(
-                    selected = selected,
-                    onClick = { onLhChange(if (selected) null else result.name) },
-                    label = { Text(lhLabel(result)) },
-                    leadingIcon = if (selected) {
-                        { Icon(Icons.Rounded.Check, contentDescription = null) }
-                    } else null,
-                    shape = MaterialTheme.shapes.small
-                )
-            }
-        }
-        Text(stringResource(R.string.hcg_test_title), style = MaterialTheme.typography.labelMedium)
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-        ) {
-            HcgTestResult.entries.forEach { result ->
-                val selected = hcgName == result.name
-                FilterChip(
-                    selected = selected,
-                    onClick = { onHcgChange(if (selected) null else result.name) },
-                    label = { Text(hcgLabel(result)) },
-                    leadingIcon = if (selected) {
-                        { Icon(Icons.Rounded.Check, contentDescription = null) }
-                    } else null,
-                    shape = MaterialTheme.shapes.small
-                )
-            }
-        }
     }
 }
-
-@Composable
-private fun disturbanceLabel(disturbance: BbtDisturbance): String = stringResource(
-    when (disturbance) {
-        BbtDisturbance.FEVER -> R.string.disturbance_fever
-        BbtDisturbance.ALCOHOL -> R.string.disturbance_alcohol
-        BbtDisturbance.POOR_SLEEP -> R.string.disturbance_poor_sleep
-        BbtDisturbance.TIME_SHIFT -> R.string.disturbance_time_shift
-        BbtDisturbance.LATE_MEASUREMENT -> R.string.disturbance_late_measurement
-        BbtDisturbance.STRESS -> R.string.disturbance_stress
-        BbtDisturbance.MEDICATION -> R.string.disturbance_medication
-    }
-)
 
 @Composable
 private fun sensationLabel(sensation: CervicalMucusSensation): String = stringResource(
@@ -932,24 +736,5 @@ private fun textureLabel(texture: CervicalMucusTexture): String = stringResource
         CervicalMucusTexture.CREAMY -> R.string.texture_creamy
         CervicalMucusTexture.EGG_WHITE -> R.string.texture_egg_white
         CervicalMucusTexture.WATERY -> R.string.texture_watery
-    }
-)
-
-@Composable
-private fun lhLabel(result: LhTestResult): String = stringResource(
-    when (result) {
-        LhTestResult.NEGATIVE -> R.string.lh_negative
-        LhTestResult.LOW -> R.string.lh_low
-        LhTestResult.PEAK_POSITIVE -> R.string.lh_peak_positive
-        LhTestResult.INDETERMINATE -> R.string.lh_indeterminate
-    }
-)
-
-@Composable
-private fun hcgLabel(result: HcgTestResult): String = stringResource(
-    when (result) {
-        HcgTestResult.NEGATIVE -> R.string.hcg_negative
-        HcgTestResult.POSITIVE -> R.string.hcg_positive
-        HcgTestResult.FAINT_UNCERTAIN -> R.string.hcg_faint_uncertain
     }
 )
