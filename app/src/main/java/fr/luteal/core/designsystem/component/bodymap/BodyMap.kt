@@ -123,7 +123,7 @@ private fun ZoneCanvas(
 ) {
     val shapes = BodyMapGeometry.shapes(side)
     val paths = remember(side) { shapes.map { it.toPath() } }
-    val outline = MaterialTheme.colorScheme.outline
+    val ink = MaterialTheme.colorScheme.onSurface
     Canvas(
         modifier = Modifier
             .fillMaxWidth()
@@ -152,12 +152,12 @@ private fun ZoneCanvas(
                 val path = paths[index]
                 val intensity = heat[shape.zone]
                 val fill = if (intensity == null) {
-                    outline.copy(alpha = 0.12f)
+                    ink.copy(alpha = 0.28f)
                 } else {
                     painIntensityColor(intensity).copy(alpha = 0.85f)
                 }
                 drawPath(path, fill)
-                drawPath(path, outline, style = Stroke(width = 0.6f))
+                drawPath(path, ink, style = Stroke(width = 1.2f))
             }
         }
     }
