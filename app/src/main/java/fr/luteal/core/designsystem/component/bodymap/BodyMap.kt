@@ -150,17 +150,24 @@ private fun ZoneCanvas(
         val scaleX = size.width / BodyMapGeometry.VIEWBOX_WIDTH
         val scaleY = size.height / BodyMapGeometry.VIEWBOX_HEIGHT
         // Default pivot is the canvas center, which throws the viewBox off-screen.
+        val silhouette = BodySilhouettePaths.path(side)
         scale(scaleX, scaleY, pivot = Offset.Zero) {
+            drawPath(
+                silhouette,
+                ink.copy(alpha = 0.4f),
+                style = Stroke(width = 1.8f / scaleX)
+            )
             shapes.forEachIndexed { index, shape ->
                 val path = paths[index]
-                val intensity = heat[shape.zone]
-                val fill = if (intensity == null) {
-                    ink.copy(alpha = 0.28f)
-                } else {
-                    painIntensityColor(intensity).copy(alpha = 0.85f)
-                }
-                drawPath(path, fill)
-                drawPath(path, ink, style = Stroke(width = 1.5f / scaleX))
+                val intensity = heat[shape.zone] ?: return@forEachIndexed
+                val color = painIntensityColor(intensity)
+                drawPath(path, color.copy(alpha = 0.85f))
+                val center = shape.rect.center
+                drawCircle(
+                    color = color,
+                    radius = 3f / scaleX,
+                    center = center
+                )
             }
         }
     }

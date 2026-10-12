@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Événements du jour en tuiles cliquables, y compris les prises de médicament modifiables ou supprimables.
 - Calendrier en tête de l’agenda ; l’ajout d’historique de cycles reste sur la carte du jour.
 - Les plans de médicaments récurrents se configurent dans les Réglages.
+- Programmes TENS modifiables directement dans les Réglages > Traitements.
+- Le menu + de l’agenda propose TENS avec programme, durée et rappel optionnel une heure après la fin.
+- Suppression des bannières informatives « Données et confidentialité » dans les Réglages.
+- Carte du corps : silhouette féminine et points de douleur sur les zones touchées.
 
 ## [0.6.0] - 2026-10-12
 
