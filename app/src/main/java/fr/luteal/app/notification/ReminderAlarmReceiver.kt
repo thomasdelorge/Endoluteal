@@ -57,6 +57,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_OPEN_MEDICATION = "open_medication"
         const val EXTRA_OPEN_RECAP_DATE = "open_recap_date"
         const val EXTRA_OPEN_MONTHLY_PERIOD = "open_monthly_period"
+        const val EXTRA_OPEN_APPOINTMENT_REPORT = "open_appointment_report"
     }
 }
 
@@ -84,6 +85,14 @@ private suspend fun ReminderAlarmReceiver.handlePrimary(context: Context, id: St
             } else if (!medicationId.isNullOrBlank()) {
                 context.openEndoluteal {
                     putExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION, medicationId)
+                }
+            }
+        }
+        ReminderType.APPOINTMENT_REPORT -> {
+            val eventId = reminder.eventId
+            if (!eventId.isNullOrBlank()) {
+                context.openEndoluteal {
+                    putExtra(ReminderAlarmReceiver.EXTRA_OPEN_APPOINTMENT_REPORT, eventId)
                 }
             }
         }

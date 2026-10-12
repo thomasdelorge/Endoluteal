@@ -3,6 +3,11 @@ package fr.luteal.app.navigation.entry
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import fr.luteal.app.notification.AppointmentReportScheduler
+import fr.luteal.core.calendar.CalendarImportEngine
+import fr.luteal.core.calendar.ProfessionalSuggestionHistory
+import fr.luteal.core.data.local.AppointmentDao
+import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.repository.AppointmentRepository
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.data.repository.ProfessionalRepository
@@ -28,6 +33,9 @@ class AppointmentEntryViewModel @Inject constructor(
     private val journalEventRepository: JournalEventRepository,
     private val appointmentRepository: AppointmentRepository,
     private val professionalRepository: ProfessionalRepository,
+    private val appointmentDao: AppointmentDao,
+    private val journalEventDao: JournalEventDao,
+    private val appointmentReportScheduler: AppointmentReportScheduler,
     private val clock: Clock
 ) : ViewModel() {
     val professionals: StateFlow<List<Professional>> = professionalRepository.observeAll()
@@ -48,6 +56,7 @@ class AppointmentEntryViewModel @Inject constructor(
     ) {
         val now = clock.instant()
         val existing = eventId?.let { journalEventRepository.get(it) }
+        val existingAppointment = eventId?.let { appointmentRepository.get(it) }
         val id = eventId ?: UUID.randomUUID().toString()
         val status = if (report.isNotBlank()) ReportStatus.DONE else ReportStatus.PENDING
         journalEventRepository.upsert(
@@ -69,12 +78,42 @@ class AppointmentEntryViewModel @Inject constructor(
             Appointment(
                 eventId = id,
                 professionalId = professionalId,
-                calendarEventKey = null,
+                calendarEventKey = existingAppointment?.calendarEventKey,
                 location = location,
                 report = report,
                 reportStatus = status
             )
         )
+        appointmentReportScheduler.syncForEvent(id)
+    }
+
+    suspend fun saveReport(eventId: String, professionalId: String, report: String) {
+        val existing = appointmentRepository.get(eventId) ?: return
+        val status = if (report.isNotBlank()) ReportStatus.DONE else ReportStatus.PENDING
+        appointmentRepository.upsert(
+            existing.copy(
+                professionalId = professionalId,
+                report = report,
+                reportStatus = status
+            )
+        )
+        appointmentReportScheduler.syncForEvent(eventId)
+    }
+
+    suspend fun suggestProfessionalId(title: String, location: String): String? {
+        val events = journalEventDao.getAllOnce()
+            .filter { it.type == JournalEventType.APPOINTMENT.name }
+            .associateBy { it.id }
+        val history = appointmentDao.allOnce().mapNotNull { entity ->
+            val event = events[entity.eventId] ?: return@mapNotNull null
+            ProfessionalSuggestionHistory(
+                professionalId = entity.professionalId,
+                title = event.notes,
+                location = entity.location,
+                startAtEpochMillis = event.startAt
+            )
+        }
+        return CalendarImportEngine.suggestProfessionalId(title, location, history)
     }
 
     fun createProfessional(name: String, specialty: Specialty, customSpecialty: String) {

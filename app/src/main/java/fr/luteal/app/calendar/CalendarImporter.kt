@@ -8,6 +8,7 @@ import fr.luteal.core.calendar.ProfessionalSuggestionHistory
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.local.JournalEventDao
+import fr.luteal.app.notification.AppointmentReportScheduler
 import fr.luteal.core.data.repository.AppointmentRepository
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.model.EventPayload
@@ -32,6 +33,7 @@ class CalendarImporter @Inject constructor(
     private val journalEventDao: JournalEventDao,
     private val journalEventRepository: JournalEventRepository,
     private val appointmentRepository: AppointmentRepository,
+    private val appointmentReportScheduler: AppointmentReportScheduler,
     private val clock: Clock
 ) {
     suspend fun importNow(): Result<Int> = runCatching {
@@ -68,13 +70,15 @@ class CalendarImporter @Inject constructor(
         val plan = CalendarImportEngine.planImport(instances, existingImported, history)
         val nowInstant = clock.instant()
         plan.upserts.forEach { upsert ->
-            persistUpsert(upsert, zone, nowInstant)
+            val eventId = persistUpsert(upsert, zone, nowInstant)
+            appointmentReportScheduler.syncForEvent(eventId)
         }
         plan.cancelEventIds.forEach { eventId ->
             val existing = appointmentRepository.get(eventId) ?: return@forEach
             appointmentRepository.upsert(
                 existing.copy(reportStatus = ReportStatus.CANCELLED)
             )
+            appointmentReportScheduler.syncForEvent(eventId)
         }
         plan.upserts.size
     }
@@ -83,7 +87,7 @@ class CalendarImporter @Inject constructor(
         upsert: fr.luteal.core.calendar.CalendarImportUpsert,
         zone: ZoneId,
         now: Instant
-    ) {
+    ): String {
         val eventId = upsert.existingEventId ?: UUID.randomUUID().toString()
         val existingEvent = upsert.existingEventId?.let { journalEventRepository.get(it) }
         val startAt = Instant.ofEpochMilli(upsert.startAtEpochMillis)
@@ -114,6 +118,7 @@ class CalendarImporter @Inject constructor(
                 reportStatus = upsert.reportStatus
             )
         )
+        return eventId
     }
 
     private fun buildHistory(

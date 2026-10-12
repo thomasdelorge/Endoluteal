@@ -26,6 +26,7 @@ import fr.luteal.app.navigation.AppLockResolvingBarrier
 import fr.luteal.app.navigation.AppLockScreen
 import fr.luteal.app.navigation.LutealMainScaffold
 import fr.luteal.app.calendar.CalendarImportScheduler
+import fr.luteal.app.notification.AppointmentReportScheduler
 import fr.luteal.app.notification.ReminderAlarmReceiver
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.security.AppLockManager
@@ -46,11 +47,15 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var calendarImportScheduler: CalendarImportScheduler
 
+    @Inject
+    lateinit var appointmentReportScheduler: AppointmentReportScheduler
+
     private var bufferedImportJson by mutableStateOf<String?>(null)
     private var pendingPainEventId by mutableStateOf<String?>(null)
     private var pendingMedicationId by mutableStateOf<String?>(null)
     private var pendingRecapDate by mutableStateOf<String?>(null)
     private var pendingMonthlyPeriod by mutableStateOf<String?>(null)
+    private var pendingAppointmentReportEventId by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +64,7 @@ class MainActivity : FragmentActivity() {
         lifecycleScope.launch {
             calendarImportScheduler.enqueueNow()
             calendarImportScheduler.schedulePeriodic()
+            appointmentReportScheduler.reconcileAll()
         }
         enableEdgeToEdge()
 
@@ -104,12 +110,14 @@ class MainActivity : FragmentActivity() {
                             pendingMedicationId = if (!barrierUp) pendingMedicationId else null,
                             pendingRecapDate = if (!barrierUp) pendingRecapDate else null,
                             pendingMonthlyPeriod = if (!barrierUp) pendingMonthlyPeriod else null,
+                            pendingAppointmentReportEventId = if (!barrierUp) pendingAppointmentReportEventId else null,
                             onPendingImportConsumed = { bufferedImportJson = null },
                             onPendingReminderConsumed = {
                                 pendingPainEventId = null
                                 pendingMedicationId = null
                                 pendingRecapDate = null
                                 pendingMonthlyPeriod = null
+                                pendingAppointmentReportEventId = null
                             }
                         )
                     }
@@ -143,6 +151,7 @@ class MainActivity : FragmentActivity() {
         pendingMedicationId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION)
         pendingRecapDate = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE)
         pendingMonthlyPeriod = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MONTHLY_PERIOD)
+        pendingAppointmentReportEventId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_APPOINTMENT_REPORT)
     }
 
     private fun showBiometricPrompt() {

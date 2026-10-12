@@ -45,6 +45,7 @@ import fr.luteal.app.navigation.entry.PainCheckSheet
 import fr.luteal.app.navigation.entry.CareSessionEntryViewModel
 import fr.luteal.app.navigation.entry.CareSessionSheet
 import fr.luteal.app.navigation.entry.AppointmentEntryViewModel
+import fr.luteal.app.navigation.entry.AppointmentReportSheet
 import fr.luteal.app.navigation.entry.AppointmentSheet
 import fr.luteal.app.navigation.entry.HospitalizationEntryViewModel
 import fr.luteal.app.navigation.entry.HospitalizationSheet
@@ -66,6 +67,7 @@ fun LutealMainScaffold(
     pendingMedicationId: String? = null,
     pendingRecapDate: String? = null,
     pendingMonthlyPeriod: String? = null,
+    pendingAppointmentReportEventId: String? = null,
     onPendingImportConsumed: () -> Unit = {},
     onPendingReminderConsumed: () -> Unit = {},
     viewModel: LutealViewModel = hiltViewModel()
@@ -98,6 +100,7 @@ fun LutealMainScaffold(
     var appointmentEventId by remember { mutableStateOf<String?>(null) }
     var recapDate by remember { mutableStateOf<LocalDate?>(null) }
     var monthlyPeriod by remember { mutableStateOf<java.time.YearMonth?>(null) }
+    var appointmentReportEventId by remember { mutableStateOf<String?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -112,7 +115,13 @@ fun LutealMainScaffold(
         onPendingImportConsumed()
     }
 
-    LaunchedEffect(pendingPainEventId, pendingMedicationId, pendingRecapDate, pendingMonthlyPeriod) {
+    LaunchedEffect(
+        pendingPainEventId,
+        pendingMedicationId,
+        pendingRecapDate,
+        pendingMonthlyPeriod,
+        pendingAppointmentReportEventId
+    ) {
         if (pendingPainEventId != null) {
             selectedDestination = LutealDestination.AGENDA
             painCheckEventId = pendingPainEventId
@@ -130,6 +139,10 @@ fun LutealMainScaffold(
             selectedDestination = LutealDestination.AGENDA
             monthlyPeriod = runCatching { java.time.YearMonth.parse(pendingMonthlyPeriod) }
                 .getOrDefault(java.time.YearMonth.from(uiState.today))
+            onPendingReminderConsumed()
+        } else if (pendingAppointmentReportEventId != null) {
+            selectedDestination = LutealDestination.AGENDA
+            appointmentReportEventId = pendingAppointmentReportEventId
             onPendingReminderConsumed()
         }
     }
@@ -344,6 +357,14 @@ fun LutealMainScaffold(
             period = period,
             viewModel = monthlyQuestionnaireViewModel,
             onDismiss = { monthlyPeriod = null }
+        )
+    }
+
+    appointmentReportEventId?.let { eventId ->
+        AppointmentReportSheet(
+            eventId = eventId,
+            viewModel = appointmentViewModel,
+            onDismiss = { appointmentReportEventId = null }
         )
     }
 

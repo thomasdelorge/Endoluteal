@@ -187,7 +187,7 @@ fun AppointmentSheet(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun NewProfessionalDialog(
+internal fun NewProfessionalDialog(
     onDismiss: () -> Unit,
     onSave: (String, Specialty, String) -> Unit
 ) {

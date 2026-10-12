@@ -1017,6 +1017,11 @@
     <string name="notif_channel_recap_desc">Invitation à compléter la journée</string>
     <string name="notif_channel_appointment_report">Compte rendu</string>
     <string name="notif_channel_appointment_report_desc">Compte rendu après un rendez-vous</string>
+    <string name="notif_appointment_report_title">Compte rendu de rendez-vous</string>
+    <string name="notif_appointment_report_body">Notez ce qui a été dit pendant la consultation.</string>
+    <string name="notif_action_appointment_report">Rédiger le compte rendu</string>
+    <string name="appointment_report_prompt_title">Compte rendu</string>
+    <string name="appointment_report_prompt_body">Texte libre, associé au professionnel consulté.</string>
     <string name="notif_action_snooze_10">+10 min</string>
     <string name="notif_action_snooze_30">+30 min</string>
     <string name="notif_action_snooze_60">+1 h</string>

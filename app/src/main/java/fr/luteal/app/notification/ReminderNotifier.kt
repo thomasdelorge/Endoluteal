@@ -33,17 +33,25 @@ class ReminderNotifier @Inject constructor(
         val payload = runCatching {
             Json { ignoreUnknownKeys = true }.decodeFromString(MedsAlarmPayload.serializer(), reminder.payloadJson)
         }.getOrNull()
-        val body = payload?.items?.joinToString { it.name }?.takeIf { it.isNotBlank() }
-            ?: payload?.name?.takeIf { it.isNotBlank() }
-            ?: context.getString(R.string.notif_reminder_body)
+        val body = when (type) {
+            ReminderType.APPOINTMENT_REPORT -> context.getString(R.string.notif_appointment_report_body)
+            else -> payload?.items?.joinToString { it.name }?.takeIf { it.isNotBlank() }
+                ?: payload?.name?.takeIf { it.isNotBlank() }
+                ?: context.getString(R.string.notif_reminder_body)
+        }
+        val title = when (type) {
+            ReminderType.APPOINTMENT_REPORT -> context.getString(R.string.notif_appointment_report_title)
+            else -> context.getString(R.string.notif_reminder_title)
+        }
         val primary = when {
+            type == ReminderType.APPOINTMENT_REPORT -> R.string.notif_action_appointment_report
             type == ReminderType.PAIN_FOLLOWUP -> R.string.notif_action_pain_check
             payload != null && payload.items.isNotEmpty() -> R.string.notif_action_take_all
             else -> R.string.notif_action_open
         }
         val notification = NotificationCompat.Builder(context, type.channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(context.getString(R.string.notif_reminder_title))
+            .setContentTitle(title)
             .setContentText(body)
             .setAutoCancel(true)
             .addAction(0, context.getString(primary), actionIntent(reminder.id, ReminderAlarmReceiver.ACTION_PRIMARY, 1))
