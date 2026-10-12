@@ -246,10 +246,18 @@ private fun PainMarkSheet(
                     )
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                if (existing != null) {
-                    TextButton(onClick = onRemove) {
-                        Text(stringResource(R.string.body_map_remove))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.intake_cancel))
+                    }
+                    if (existing != null) {
+                        TextButton(onClick = onRemove) {
+                            Text(stringResource(R.string.body_map_remove))
+                        }
                     }
                 }
                 Button(
@@ -266,7 +274,7 @@ private fun PainMarkSheet(
                     },
                     enabled = intensity != null
                 ) {
-                    Text(stringResource(R.string.action_save_entry))
+                    Text(stringResource(R.string.meds_save))
                 }
             }
         }

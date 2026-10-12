@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Choix du médicament dans un menu déroulant filtrable.
 - Un rendez-vous importé garde son titre et le praticien choisi au prochain import.
 - Les boutons Enregistrer des saisies sont des boutons remplis.
+- Annuler est à gauche et Enregistrer à droite dans les feuilles de saisie.
 
 ## [0.4.0] - 2026-10-12
 

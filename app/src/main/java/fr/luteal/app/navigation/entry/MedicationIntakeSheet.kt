@@ -35,6 +35,7 @@ import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.PainScale
+import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.PainMark
@@ -159,10 +160,12 @@ fun MedicationIntakeSheet(
             if (showMap) {
                 BodyMap(marks = marks, onMarksChange = { marks = it })
             }
-            Button(
-                onClick = {
-                    val id = medicationId ?: return@Button
-                    val count = unitCount ?: return@Button
+            SheetActions(
+                onCancel = onDismiss,
+                confirmEnabled = medicationId != null && unitCount != null && unitCount > 0.0,
+                onConfirm = {
+                    val id = medicationId ?: return@SheetActions
+                    val count = unitCount ?: return@SheetActions
                     val alerts = report?.alerts.orEmpty()
                     if (alerts.any { it.severity == AlertSeverity.DANGER }) {
                         askDanger = true
@@ -172,9 +175,8 @@ fun MedicationIntakeSheet(
                             doneAt = saved.nextPossibleIntakeAt
                         }
                     }
-                },
-                enabled = medicationId != null && unitCount != null && unitCount > 0.0
-            ) { Text(stringResource(R.string.meds_save)) }
+                }
+            )
         }
     }
 
@@ -253,12 +255,15 @@ fun PainCheckSheet(
             PainScale(value = intensity, onValueChange = { intensity = it })
             TextButton(onClick = { showMap = !showMap }) { Text(stringResource(R.string.intake_body_map)) }
             if (showMap) BodyMap(marks = marks, onMarksChange = { marks = it })
-            Button(onClick = {
-                scope.launch {
-                    viewModel.savePainCheck(linkedEventId, marksWith(intensity, marks))
-                    onDismiss()
+            SheetActions(
+                onCancel = onDismiss,
+                onConfirm = {
+                    scope.launch {
+                        viewModel.savePainCheck(linkedEventId, marksWith(intensity, marks))
+                        onDismiss()
+                    }
                 }
-            }) { Text(stringResource(R.string.meds_save)) }
+            )
         }
     }
 }

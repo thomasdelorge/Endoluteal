@@ -31,6 +31,7 @@ import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.PainScale
+import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.care.CareType
@@ -202,9 +203,11 @@ fun CareSessionSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             val duration = durationMinutes.toIntOrNull() ?: 0
-            Button(
-                onClick = {
-                    val type = selectedType ?: return@Button
+            SheetActions(
+                onCancel = onDismiss,
+                confirmEnabled = selectedType != null && duration > 0,
+                onConfirm = {
+                    val type = selectedType ?: return@SheetActions
                     scope.launch {
                         followup = viewModel.save(
                             eventId = existingEventId,
@@ -217,9 +220,8 @@ fun CareSessionSheet(
                             notes = notes
                         )
                     }
-                },
-                enabled = selectedType != null && duration > 0
-            ) { Text(stringResource(R.string.meds_save)) }
+                }
+            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.care_delete))

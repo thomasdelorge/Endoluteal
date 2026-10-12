@@ -29,6 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Specialty
 import java.time.LocalDate
@@ -158,9 +159,11 @@ fun AppointmentSheet(
                 label = { Text(stringResource(R.string.appointment_report)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            Button(
-                onClick = {
-                    val professionalId = selectedProfessionalId ?: return@Button
+            SheetActions(
+                onCancel = onDismiss,
+                confirmEnabled = selectedProfessionalId != null,
+                onConfirm = {
+                    val professionalId = selectedProfessionalId ?: return@SheetActions
                     scope.launch {
                         viewModel.save(
                             eventId = existingEventId,
@@ -173,9 +176,8 @@ fun AppointmentSheet(
                         )
                         onDismiss()
                     }
-                },
-                enabled = selectedProfessionalId != null
-            ) { Text(stringResource(R.string.meds_save)) }
+                }
+            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.appointment_delete))

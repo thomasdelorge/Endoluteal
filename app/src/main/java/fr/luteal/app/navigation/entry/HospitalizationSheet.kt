@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -27,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.EventPayload
@@ -171,8 +171,9 @@ fun HospitalizationSheet(
                 label = { Text(stringResource(R.string.symptom_notes)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            Button(
-                onClick = {
+            SheetActions(
+                onCancel = onDismiss,
+                onConfirm = {
                     scope.launch {
                         val endInstant = if (hasDischarge) dischargeAt.atZone(zone).toInstant() else null
                         viewModel.save(
@@ -191,7 +192,7 @@ fun HospitalizationSheet(
                         onDismiss()
                     }
                 }
-            ) { Text(stringResource(R.string.meds_save)) }
+            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.hospital_delete))

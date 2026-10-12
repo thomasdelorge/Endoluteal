@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Specialty
 import kotlinx.coroutines.launch
@@ -110,17 +110,17 @@ fun AppointmentReportSheet(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4
             )
-            Button(
-                onClick = {
-                    val professionalId = selectedProfessionalId ?: return@Button
+            SheetActions(
+                onCancel = onDismiss,
+                confirmEnabled = selectedProfessionalId != null,
+                onConfirm = {
+                    val professionalId = selectedProfessionalId ?: return@SheetActions
                     scope.launch {
                         viewModel.saveReport(eventId, professionalId, report)
                         onDismiss()
                     }
-                },
-                enabled = selectedProfessionalId != null,
-                modifier = Modifier.fillMaxWidth()
-            ) { Text(stringResource(R.string.meds_save)) }
+                }
+            )
         }
     }
 }
