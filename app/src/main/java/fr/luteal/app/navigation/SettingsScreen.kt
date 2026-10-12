@@ -437,6 +437,13 @@ fun SettingsScreen(
                 checked = syncState.hideDyspareuniaInRecap,
                 onCheckedChange = viewModel::setHideDyspareuniaInRecap
             )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            LutealToggleRow(
+                title = stringResource(R.string.settings_hide_libido_recap_title),
+                description = stringResource(R.string.settings_hide_libido_recap_body),
+                checked = syncState.hideLibidoInRecap,
+                onCheckedChange = viewModel::setHideLibidoInRecap
+            )
         }
 
         SettingsSectionHeader(title = stringResource(R.string.settings_appearance_title))

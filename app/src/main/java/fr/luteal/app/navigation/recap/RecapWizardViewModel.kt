@@ -18,11 +18,15 @@ import fr.luteal.core.model.CycleEstimateCalculator
 import fr.luteal.core.model.CycleEstimateResult
 import fr.luteal.core.model.CurrentCyclePhase
 import fr.luteal.core.model.CurrentCyclePhaseCalculator
+import fr.luteal.core.model.CyclePhase
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.core.model.PhaseCertainty
 import fr.luteal.core.model.recap.DailyRecap
+import fr.luteal.core.model.recap.RecapBowelPayload
 import fr.luteal.core.model.recap.RecapCyclePayload
+import fr.luteal.core.model.recap.RecapGeneralPayload
 import fr.luteal.core.model.recap.RecapPainPayload
+import fr.luteal.core.model.recap.RecapPsyPayload
 import fr.luteal.core.model.recap.RecapStep
 import fr.luteal.core.model.meds.continuousHormonalActive
 import java.time.Clock
@@ -65,6 +69,10 @@ class RecapWizardViewModel @Inject constructor(
 
     val hideDyspareunia: StateFlow<Boolean> = userRepository.getUserPreferences()
         .map { it.hideDyspareuniaInRecap }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
+
+    val hideLibido: StateFlow<Boolean> = userRepository.getUserPreferences()
+        .map { it.hideLibidoInRecap }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
 
     fun open(date: LocalDate) {
@@ -115,12 +123,40 @@ class RecapWizardViewModel @Inject constructor(
     }
 
     fun finishPainStep(payload: RecapPainPayload, onDone: () -> Unit) {
+        finishPayloadStep(RecapStep.PAIN, onDone) { current, now ->
+            current.copy(pain = payload, updatedAt = now)
+        }
+    }
+
+    fun finishPsyStep(payload: RecapPsyPayload, onDone: () -> Unit) {
+        finishPayloadStep(RecapStep.PSY, onDone) { current, now ->
+            current.copy(psy = payload, updatedAt = now)
+        }
+    }
+
+    fun finishGeneralStep(payload: RecapGeneralPayload, onDone: () -> Unit) {
+        finishPayloadStep(RecapStep.GENERAL, onDone) { current, now ->
+            current.copy(general = payload, updatedAt = now)
+        }
+    }
+
+    fun finishBowelStep(payload: RecapBowelPayload, onDone: () -> Unit) {
+        finishPayloadStep(RecapStep.BOWEL, onDone) { current, now ->
+            current.copy(bowel = payload, updatedAt = now)
+        }
+    }
+
+    private fun finishPayloadStep(
+        step: RecapStep,
+        onDone: () -> Unit,
+        merge: (DailyRecap, Instant) -> DailyRecap
+    ) {
         val date = _recapDate.value ?: return
         viewModelScope.launch {
             val now = clock.instant()
             val current = dailyRecapRepository.get(date) ?: DailyRecap.empty(date, now)
-            dailyRecapRepository.upsert(current.copy(pain = payload, updatedAt = now))
-            dailyRecapRepository.markStepComplete(date, RecapStep.PAIN)
+            dailyRecapRepository.upsert(merge(current, now))
+            dailyRecapRepository.markStepComplete(date, step)
             _recap.value = dailyRecapRepository.get(date)
             onDone()
         }

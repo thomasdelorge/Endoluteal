@@ -37,7 +37,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import fr.luteal.app.EntrySaveState
 import fr.luteal.app.LutealViewModel
 import fr.luteal.app.R
 import fr.luteal.app.navigation.entry.MedicationIntakeSheet
@@ -51,12 +50,13 @@ import fr.luteal.app.navigation.entry.HospitalizationEntryViewModel
 import fr.luteal.app.navigation.entry.HospitalizationSheet
 import fr.luteal.app.navigation.entry.SymptomEntryViewModel
 import fr.luteal.app.navigation.entry.SymptomSheet
+import fr.luteal.app.navigation.recap.MonthlyQuestionnaireSheet
+import fr.luteal.app.navigation.recap.MonthlyQuestionnaireViewModel
 import fr.luteal.app.navigation.recap.RecapWizardSheet
 import fr.luteal.app.navigation.recap.RecapWizardViewModel
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.app.navigation.meds.MedsScreen
 import fr.luteal.core.designsystem.theme.LutealSpacing
-import fr.luteal.core.model.ObservationCatalog
 import java.time.LocalDate
 
 @Composable
@@ -65,6 +65,7 @@ fun LutealMainScaffold(
     pendingPainEventId: String? = null,
     pendingMedicationId: String? = null,
     pendingRecapDate: String? = null,
+    pendingMonthlyPeriod: String? = null,
     onPendingImportConsumed: () -> Unit = {},
     onPendingReminderConsumed: () -> Unit = {},
     viewModel: LutealViewModel = hiltViewModel()
@@ -77,13 +78,13 @@ fun LutealMainScaffold(
     val hospitalViewModel: HospitalizationEntryViewModel = hiltViewModel()
     val appointmentViewModel: AppointmentEntryViewModel = hiltViewModel()
     val recapViewModel: RecapWizardViewModel = hiltViewModel()
+    val monthlyQuestionnaireViewModel: MonthlyQuestionnaireViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     val careLabels by agendaViewModel.careLabels.collectAsStateWithLifecycle()
     val appointmentLabels by agendaViewModel.appointmentLabels.collectAsStateWithLifecycle()
     val eventDetailLabels = intakeLabels + careLabels + appointmentLabels
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
-    var editorRequest by remember { mutableStateOf<EditorRequest?>(null) }
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
     var intakeMedicationId by remember { mutableStateOf<String?>(null) }
     var painCheckEventId by remember { mutableStateOf<String?>(null) }
@@ -96,11 +97,11 @@ fun LutealMainScaffold(
     var appointmentDate by remember { mutableStateOf<LocalDate?>(null) }
     var appointmentEventId by remember { mutableStateOf<String?>(null) }
     var recapDate by remember { mutableStateOf<LocalDate?>(null) }
+    var monthlyPeriod by remember { mutableStateOf<java.time.YearMonth?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
     val saveError = stringResource(R.string.save_error)
-    val saveSuccess = stringResource(R.string.save_success_local)
 
     LaunchedEffect(pendingImportJson, uiState.preferences.hasCompletedOnboarding) {
         val json = pendingImportJson ?: return@LaunchedEffect
@@ -111,7 +112,7 @@ fun LutealMainScaffold(
         onPendingImportConsumed()
     }
 
-    LaunchedEffect(pendingPainEventId, pendingMedicationId, pendingRecapDate) {
+    LaunchedEffect(pendingPainEventId, pendingMedicationId, pendingRecapDate, pendingMonthlyPeriod) {
         if (pendingPainEventId != null) {
             selectedDestination = LutealDestination.AGENDA
             painCheckEventId = pendingPainEventId
@@ -125,6 +126,11 @@ fun LutealMainScaffold(
             selectedDestination = LutealDestination.AGENDA
             recapDate = runCatching { LocalDate.parse(pendingRecapDate) }.getOrDefault(uiState.today)
             onPendingReminderConsumed()
+        } else if (pendingMonthlyPeriod != null) {
+            selectedDestination = LutealDestination.AGENDA
+            monthlyPeriod = runCatching { java.time.YearMonth.parse(pendingMonthlyPeriod) }
+                .getOrDefault(java.time.YearMonth.from(uiState.today))
+            onPendingReminderConsumed()
         }
     }
 
@@ -132,14 +138,6 @@ fun LutealMainScaffold(
         if (uiState.operationFailed) {
             snackbarHostState.showSnackbar(saveError)
             viewModel.clearOperationError()
-        }
-    }
-
-    LaunchedEffect(uiState.entrySaveState) {
-        if (uiState.entrySaveState == EntrySaveState.SUCCESS) {
-            editorRequest = null
-            snackbarHostState.showSnackbar(saveSuccess)
-            viewModel.clearEntrySaveState()
         }
     }
 
@@ -199,10 +197,7 @@ fun LutealMainScaffold(
                                 state = uiState,
                                 events = events,
                                 intakeLabels = eventDetailLabels,
-                                onSelectDate = {
-                                    viewModel.clearEntrySaveState()
-                                    editorRequest = EditorRequest(it, startPeriodIntent = false)
-                                },
+                                onSelectDate = { recapDate = it },
                                 onOpenRecap = { date -> recapDate = date },
                                 onRecordMedication = { date ->
                                     intakeMedicationId = null
@@ -280,27 +275,6 @@ fun LutealMainScaffold(
         )
     }
 
-    editorRequest?.let { req ->
-        DailyEntrySheet(
-            date = req.date,
-            existingEntry = uiState.entries.firstOrNull { it.date == req.date },
-            previousDayEntry = uiState.entries.firstOrNull { it.date == req.date.minusDays(1) },
-            existingBiomarker = uiState.biomarkers.firstOrNull { it.date == req.date },
-            currentCycle = uiState.currentCycle,
-            offeredSymptomIds = ObservationCatalog.symptomIdsFor(
-                uiState.preferences.declaredContexts
-            ),
-            startPeriodIntent = req.startPeriodIntent,
-            isSaving = uiState.entrySaveState == EntrySaveState.SAVING,
-            saveFailed = uiState.entrySaveState == EntrySaveState.FAILED,
-            onDismiss = {
-                viewModel.clearEntrySaveState()
-                editorRequest = null
-            },
-            onSave = viewModel::saveEntry
-        )
-    }
-
     intakeDate?.let { date ->
         MedicationIntakeSheet(
             initialDate = date,
@@ -365,6 +339,14 @@ fun LutealMainScaffold(
         )
     }
 
+    monthlyPeriod?.let { period ->
+        MonthlyQuestionnaireSheet(
+            period = period,
+            viewModel = monthlyQuestionnaireViewModel,
+            onDismiss = { monthlyPeriod = null }
+        )
+    }
+
     appointmentDate?.let { date ->
         AppointmentSheet(
             initialDate = date,
@@ -377,11 +359,6 @@ fun LutealMainScaffold(
         )
     }
 }
-
-private data class EditorRequest(
-    val date: LocalDate,
-    val startPeriodIntent: Boolean
-)
 
 private enum class LutealDestination(
     @StringRes val labelRes: Int,

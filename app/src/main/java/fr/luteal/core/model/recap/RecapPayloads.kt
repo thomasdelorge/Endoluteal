@@ -32,15 +32,36 @@ data class RecapPainPayload(
 
 @Serializable
 data class RecapPsyPayload(
-    val placeholder: Boolean = false
+    val mood: Int? = null,
+    val anxiety: Int? = null,
+    val irritability: Int? = null,
+    val discouragement: Int? = null,
+    val overwhelmed: Int? = null,
+    val isolation: Int? = null,
+    val libido: Int? = null
 )
+
+enum class RecapDailyImpact {
+    NONE,
+    REDUCED_ACTIVITY,
+    CANCELLED_WORK,
+    BEDREST
+}
 
 @Serializable
 data class RecapGeneralPayload(
-    val placeholder: Boolean = false
+    val fatigue: Int? = null,
+    val stress: Int? = null,
+    val sleepQuality: Int? = null,
+    val headache: Int? = null,
+    val nausea: Int? = null,
+    val alcoholDrinks: Int? = null,
+    val dailyImpact: String = ""
 )
 
 @Serializable
 data class RecapBowelPayload(
-    val placeholder: Boolean = false
+    val constipation: Boolean = false,
+    val bristolType: Int? = null,
+    val bloating: Int? = null
 )

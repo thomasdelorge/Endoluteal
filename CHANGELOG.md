@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rendez-vous manuels liés à un professionnel (spécialité, lieu, compte rendu).
 - Récap quotidien en cartes avec enregistrement par étape et rappel quotidien.
 - Étapes Cycle et Douleurs du récap (5D, carte corporelle min/max, dyspareunie masquable).
+- Étapes Psy, Général et Intestinal du récap ; suppression de l’ancienne saisie journalière.
 
 ### Changed
 

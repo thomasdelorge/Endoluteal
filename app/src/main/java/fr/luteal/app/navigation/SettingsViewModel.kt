@@ -101,7 +101,8 @@ class SettingsViewModel @Inject constructor(
             notificationCustomTitle = preferences.notificationCustomTitle,
             notificationCustomBody = preferences.notificationCustomBody,
             temperatureUnit = preferences.temperatureUnit,
-            hideDyspareuniaInRecap = preferences.hideDyspareuniaInRecap
+            hideDyspareuniaInRecap = preferences.hideDyspareuniaInRecap,
+            hideLibidoInRecap = preferences.hideLibidoInRecap
         )
     }.stateIn(
         scope = viewModelScope,
@@ -130,6 +131,12 @@ class SettingsViewModel @Inject constructor(
     fun setHideDyspareuniaInRecap(hidden: Boolean) {
         viewModelScope.launch {
             userPreferencesDataStore.setHideDyspareuniaInRecap(hidden)
+        }
+    }
+
+    fun setHideLibidoInRecap(hidden: Boolean) {
+        viewModelScope.launch {
+            userPreferencesDataStore.setHideLibidoInRecap(hidden)
         }
     }
 
@@ -492,7 +499,8 @@ data class SettingsSyncUiState(
     val notificationCustomTitle: String = "",
     val notificationCustomBody: String = "",
     val temperatureUnit: String = "CELSIUS",
-    val hideDyspareuniaInRecap: Boolean = false
+    val hideDyspareuniaInRecap: Boolean = false,
+    val hideLibidoInRecap: Boolean = false
 )
 
 /** Text drafts held together so [combine] stays within its five-flow limit. */

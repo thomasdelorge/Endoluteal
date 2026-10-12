@@ -22,11 +22,17 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.app.navigation.recap.steps.BowelStep
 import fr.luteal.app.navigation.recap.steps.CycleStep
+import fr.luteal.app.navigation.recap.steps.GeneralStep
 import fr.luteal.app.navigation.recap.steps.PainStep
+import fr.luteal.app.navigation.recap.steps.PsyStep
 import fr.luteal.core.designsystem.theme.LutealSpacing
+import fr.luteal.core.model.recap.RecapBowelPayload
 import fr.luteal.core.model.recap.RecapCyclePayload
+import fr.luteal.core.model.recap.RecapGeneralPayload
 import fr.luteal.core.model.recap.RecapPainPayload
+import fr.luteal.core.model.recap.RecapPsyPayload
 import fr.luteal.core.model.recap.RecapStep
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -43,6 +49,7 @@ fun RecapWizardSheet(
     val cycleUi by viewModel.cycleUi.collectAsStateWithLifecycle()
     val dayEvents by viewModel.dayEventLines.collectAsStateWithLifecycle()
     val hideDyspareunia by viewModel.hideDyspareunia.collectAsStateWithLifecycle()
+    val hideLibido by viewModel.hideLibido.collectAsStateWithLifecycle()
     val steps = RecapStep.ordered
     val pagerState = rememberPagerState(
         initialPage = viewModel.initialPageIndex(),
@@ -102,11 +109,23 @@ fun RecapWizardSheet(
                             viewModel.finishPainStep(payload) { advanceFrom(page) }
                         }
                     )
-                    else -> RecapPlaceholderStep(
-                        step = step,
-                        onContinue = {
-                            viewModel.completeStep(step)
-                            advanceFrom(page)
+                    RecapStep.PSY -> PsyStep(
+                        hideLibido = hideLibido,
+                        initial = currentRecap?.psy ?: RecapPsyPayload(),
+                        onContinue = { payload ->
+                            viewModel.finishPsyStep(payload) { advanceFrom(page) }
+                        }
+                    )
+                    RecapStep.GENERAL -> GeneralStep(
+                        initial = currentRecap?.general ?: RecapGeneralPayload(),
+                        onContinue = { payload ->
+                            viewModel.finishGeneralStep(payload) { advanceFrom(page) }
+                        }
+                    )
+                    RecapStep.BOWEL -> BowelStep(
+                        initial = currentRecap?.bowel ?: RecapBowelPayload(),
+                        onContinue = { payload ->
+                            viewModel.finishBowelStep(payload) { advanceFrom(page) }
                         }
                     )
                 }
@@ -123,30 +142,4 @@ fun RecapWizardSheet(
             }
         }
     }
-}
-
-@Composable
-private fun RecapPlaceholderStep(step: RecapStep, onContinue: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-        Text(
-            text = stringResource(step.titleRes()),
-            style = MaterialTheme.typography.titleMedium
-        )
-        Text(
-            text = stringResource(R.string.recap_step_placeholder),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        TextButton(onClick = onContinue) {
-            Text(stringResource(R.string.recap_continue))
-        }
-    }
-}
-
-private fun RecapStep.titleRes(): Int = when (this) {
-    RecapStep.CYCLE -> R.string.recap_step_cycle
-    RecapStep.PAIN -> R.string.recap_step_pain
-    RecapStep.PSY -> R.string.recap_step_psy
-    RecapStep.GENERAL -> R.string.recap_step_general
-    RecapStep.BOWEL -> R.string.recap_step_bowel
 }
