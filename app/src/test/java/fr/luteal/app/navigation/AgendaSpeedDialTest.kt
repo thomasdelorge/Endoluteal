@@ -40,7 +40,7 @@ class AgendaSpeedDialTest {
         composeRule.onNodeWithText("Récap du jour").assertIsDisplayed()
         composeRule.onNodeWithText("Médicament").assertIsDisplayed()
         composeRule.onNodeWithText("Symptôme").assertIsDisplayed()
-        composeRule.onNodeWithText("Traitement").assertIsDisplayed()
+        composeRule.onNodeWithText("TENS").assertIsDisplayed()
         composeRule.onNodeWithTag("agenda_action_daily_recap").performClick()
         composeRule.runOnIdle { assertEquals(today, recapDate) }
         assertEquals(
