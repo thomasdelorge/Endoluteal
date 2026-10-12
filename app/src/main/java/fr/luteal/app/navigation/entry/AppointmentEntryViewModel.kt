@@ -66,7 +66,7 @@ class AppointmentEntryViewModel @Inject constructor(
                 startAt = startAt,
                 endAt = endAt,
                 zoneId = zoneId.id,
-                notes = "",
+                notes = existing?.notes.orEmpty(),
                 linkedEventId = null,
                 payload = EventPayload.Appointment,
                 marks = emptyList(),

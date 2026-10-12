@@ -53,6 +53,7 @@ fun AppointmentSheet(
     }
     var endAt by remember { mutableStateOf(startAt.plusHours(1)) }
     var selectedProfessionalId by remember { mutableStateOf<String?>(null) }
+    var importedTitle by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var report by remember { mutableStateOf("") }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -65,20 +66,15 @@ fun AppointmentSheet(
         val appointment = viewModel.getAppointment(id)
         if (event != null) {
             startAt = LocalDateTime.ofInstant(event.startAt, zone)
+            importedTitle = event.notes
             if (event.endAt != null) {
                 endAt = LocalDateTime.ofInstant(event.endAt, zone)
             }
         }
         if (appointment != null) {
-            selectedProfessionalId = appointment.professionalId
+            selectedProfessionalId = appointment.professionalId.takeIf { it.isNotBlank() }
             location = appointment.location
             report = appointment.report
-        }
-    }
-
-    LaunchedEffect(professionals) {
-        if (selectedProfessionalId == null && professionals.isNotEmpty()) {
-            selectedProfessionalId = professionals.first().id
         }
     }
 
@@ -122,6 +118,9 @@ fun AppointmentSheet(
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
             Text(stringResource(R.string.appointment_title), style = MaterialTheme.typography.titleLarge)
+            if (importedTitle.isNotBlank()) {
+                Text(importedTitle, style = MaterialTheme.typography.titleMedium)
+            }
             Text(stringResource(R.string.appointment_professional), style = MaterialTheme.typography.labelLarge)
             if (professionals.isEmpty()) {
                 Text(

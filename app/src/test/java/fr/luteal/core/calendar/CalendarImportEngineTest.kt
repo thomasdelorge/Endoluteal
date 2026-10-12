@@ -67,4 +67,38 @@ class CalendarImportEngineTest {
         )
         assertTrue(plan.cancelEventIds.isEmpty())
     }
+
+    @Test
+    fun keepsAssignedProfessionalOnReimport() {
+        val plan = CalendarImportEngine.planImport(
+            instances = listOf(
+                ImportedCalendarInstance(
+                    calendarEventKey = "1:100",
+                    title = "Gynéco",
+                    description = "",
+                    location = "Cabinet",
+                    startAtEpochMillis = 100,
+                    endAtEpochMillis = 200
+                )
+            ),
+            existingImported = listOf(
+                ExistingImportedAppointment(
+                    eventId = "e1",
+                    calendarEventKey = "1:100",
+                    professionalId = "pro-9",
+                    location = "Ancien lieu",
+                    report = "",
+                    reportStatus = ReportStatus.PENDING,
+                    title = "Gynéco",
+                    startAtEpochMillis = 100,
+                    endAtEpochMillis = 200
+                )
+            ),
+            history = emptyList()
+        )
+        val upsert = plan.upserts.single()
+        assertEquals("e1", upsert.existingEventId)
+        assertEquals("pro-9", upsert.professionalId)
+        assertEquals("Cabinet", upsert.location)
+    }
 }
