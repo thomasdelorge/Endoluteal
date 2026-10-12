@@ -973,6 +973,10 @@
     <string name="care_program">Programme</string>
     <string name="care_program_name">Nom du programme</string>
     <string name="care_duration">Durée (minutes)</string>
+    <string name="care_tens_duration_30">30 min</string>
+    <string name="care_tens_duration_60">1 h</string>
+    <string name="care_tens_duration_90">1 h 30</string>
+    <string name="care_tens_duration_120">2 h</string>
     <string name="care_pain_before">Douleur avant le soin</string>
     <string name="care_empty_types">Ajoutez des types de soin dans Réglages.</string>
     <string name="care_delete">Supprimer</string>

@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - La section « Données de démonstration » est retirée des Réglages.
 - Les centres d’attention ne sont plus proposés dans les Réglages.
 - La légende des phases et observations est retirée de l’agenda.
+- La durée d’un TENS se choisit parmi 30 min, 1 h, 1 h 30 et 2 h.
 
 ## [0.6.0] - 2026-10-12
 

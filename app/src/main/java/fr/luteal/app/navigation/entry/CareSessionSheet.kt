@@ -234,12 +234,29 @@ fun CareSessionSheet(
                 }
             }
             DateTimeField(value = at, onValueChange = { at = it })
-            OutlinedTextField(
-                value = durationMinutes,
-                onValueChange = { durationMinutes = it.filter { ch -> ch.isDigit() } },
-                label = { Text(stringResource(R.string.care_duration)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+            if (isTens) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+                    listOf(
+                        30 to R.string.care_tens_duration_30,
+                        60 to R.string.care_tens_duration_60,
+                        90 to R.string.care_tens_duration_90,
+                        120 to R.string.care_tens_duration_120
+                    ).forEach { (minutes, label) ->
+                        FilterChip(
+                            selected = durationMinutes == minutes.toString(),
+                            onClick = { durationMinutes = minutes.toString() },
+                            label = { Text(stringResource(label)) }
+                        )
+                    }
+                }
+            } else {
+                OutlinedTextField(
+                    value = durationMinutes,
+                    onValueChange = { durationMinutes = it.filter { ch -> ch.isDigit() } },
+                    label = { Text(stringResource(R.string.care_duration)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
             Text(stringResource(R.string.care_pain_before))
             PainScale(value = painBefore, onValueChange = { painBefore = it })
             OutlinedTextField(
@@ -249,6 +266,7 @@ fun CareSessionSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             val duration = durationMinutes.toIntOrNull() ?: 0
+            val tensDurations = setOf(30, 60, 90, 120)
             val namedProgram = programName.trim()
             val programOk = when {
                 tensOnly && selectedType?.programs?.isNotEmpty() == true -> namedProgram.isNotEmpty()
@@ -257,7 +275,8 @@ fun CareSessionSheet(
             }
             SheetActions(
                 onCancel = onDismiss,
-                confirmEnabled = selectedType != null && duration > 0 && programOk,
+                confirmEnabled = selectedType != null && programOk &&
+                    if (isTens) duration in tensDurations else duration > 0,
                 onConfirm = {
                     val type = selectedType ?: return@SheetActions
                     scope.launch {
