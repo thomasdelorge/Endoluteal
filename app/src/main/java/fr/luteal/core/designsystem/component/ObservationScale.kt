@@ -53,7 +53,8 @@ fun ObservationScale(
     onValueChange: (Int?) -> Unit,
     valueDescription: (Int) -> String,
     modifier: Modifier = Modifier,
-    type: ObservationScaleType = ObservationScaleType.GENERIC
+    type: ObservationScaleType = ObservationScaleType.GENERIC,
+    stepSymbols: List<String> = emptyList()
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(text = label, style = MaterialTheme.typography.titleSmall)
@@ -74,6 +75,7 @@ fun ObservationScale(
                     selected = value == option,
                     description = valueDescription(option),
                     type = type,
+                    stepSymbol = stepSymbols.getOrNull(option - 1),
                     onClick = { onValueChange(option.takeUnless { value == option }) },
                     modifier = Modifier.weight(1f)
                 )
@@ -88,6 +90,7 @@ private fun ScaleStep(
     selected: Boolean,
     description: String,
     type: ObservationScaleType,
+    stepSymbol: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -123,19 +126,25 @@ private fun ScaleStep(
                 modifier = Modifier.height(30.dp),
                 contentAlignment = Alignment.Center
             ) {
-                when (type) {
-                    ObservationScaleType.PAIN -> PainIndicator(option, selected, markColor)
-                    ObservationScaleType.MOOD -> MoodIndicator(option, markColor)
-                    ObservationScaleType.ENERGY -> EnergyIndicator(option, markColor)
-                    ObservationScaleType.GENERIC -> GenericIndicator(option, markColor)
+                if (stepSymbol != null) {
+                    Text(text = stepSymbol, style = MaterialTheme.typography.headlineSmall)
+                } else {
+                    when (type) {
+                        ObservationScaleType.PAIN -> PainIndicator(option, selected, markColor)
+                        ObservationScaleType.MOOD -> MoodIndicator(option, markColor)
+                        ObservationScaleType.ENERGY -> EnergyIndicator(option, markColor)
+                        ObservationScaleType.GENERIC -> GenericIndicator(option, markColor)
+                    }
                 }
             }
-            Text(
-                text = option.toString(),
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                color = labelColor
-            )
+            if (stepSymbol == null) {
+                Text(
+                    text = option.toString(),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                    color = labelColor
+                )
+            }
         }
     }
 }

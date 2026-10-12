@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Carte du corps : silhouette féminine retracée (domaine public) et zones recalées.
 - L’échelle de douleur 0–10 devient un curseur pleine largeur avec une phrase d’aide par niveau.
 - Récap douleur : une courte explication sous chaque question des cinq douleurs.
+- Récap psychologique : visages sur les échelles à cinq niveaux.
 
 ## [0.6.0] - 2026-10-12
 

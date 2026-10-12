@@ -13,7 +13,8 @@ fun LabeledScale(
     label: String,
     value: Int?,
     onValueChange: (Int?) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    stepSymbols: List<String> = emptyList()
 ) {
     val levelLabels = recapScaleLabels()
     ObservationScale(
@@ -23,7 +24,8 @@ fun LabeledScale(
         onValueChange = onValueChange,
         valueDescription = { levelLabels[it - 1] },
         modifier = modifier,
-        type = ObservationScaleType.GENERIC
+        type = ObservationScaleType.GENERIC,
+        stepSymbols = stepSymbols
     )
 }
 
