@@ -1,13 +1,20 @@
 package fr.luteal.app.navigation.entry
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -52,6 +59,7 @@ fun MedicationIntakeSheet(
     val catalog by viewModel.catalog.collectAsStateWithLifecycle()
     val zone = remember { ZoneId.systemDefault() }
     var query by remember { mutableStateOf("") }
+    var menuOpen by remember { mutableStateOf(false) }
     var medicationId by remember { mutableStateOf(initialMedicationId) }
     var units by remember { mutableStateOf("1") }
     var at by remember {
@@ -69,6 +77,17 @@ fun MedicationIntakeSheet(
     val scope = rememberCoroutineScope()
     val selected = catalog.medications.find { it.id == medicationId }
     val unitCount = units.toDoubleOrNull()
+    val filtering = selected == null || query != selected.name
+    val medicationOptions = catalog.medications.filter { medication ->
+        !medication.archived && (
+            !filtering || query.isBlank() || medication.name.contains(query, ignoreCase = true)
+        )
+    }
+
+    LaunchedEffect(medicationId, catalog.medications) {
+        val name = catalog.medications.find { it.id == medicationId }?.name ?: return@LaunchedEffect
+        if (query.isBlank()) query = name
+    }
 
     LaunchedEffect(medicationId, units, at, catalog.medications.size) {
         val id = medicationId
@@ -89,17 +108,36 @@ fun MedicationIntakeSheet(
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
             Text(stringResource(R.string.intake_title), style = MaterialTheme.typography.titleLarge)
-            OutlinedTextField(
-                value = query,
-                onValueChange = { query = it },
-                label = { Text(stringResource(R.string.intake_search)) },
-                modifier = Modifier.fillMaxWidth()
-            )
-            catalog.medications.filter { medication ->
-                !medication.archived && (query.isBlank() || medication.name.contains(query, ignoreCase = true))
-            }.take(8).forEach { medication ->
-                TextButton(onClick = { medicationId = medication.id }) {
-                    Text(if (medication.id == medicationId) "• ${medication.name}" else medication.name)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = query,
+                    onValueChange = {
+                        query = it
+                        menuOpen = true
+                        if (selected?.name != it) medicationId = null
+                    },
+                    label = { Text(stringResource(R.string.intake_search)) },
+                    trailingIcon = {
+                        IconButton(onClick = { menuOpen = !menuOpen }) {
+                            Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                DropdownMenu(
+                    expanded = menuOpen,
+                    onDismissRequest = { menuOpen = false }
+                ) {
+                    medicationOptions.forEach { medication ->
+                        DropdownMenuItem(
+                            text = { Text(medication.name) },
+                            onClick = {
+                                medicationId = medication.id
+                                query = medication.name
+                                menuOpen = false
+                            }
+                        )
+                    }
                 }
             }
             OutlinedTextField(

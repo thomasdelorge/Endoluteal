@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Silhouette de localisation lisible en thème sombre.
 - Dates affichées au format JJ-MM-AAAA, heures au format 24 h.
+- Choix du médicament dans un menu déroulant filtrable.
 
 ## [0.4.0] - 2026-10-12
 
