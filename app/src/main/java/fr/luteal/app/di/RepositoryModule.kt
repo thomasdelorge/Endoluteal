@@ -22,6 +22,8 @@ import fr.luteal.core.data.repository.CycleRepository
 import fr.luteal.core.data.repository.CycleRepositoryImpl
 import fr.luteal.core.data.repository.DailyEntryRepository
 import fr.luteal.core.data.repository.DailyEntryRepositoryImpl
+import fr.luteal.core.data.repository.DailyRecapRepository
+import fr.luteal.core.data.repository.DailyRecapRepositoryImpl
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.data.repository.JournalEventRepositoryImpl
 import fr.luteal.core.data.repository.MedicationIntakeRepository
@@ -52,6 +54,12 @@ abstract class RepositoryModule {
     abstract fun bindDailyEntryRepository(
         dailyEntryRepositoryImpl: DailyEntryRepositoryImpl
     ): DailyEntryRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindDailyRecapRepository(
+        dailyRecapRepositoryImpl: DailyRecapRepositoryImpl
+    ): DailyRecapRepository
 
     @Binds
     @Singleton

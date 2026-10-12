@@ -7,6 +7,7 @@ import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.CareTypeEntity
 import fr.luteal.core.data.entity.ProfessionalEntity
+import fr.luteal.core.data.entity.DailyRecapEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
 import fr.luteal.core.data.entity.InteractionRuleEntity
@@ -39,9 +40,10 @@ import fr.luteal.core.data.entity.UserProfileEntity
         TreatmentPlanEntity::class,
         CareTypeEntity::class,
         ProfessionalEntity::class,
-        AppointmentEntity::class
+        AppointmentEntity::class,
+        DailyRecapEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -59,4 +61,5 @@ abstract class LutealDatabase : RoomDatabase() {
     abstract fun careTypeDao(): CareTypeDao
     abstract fun professionalDao(): ProfessionalDao
     abstract fun appointmentDao(): AppointmentDao
+    abstract fun dailyRecapDao(): DailyRecapDao
 }

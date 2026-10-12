@@ -99,6 +99,7 @@ fun AgendaScreen(
     events: List<JournalEvent> = emptyList(),
     intakeLabels: Map<String, String> = emptyMap(),
     onSelectDate: (LocalDate) -> Unit,
+    onOpenRecap: (LocalDate) -> Unit = {},
     onRecordMedication: (LocalDate) -> Unit = {},
     onRecordSymptom: (LocalDate) -> Unit = {},
     onRecordCare: (LocalDate) -> Unit = {},
@@ -324,7 +325,7 @@ fun AgendaScreen(
             actions = listOf(
                 SpeedDialAction("agenda_action_daily_recap", dailyRecapLabel) {
                     fabExpanded = false
-                    onSelectDate(selectedDate)
+                    onOpenRecap(selectedDate)
                 },
                 SpeedDialAction("agenda_action_medication", medicationLabel) {
                     fabExpanded = false

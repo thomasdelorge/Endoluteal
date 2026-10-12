@@ -7,7 +7,9 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.luteal.app.MainActivity
 import fr.luteal.core.data.local.ReminderDao
 import fr.luteal.core.model.MedsAlarmPayload
+import fr.luteal.core.model.RecapAlarmPayload
 import fr.luteal.core.model.ReminderType
+import java.time.LocalDate
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -53,6 +55,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_MINUTES = "snooze_minutes"
         const val EXTRA_OPEN_PAIN_EVENT = "open_pain_event"
         const val EXTRA_OPEN_MEDICATION = "open_medication"
+        const val EXTRA_OPEN_RECAP_DATE = "open_recap_date"
     }
 }
 
@@ -81,6 +84,15 @@ private suspend fun ReminderAlarmReceiver.handlePrimary(context: Context, id: St
                 context.openEndoluteal {
                     putExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION, medicationId)
                 }
+            }
+        }
+        ReminderType.RECAP -> {
+            val payload = runCatching {
+                Json { ignoreUnknownKeys = true }.decodeFromString(RecapAlarmPayload.serializer(), reminder.payloadJson)
+            }.getOrNull()
+            val date = payload?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
+            context.openEndoluteal {
+                putExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE, date)
             }
         }
         else -> Unit

@@ -55,6 +55,7 @@ class DataExportManagerTest {
             careTypeDao = database.careTypeDao(),
             professionalDao = database.professionalDao(),
             appointmentDao = database.appointmentDao(),
+            dailyRecapDao = database.dailyRecapDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 

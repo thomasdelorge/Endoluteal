@@ -47,6 +47,7 @@ class ProfessionalAppointmentBackupTest {
             database.careTypeDao(),
             database.professionalDao(),
             database.appointmentDao(),
+            database.dailyRecapDao(),
             preferences
         )
         importManager = DataImportManager(
@@ -62,6 +63,7 @@ class ProfessionalAppointmentBackupTest {
             database.careTypeDao(),
             database.professionalDao(),
             database.appointmentDao(),
+            database.dailyRecapDao(),
             preferences
         )
     }

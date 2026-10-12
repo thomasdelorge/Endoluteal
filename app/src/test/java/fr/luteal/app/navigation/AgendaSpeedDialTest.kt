@@ -23,13 +23,14 @@ class AgendaSpeedDialTest {
 
     @Test
     fun fabOpensAndClosesTheDailyRecapAction() {
-        var opened: LocalDate? = null
+        var recapDate: LocalDate? = null
         val today = LocalDate.parse("2026-08-13")
         composeRule.setContent {
             LutealTheme {
                 AgendaScreen(
                     state = LutealUiState(today = today),
-                    onSelectDate = { opened = it }
+                    onSelectDate = {},
+                    onOpenRecap = { recapDate = it }
                 )
             }
         }
@@ -41,7 +42,7 @@ class AgendaSpeedDialTest {
         composeRule.onNodeWithText("Symptôme").assertIsDisplayed()
         composeRule.onNodeWithText("Traitement").assertIsDisplayed()
         composeRule.onNodeWithTag("agenda_action_daily_recap").performClick()
-        composeRule.runOnIdle { assertEquals(today, opened) }
+        composeRule.runOnIdle { assertEquals(today, recapDate) }
         assertEquals(
             0,
             composeRule.onAllNodesWithTag("agenda_action_daily_recap").fetchSemanticsNodes().size

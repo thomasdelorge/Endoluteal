@@ -67,6 +67,7 @@ class DataImportManagerTest {
             careTypeDao = database.careTypeDao(),
             professionalDao = database.professionalDao(),
             appointmentDao = database.appointmentDao(),
+            dailyRecapDao = database.dailyRecapDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
@@ -83,6 +84,7 @@ class DataImportManagerTest {
             careTypeDao = database.careTypeDao(),
             professionalDao = database.professionalDao(),
             appointmentDao = database.appointmentDao(),
+            dailyRecapDao = database.dailyRecapDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }

@@ -841,6 +841,15 @@
     <string name="agenda_title">Agenda</string>
     <string name="agenda_subtitle">Ce qui a été enregistré, jour par jour</string>
     <string name="agenda_action_daily_recap">Récap du jour</string>
+    <string name="recap_wizard_title">Récap du jour</string>
+    <string name="recap_skip">Passer</string>
+    <string name="recap_continue">Continuer</string>
+    <string name="recap_step_placeholder">Contenu à venir dans les prochaines étapes.</string>
+    <string name="recap_step_cycle">Cycle</string>
+    <string name="recap_step_pain">Douleurs</string>
+    <string name="recap_step_psy">Psy</string>
+    <string name="recap_step_general">Général</string>
+    <string name="recap_step_bowel">Intestinal</string>
     <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_action_symptom">Symptôme</string>
     <string name="agenda_action_care">Traitement</string>

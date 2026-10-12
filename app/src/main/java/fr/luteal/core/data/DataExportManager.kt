@@ -3,6 +3,7 @@ package fr.luteal.core.data
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
+import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
@@ -16,6 +17,7 @@ import fr.luteal.core.model.BiomarkerBackupDto
 import fr.luteal.core.model.CareProgramBackupDto
 import fr.luteal.core.model.AppointmentBackupDto
 import fr.luteal.core.model.CareTypeBackupDto
+import fr.luteal.core.model.DailyRecapBackupDto
 import fr.luteal.core.model.ProfessionalBackupDto
 import fr.luteal.core.model.CompositionBackupDto
 import fr.luteal.core.model.CycleBackupDto
@@ -54,6 +56,7 @@ class DataExportManager @Inject constructor(
     private val careTypeDao: CareTypeDao,
     private val professionalDao: ProfessionalDao,
     private val appointmentDao: AppointmentDao,
+    private val dailyRecapDao: DailyRecapDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -249,6 +252,18 @@ class DataExportManager @Inject constructor(
                 archived = entity.archived
             )
         }
+        val dailyRecaps = dailyRecapDao.allOnce().map { entity ->
+            DailyRecapBackupDto(
+                date = entity.date,
+                cycle = entity.cycleJson,
+                pain = entity.painJson,
+                psy = entity.psyJson,
+                general = entity.generalJson,
+                bowel = entity.bowelJson,
+                completedSteps = entity.completedStepsJson.toStepNameList(),
+                updatedAt = Instant.ofEpochMilli(entity.updatedAtEpochMillis).toString()
+            )
+        }
         val treatmentPlans = treatmentPlanDao.allOnce().map { entity ->
             TreatmentPlanBackupDto(
                 id = entity.id,
@@ -300,9 +315,15 @@ class DataExportManager @Inject constructor(
             careTypes = careTypes,
             professionals = professionals,
             appointments = appointments,
+            dailyRecaps = dailyRecaps,
             preferences = preferencesDto
         )
     }
+
+    private fun String.toStepNameList(): List<String> = runCatching {
+        val array = JSONArray(this)
+        List(array.length()) { index -> array.getString(index) }
+    }.getOrDefault(emptyList())
 
     private fun String.toCarePrograms(): List<CareProgramBackupDto> = runCatching {
         val array = JSONArray(this)

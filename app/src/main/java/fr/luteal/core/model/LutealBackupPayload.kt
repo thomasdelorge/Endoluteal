@@ -28,6 +28,7 @@ data class LutealBackupPayload(
     @SerialName("care_types") val careTypes: List<CareTypeBackupDto> = emptyList(),
     @SerialName("professionals") val professionals: List<ProfessionalBackupDto> = emptyList(),
     @SerialName("appointments") val appointments: List<AppointmentBackupDto> = emptyList(),
+    @SerialName("daily_recaps") val dailyRecaps: List<DailyRecapBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
 )
 
@@ -174,6 +175,18 @@ data class CareTypeBackupDto(
 data class CareProgramBackupDto(
     @SerialName("name") val name: String,
     @SerialName("default_duration_minutes") val defaultDurationMinutes: Int
+)
+
+@Serializable
+data class DailyRecapBackupDto(
+    @SerialName("date") val date: String,
+    @SerialName("cycle") val cycle: String,
+    @SerialName("pain") val pain: String,
+    @SerialName("psy") val psy: String,
+    @SerialName("general") val general: String,
+    @SerialName("bowel") val bowel: String,
+    @SerialName("completed_steps") val completedSteps: List<String> = emptyList(),
+    @SerialName("updated_at") val updatedAt: String
 )
 
 @Serializable

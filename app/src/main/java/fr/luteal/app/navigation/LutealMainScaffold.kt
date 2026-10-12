@@ -51,6 +51,8 @@ import fr.luteal.app.navigation.entry.HospitalizationEntryViewModel
 import fr.luteal.app.navigation.entry.HospitalizationSheet
 import fr.luteal.app.navigation.entry.SymptomEntryViewModel
 import fr.luteal.app.navigation.entry.SymptomSheet
+import fr.luteal.app.navigation.recap.RecapWizardSheet
+import fr.luteal.app.navigation.recap.RecapWizardViewModel
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.app.navigation.meds.MedsScreen
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -62,6 +64,7 @@ fun LutealMainScaffold(
     pendingImportJson: String? = null,
     pendingPainEventId: String? = null,
     pendingMedicationId: String? = null,
+    pendingRecapDate: String? = null,
     onPendingImportConsumed: () -> Unit = {},
     onPendingReminderConsumed: () -> Unit = {},
     viewModel: LutealViewModel = hiltViewModel()
@@ -73,6 +76,7 @@ fun LutealMainScaffold(
     val careViewModel: CareSessionEntryViewModel = hiltViewModel()
     val hospitalViewModel: HospitalizationEntryViewModel = hiltViewModel()
     val appointmentViewModel: AppointmentEntryViewModel = hiltViewModel()
+    val recapViewModel: RecapWizardViewModel = hiltViewModel()
     val events by agendaViewModel.events.collectAsStateWithLifecycle()
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     val careLabels by agendaViewModel.careLabels.collectAsStateWithLifecycle()
@@ -91,6 +95,7 @@ fun LutealMainScaffold(
     var hospitalEventId by remember { mutableStateOf<String?>(null) }
     var appointmentDate by remember { mutableStateOf<LocalDate?>(null) }
     var appointmentEventId by remember { mutableStateOf<String?>(null) }
+    var recapDate by remember { mutableStateOf<LocalDate?>(null) }
     var showBackfillDialog by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val settingsViewModel: SettingsViewModel = hiltViewModel()
@@ -106,7 +111,7 @@ fun LutealMainScaffold(
         onPendingImportConsumed()
     }
 
-    LaunchedEffect(pendingPainEventId, pendingMedicationId) {
+    LaunchedEffect(pendingPainEventId, pendingMedicationId, pendingRecapDate) {
         if (pendingPainEventId != null) {
             selectedDestination = LutealDestination.AGENDA
             painCheckEventId = pendingPainEventId
@@ -115,6 +120,10 @@ fun LutealMainScaffold(
             selectedDestination = LutealDestination.AGENDA
             intakeMedicationId = pendingMedicationId
             intakeDate = uiState.today
+            onPendingReminderConsumed()
+        } else if (pendingRecapDate != null) {
+            selectedDestination = LutealDestination.AGENDA
+            recapDate = runCatching { LocalDate.parse(pendingRecapDate) }.getOrDefault(uiState.today)
             onPendingReminderConsumed()
         }
     }
@@ -194,6 +203,7 @@ fun LutealMainScaffold(
                                     viewModel.clearEntrySaveState()
                                     editorRequest = EditorRequest(it, startPeriodIntent = false)
                                 },
+                                onOpenRecap = { date -> recapDate = date },
                                 onRecordMedication = { date ->
                                     intakeMedicationId = null
                                     intakeDate = date
@@ -344,6 +354,14 @@ fun LutealMainScaffold(
                 hospitalDate = null
                 hospitalEventId = null
             }
+        )
+    }
+
+    recapDate?.let { date ->
+        RecapWizardSheet(
+            date = date,
+            viewModel = recapViewModel,
+            onDismiss = { recapDate = null }
         )
     }
 

@@ -5,6 +5,7 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.CareTypeEntity
+import fr.luteal.core.data.entity.DailyRecapEntity
 import fr.luteal.core.data.entity.ProfessionalEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
@@ -19,6 +20,7 @@ import fr.luteal.core.data.entity.SymptomLogEntity
 import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
+import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
@@ -62,6 +64,7 @@ class DataImportManager @Inject constructor(
     private val careTypeDao: CareTypeDao,
     private val professionalDao: ProfessionalDao,
     private val appointmentDao: AppointmentDao,
+    private val dailyRecapDao: DailyRecapDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -151,6 +154,7 @@ class DataImportManager @Inject constructor(
                         careTypeDao.deleteAll()
                         appointmentDao.deleteAll()
                         professionalDao.deleteAll()
+                        dailyRecapDao.deleteAll()
                     }
 
                     val now = System.currentTimeMillis()
@@ -443,6 +447,25 @@ class DataImportManager @Inject constructor(
                                 location = appointment.location,
                                 report = appointment.report,
                                 reportStatus = appointment.reportStatus
+                            )
+                        )
+                    }
+                    for (recap in payload.dailyRecaps) {
+                        if (recap.date.isBlank()) continue
+                        val steps = JSONArray()
+                        recap.completedSteps.forEach(steps::put)
+                        dailyRecapDao.upsert(
+                            DailyRecapEntity(
+                                date = recap.date,
+                                cycleJson = recap.cycle,
+                                painJson = recap.pain,
+                                psyJson = recap.psy,
+                                generalJson = recap.general,
+                                bowelJson = recap.bowel,
+                                completedStepsJson = steps.toString(),
+                                updatedAtEpochMillis = runCatching {
+                                    Instant.parse(recap.updatedAt).toEpochMilli()
+                                }.getOrDefault(System.currentTimeMillis())
                             )
                         )
                     }

@@ -13,6 +13,7 @@ import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
 import fr.luteal.core.data.local.DailyEntryDao
+import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.data.local.MedicationDao
@@ -92,4 +93,8 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun provideAppointmentDao(database: LutealDatabase): AppointmentDao = database.appointmentDao()
+
+    @Provides
+    @Singleton
+    fun provideDailyRecapDao(database: LutealDatabase): DailyRecapDao = database.dailyRecapDao()
 }

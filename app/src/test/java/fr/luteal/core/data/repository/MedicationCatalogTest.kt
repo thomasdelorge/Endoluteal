@@ -128,6 +128,7 @@ class MedicationCatalogTest {
             database.careTypeDao(),
             database.professionalDao(),
             database.appointmentDao(),
+            database.dailyRecapDao(),
             preferences
         )
         val json = exportManager.exportToJsonString()
@@ -148,6 +149,7 @@ class MedicationCatalogTest {
             database.careTypeDao(),
             database.professionalDao(),
             database.appointmentDao(),
+            database.dailyRecapDao(),
             preferences
         )
         val payload = importManager.inspectBackup(json.byteInputStream()).getOrThrow().second
