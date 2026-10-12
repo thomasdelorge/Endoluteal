@@ -57,10 +57,33 @@ class CareCatalogViewModel @Inject constructor(
     }
 
     fun addProgram(typeId: String, program: CareProgram) {
+        viewModelScope.launch { insertProgram(typeId, program) }
+    }
+
+    fun renameProgram(typeId: String, previousName: String, program: CareProgram) {
         viewModelScope.launch {
             val current = careTypeRepository.allOnce().find { it.id == typeId } ?: return@launch
-            if (current.programs.any { it.name == program.name }) return@launch
-            careTypeRepository.upsert(current.copy(programs = current.programs + program))
+            val next = current.programs.map { existing ->
+                if (existing.name == previousName) program else existing
+            }
+            if (next == current.programs) return@launch
+            if (next.count { it.name == program.name } > 1) return@launch
+            careTypeRepository.upsert(current.copy(programs = next))
         }
+    }
+
+    fun removeProgram(typeId: String, name: String) {
+        viewModelScope.launch {
+            val current = careTypeRepository.allOnce().find { it.id == typeId } ?: return@launch
+            careTypeRepository.upsert(
+                current.copy(programs = current.programs.filterNot { it.name == name })
+            )
+        }
+    }
+
+    private suspend fun insertProgram(typeId: String, program: CareProgram) {
+        val current = careTypeRepository.allOnce().find { it.id == typeId } ?: return
+        if (program.name.isBlank() || current.programs.any { it.name == program.name }) return
+        careTypeRepository.upsert(current.copy(programs = current.programs + program))
     }
 }

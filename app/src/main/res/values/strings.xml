@@ -966,6 +966,7 @@
     <string name="care_title">Traitement non médicamenteux</string>
     <string name="care_type">Type de soin</string>
     <string name="care_program">Programme</string>
+    <string name="care_program_name">Nom du programme</string>
     <string name="care_duration">Durée (minutes)</string>
     <string name="care_pain_before">Douleur avant le soin</string>
     <string name="care_empty_types">Ajoutez des types de soin dans Réglages.</string>
@@ -986,6 +987,8 @@
     <string name="care_seed_accept">Ajouter</string>
     <string name="care_seed_dismiss">Plus tard</string>
     <string name="care_add_type">Ajouter un type</string>
+    <string name="care_add_program">Ajouter le programme</string>
+    <string name="care_rename_program">Renommer</string>
     <string name="hospital_title">Hospitalisation</string>
     <string name="hospital_admission">Entrée</string>
     <string name="hospital_has_discharge">Sortie renseignée</string>

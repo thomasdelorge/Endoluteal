@@ -35,6 +35,7 @@ import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.care.CareType
+import fr.luteal.core.model.care.CareTypeSeed
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -88,6 +89,7 @@ fun CareSessionSheet(
     }
 
     val selectedType = careTypes.find { it.id == selectedTypeId } ?: careTypes.firstOrNull()
+    val isTens = selectedType?.id == CareTypeSeed.TENS_ID
     LaunchedEffect(selectedType?.id, programName) {
         val type = selectedType ?: return@LaunchedEffect
         if (existingEventId != null) return@LaunchedEffect
@@ -186,6 +188,14 @@ fun CareSessionSheet(
                         }
                     }
                 }
+                if (isTens) {
+                    OutlinedTextField(
+                        value = programName,
+                        onValueChange = { programName = it },
+                        label = { Text(stringResource(R.string.care_program_name)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
             DateTimeField(value = at, onValueChange = { at = it })
             OutlinedTextField(
@@ -203,16 +213,17 @@ fun CareSessionSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             val duration = durationMinutes.toIntOrNull() ?: 0
+            val namedProgram = programName.trim()
             SheetActions(
                 onCancel = onDismiss,
-                confirmEnabled = selectedType != null && duration > 0,
+                confirmEnabled = selectedType != null && duration > 0 && (!isTens || namedProgram.isNotEmpty()),
                 onConfirm = {
                     val type = selectedType ?: return@SheetActions
                     scope.launch {
                         followup = viewModel.save(
                             eventId = existingEventId,
                             careType = type,
-                            programName = programName,
+                            programName = namedProgram,
                             startAt = at.atZone(zone).toInstant(),
                             durationMinutes = duration,
                             painBefore = painBefore,

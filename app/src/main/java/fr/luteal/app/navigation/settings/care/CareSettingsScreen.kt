@@ -2,6 +2,7 @@ package fr.luteal.app.navigation.settings.care
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -24,7 +26,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.care.CareProgram
-import fr.luteal.core.model.care.CareType
 
 @Composable
 fun CareSettingsScreen(
@@ -33,7 +34,7 @@ fun CareSettingsScreen(
 ) {
     val types by viewModel.types.collectAsStateWithLifecycle()
     val seedOffered by viewModel.seedOffered.collectAsStateWithLifecycle()
-    var editing by remember { mutableStateOf<CareType?>(null) }
+    var editingId by remember { mutableStateOf<String?>(null) }
     var newTypeName by remember { mutableStateOf("") }
     var showNewType by remember { mutableStateOf(false) }
 
@@ -62,7 +63,7 @@ fun CareSettingsScreen(
             }
         }
         types.filter { !it.archived }.forEach { type ->
-            TextButton(onClick = { editing = type }) {
+            TextButton(onClick = { editingId = type.id }) {
                 Text(type.name, style = MaterialTheme.typography.titleMedium)
             }
             type.programs.forEach { program ->
@@ -107,18 +108,64 @@ fun CareSettingsScreen(
         )
     }
 
-    editing?.let { type ->
+    types.find { it.id == editingId }?.let { type ->
         var programName by remember(type.id) { mutableStateOf("") }
         var programMinutes by remember(type.id) { mutableStateOf("20") }
+        var renaming by remember(type.id) { mutableStateOf<String?>(null) }
+        var renamed by remember(type.id) { mutableStateOf("") }
         AlertDialog(
-            onDismissRequest = { editing = null },
+            onDismissRequest = { editingId = null },
             title = { Text(type.name) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
+                Column(
+                    modifier = Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+                ) {
+                    type.programs.forEach { program ->
+                        if (renaming == program.name) {
+                            OutlinedTextField(
+                                value = renamed,
+                                onValueChange = { renamed = it },
+                                label = { Text(stringResource(R.string.care_program_name)) },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Row {
+                                TextButton(onClick = { renaming = null }) {
+                                    Text(stringResource(R.string.intake_cancel))
+                                }
+                                TextButton(onClick = {
+                                    val next = renamed.trim()
+                                    if (next.isNotEmpty()) {
+                                        viewModel.renameProgram(
+                                            type.id,
+                                            program.name,
+                                            CareProgram(next, program.defaultDurationMinutes)
+                                        )
+                                        renaming = null
+                                    }
+                                }) { Text(stringResource(R.string.meds_save)) }
+                            }
+                        } else {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "${program.name} (${program.defaultDurationMinutes} min)",
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                TextButton(onClick = {
+                                    renaming = program.name
+                                    renamed = program.name
+                                }) { Text(stringResource(R.string.care_rename_program)) }
+                                TextButton(onClick = { viewModel.removeProgram(type.id, program.name) }) {
+                                    Text(stringResource(R.string.meds_delete))
+                                }
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = programName,
                         onValueChange = { programName = it },
-                        label = { Text(stringResource(R.string.care_program)) },
+                        label = { Text(stringResource(R.string.care_program_name)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
@@ -132,15 +179,16 @@ fun CareSettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val minutes = programMinutes.toIntOrNull() ?: return@TextButton
-                    if (programName.isNotBlank() && minutes > 0) {
-                        viewModel.addProgram(type.id, CareProgram(programName.trim(), minutes))
-                        editing = null
+                    val name = programName.trim()
+                    if (name.isNotEmpty() && minutes > 0) {
+                        viewModel.addProgram(type.id, CareProgram(name, minutes))
+                        programName = ""
                     }
-                }) { Text(stringResource(R.string.meds_save)) }
+                }) { Text(stringResource(R.string.care_add_program)) }
             },
             dismissButton = {
-                TextButton(onClick = { editing = null }) {
-                    Text(stringResource(R.string.intake_cancel))
+                TextButton(onClick = { editingId = null }) {
+                    Text(stringResource(R.string.action_close))
                 }
             }
         )

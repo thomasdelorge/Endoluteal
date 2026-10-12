@@ -10,7 +10,9 @@ import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.JournalEvent
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.core.model.ReminderType
+import fr.luteal.core.model.care.CareProgram
 import fr.luteal.core.model.care.CareType
+import fr.luteal.core.model.care.CareTypeSeed
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -70,7 +72,18 @@ class CareSessionEntryViewModel @Inject constructor(
             updatedAt = now
         )
         journalEventRepository.upsert(event)
+        rememberProgram(careType, programName, durationMinutes)
         return CareSaveResult(id, endAt)
+    }
+
+    private suspend fun rememberProgram(careType: CareType, programName: String, durationMinutes: Int) {
+        val name = programName.trim()
+        if (careType.id != CareTypeSeed.TENS_ID || name.isEmpty()) return
+        val current = careTypeRepository.allOnce().find { it.id == careType.id } ?: return
+        if (current.programs.any { it.name == name }) return
+        careTypeRepository.upsert(
+            current.copy(programs = current.programs + CareProgram(name, durationMinutes))
+        )
     }
 
     fun schedulePainFollowup(eventId: String, endAt: Instant) {
