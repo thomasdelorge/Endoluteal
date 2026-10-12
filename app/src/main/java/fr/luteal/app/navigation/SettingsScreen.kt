@@ -534,6 +534,14 @@ fun SettingsScreen(
                 onClick = { viewModel.setTemperatureUnit("FAHRENHEIT") }
             )
         }
+        Text(
+            text = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = LutealSpacing.sm)
+        )
         Spacer(Modifier.height(LutealSpacing.md))
     }
 }

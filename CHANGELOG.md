@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Le menu + de l’agenda propose TENS avec programme, durée et rappel optionnel une heure après la fin.
 - Suppression des bannières informatives « Données et confidentialité » dans les Réglages.
 - Carte du corps : silhouette féminine et points de douleur sur les zones touchées.
+- Numéro de version affiché en bas des Réglages.
 
 ## [0.6.0] - 2026-10-12
 

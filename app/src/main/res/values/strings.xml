@@ -281,6 +281,7 @@
     <string name="settings_palette_sand">Sable</string>
     <string name="settings_about_title">À propos des estimations</string>
     <string name="settings_about_body">Luteal sépare les observations enregistrées des calculs estimatifs. L’application ne pose aucun diagnostic et ne formule aucune conclusion médicale.</string>
+    <string name="settings_app_version">Version %1$s</string>
     <string name="settings_test_data_title">Données de démonstration</string>
     <string name="settings_test_data_body">Injectez 3 cycles de test avec observations et symptômes pour tester l’estimation, le journal et le mode Duo sans attendre plusieurs mois.</string>
     <string name="settings_test_data_seed_button">Générer 3 cycles de test</string>
