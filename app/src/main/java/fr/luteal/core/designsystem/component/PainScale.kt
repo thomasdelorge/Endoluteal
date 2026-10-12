@@ -55,7 +55,8 @@ fun PainScale(
     val hint = if (!touched) {
         stringResource(R.string.pain_hint_prompt)
     } else {
-        stringResource(painHintRes(sliderValue.roundToInt()))
+        val level = sliderValue.roundToInt()
+        "$level — ${stringResource(painHintRes(level))}"
     }
     Column(modifier = modifier, verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
         Slider(
