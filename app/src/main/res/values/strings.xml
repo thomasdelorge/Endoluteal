@@ -890,6 +890,7 @@
     <string name="daily_recap_edit">Modifier</string>
     <string name="daily_recap_complete">Compléter le récap du jour</string>
     <string name="recap_continue">Continuer</string>
+    <string name="recap_previous">Précédent</string>
     <string name="recap_step_placeholder">Contenu à venir dans les prochaines étapes.</string>
     <string name="recap_step_cycle">Cycle</string>
     <string name="recap_step_pain">Douleurs</string>

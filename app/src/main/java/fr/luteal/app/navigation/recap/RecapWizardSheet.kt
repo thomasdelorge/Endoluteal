@@ -3,6 +3,7 @@ package fr.luteal.app.navigation.recap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -68,14 +69,6 @@ fun RecapWizardSheet(
         saveCurrentStep = null
     }
 
-    LaunchedEffect(recap?.completedSteps) {
-        val target = recap?.firstIncompleteStep() ?: return@LaunchedEffect
-        val index = steps.indexOf(target)
-        if (index >= 0 && index != pagerState.currentPage) {
-            pagerState.scrollToPage(index)
-        }
-    }
-
     fun advanceFrom(page: Int) {
         if (page < steps.lastIndex) {
             scope.launch { pagerState.animateScrollToPage(page + 1) }
@@ -105,7 +98,8 @@ fun RecapWizardSheet(
             val currentRecap = recap
             HorizontalPager(
                 state = pagerState,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
+                userScrollEnabled = true
             ) { page ->
                 val stepActive = page == activePage
                 Column(
@@ -163,7 +157,23 @@ fun RecapWizardSheet(
                     }
                 }
             }
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                if (pagerState.currentPage > 0) {
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                pagerState.animateScrollToPage(pagerState.currentPage - 1)
+                            }
+                        },
+                        modifier = Modifier.testTag("recap_previous")
+                    ) { Text(stringResource(R.string.recap_previous)) }
+                } else {
+                    Spacer(modifier = Modifier)
+                }
                 TextButton(
                     onClick = { saveCurrentStep?.invoke() },
                     enabled = saveCurrentStep != null,
