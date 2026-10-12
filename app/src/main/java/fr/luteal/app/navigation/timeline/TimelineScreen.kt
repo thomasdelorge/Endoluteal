@@ -38,12 +38,16 @@ import fr.luteal.core.model.professional.Specialty
 import fr.luteal.core.model.report.SinceLastVisitSummary
 import fr.luteal.core.model.report.TimelineVisit
 import fr.luteal.core.model.report.TimelineVisitKind
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
+fun TimelineScreen(
+    onEditAppointment: (eventId: String, date: LocalDate) -> Unit,
+    viewModel: TimelineViewModel = hiltViewModel()
+) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy")
@@ -63,9 +67,25 @@ fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
                 }
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.select(null) }) {
-                    Text(stringResource(R.string.action_close))
+                if (visit.kind == TimelineVisitKind.APPOINTMENT) {
+                    TextButton(onClick = {
+                        viewModel.select(null)
+                        onEditAppointment(visit.eventId, visit.at.atZone(zone).toLocalDate())
+                    }) { Text(stringResource(R.string.timeline_edit_appointment)) }
+                } else {
+                    TextButton(onClick = { viewModel.select(null) }) {
+                        Text(stringResource(R.string.action_close))
+                    }
                 }
+            },
+            dismissButton = if (visit.kind == TimelineVisitKind.APPOINTMENT) {
+                {
+                    TextButton(onClick = { viewModel.select(null) }) {
+                        Text(stringResource(R.string.action_close))
+                    }
+                }
+            } else {
+                null
             }
         )
     }

@@ -54,9 +54,6 @@ fun AppointmentReportSheet(
         if (selectedProfessionalId == null && event != null) {
             selectedProfessionalId = viewModel.suggestProfessionalId(event.notes, appointment?.location ?: "")
         }
-        if (selectedProfessionalId == null && professionals.isNotEmpty()) {
-            selectedProfessionalId = professionals.first().id
-        }
     }
 
     if (showNewProfessional) {

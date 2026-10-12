@@ -856,6 +856,7 @@
     <string name="timeline_period_90">90 jours</string>
     <string name="timeline_period_365">1 an</string>
     <string name="timeline_empty">Aucun rendez-vous ni hospitalisation pour ces filtres.</string>
+    <string name="timeline_edit_appointment">Modifier</string>
     <string name="timeline_kind_appointment">Rendez-vous</string>
     <string name="timeline_kind_hospital">Hospitalisation</string>
     <string name="timeline_no_report">Pas de compte rendu.</string>

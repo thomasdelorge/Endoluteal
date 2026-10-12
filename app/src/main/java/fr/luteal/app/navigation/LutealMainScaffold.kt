@@ -263,7 +263,12 @@ fun LutealMainScaffold(
                                 },
                                 onBackfillCycle = { showBackfillDialog = true }
                             )
-                            LutealDestination.TIMELINE -> TimelineScreen()
+                            LutealDestination.TIMELINE -> TimelineScreen(
+                                onEditAppointment = { eventId, date ->
+                                    appointmentEventId = eventId
+                                    appointmentDate = date
+                                }
+                            )
                             LutealDestination.MEDICATIONS -> MedsScreen(
                                 onTake = { medicationId ->
                                     intakeMedicationId = medicationId

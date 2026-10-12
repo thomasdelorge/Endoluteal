@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Saisie d’un plan de médicament : liste déroulante des médicaments déjà enregistrés, dates au calendrier (JJ-MM-AAAA), bouton Enregistrer plein.
+- Un rendez-vous ouvert depuis la frise se modifie dans la même fiche que l’agenda, et exige un professionnel.
 
 ## [0.5.0] - 2026-10-12
 
