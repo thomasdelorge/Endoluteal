@@ -120,7 +120,7 @@ flowchart LR
 - TENS généralisé en traitement non médicamenteux.
 - 5D de l'endométriose dans le récap, dyspareunie masquable.
 - Impact sur la journée dans le récap.
-- Questionnaire EHP-5 mensuel, sous réserve de licence.
+- Questionnaire mensuel inspiré (pas le texte EHP-5) tant qu’aucun accord Oxford n’est obtenu : [EHP5_LICENCE.md](EHP5_LICENCE.md).
 - Traitement hormonal continu : masque la prédiction des règles.
 - Widgets supprimés ; widget de prise rapide en backlog.
 - Backup chiffré en v0.2.0.
