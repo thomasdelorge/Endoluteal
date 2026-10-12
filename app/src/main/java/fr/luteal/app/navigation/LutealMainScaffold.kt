@@ -55,6 +55,7 @@ import fr.luteal.app.navigation.recap.MonthlyQuestionnaireSheet
 import fr.luteal.app.navigation.recap.MonthlyQuestionnaireViewModel
 import fr.luteal.app.navigation.recap.RecapWizardSheet
 import fr.luteal.app.navigation.recap.RecapWizardViewModel
+import fr.luteal.app.navigation.timeline.TimelineScreen
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.app.navigation.meds.MedsScreen
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -262,7 +263,7 @@ fun LutealMainScaffold(
                                 },
                                 onBackfillCycle = { showBackfillDialog = true }
                             )
-                            LutealDestination.TIMELINE -> ComingSoonScreen(R.string.nav_timeline)
+                            LutealDestination.TIMELINE -> TimelineScreen()
                             LutealDestination.MEDICATIONS -> MedsScreen(
                                 onTake = { medicationId ->
                                     intakeMedicationId = medicationId
@@ -389,24 +390,4 @@ private enum class LutealDestination(
     TIMELINE(R.string.nav_timeline, Icons.Rounded.Timeline),
     MEDICATIONS(R.string.nav_medications, Icons.Rounded.Medication),
     SETTINGS(R.string.nav_settings, Icons.Rounded.Settings)
-}
-
-@Composable
-private fun ComingSoonScreen(@StringRes titleRes: Int) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(LutealSpacing.lg),
-        verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-    ) {
-        ScreenHeader(
-            title = stringResource(titleRes),
-            subtitle = stringResource(R.string.screen_coming_soon_title)
-        )
-        Text(
-            text = stringResource(R.string.screen_coming_soon_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
 }
