@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Agenda : une seule carte « Récap du jour » en lecture seule avec « Modifier » ou « Compléter ».
 - Curseur de douleur : le chiffre 0–10 précède la phrase d’aide.
 - Récap du jour : bouton « Précédent » et navigation libre entre les étapes.
+- Réglages : thème et palette en menus déroulants.
 
 ## [0.6.0] - 2026-10-12
 

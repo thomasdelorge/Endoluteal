@@ -71,6 +71,7 @@ import fr.luteal.app.navigation.settings.meds.TreatmentPlansSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.LutealRadioRow
+import fr.luteal.core.designsystem.component.SettingsDropdownField
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.LutealToggleRow
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -457,38 +458,30 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            LutealRadioRow(
-                title = stringResource(R.string.settings_theme_system),
-                selected = syncState.themeMode == "SYSTEM",
-                onClick = { viewModel.setThemeMode("SYSTEM") }
+            val themeOptions = listOf(
+                "SYSTEM" to stringResource(R.string.settings_theme_system),
+                "LIGHT" to stringResource(R.string.settings_theme_light),
+                "DARK" to stringResource(R.string.settings_theme_dark)
             )
-            LutealRadioRow(
-                title = stringResource(R.string.settings_theme_light),
-                selected = syncState.themeMode == "LIGHT",
-                onClick = { viewModel.setThemeMode("LIGHT") }
-            )
-            LutealRadioRow(
-                title = stringResource(R.string.settings_theme_dark),
-                selected = syncState.themeMode == "DARK",
-                onClick = { viewModel.setThemeMode("DARK") }
+            SettingsDropdownField(
+                label = stringResource(R.string.settings_theme_label),
+                selectedLabel = themeOptions.first { it.first == syncState.themeMode }.second,
+                options = themeOptions,
+                onSelect = viewModel::setThemeMode
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            Text(
-                text = stringResource(R.string.settings_palette_title),
-                style = MaterialTheme.typography.titleMedium
+            val paletteOptions = listOf(
+                "EVERGREEN" to stringResource(R.string.settings_palette_evergreen),
+                "BLUE" to stringResource(R.string.settings_palette_blue),
+                "PLUM" to stringResource(R.string.settings_palette_plum),
+                "SAND" to stringResource(R.string.settings_palette_sand)
             )
-            listOf(
-                "EVERGREEN" to R.string.settings_palette_evergreen,
-                "BLUE" to R.string.settings_palette_blue,
-                "PLUM" to R.string.settings_palette_plum,
-                "SAND" to R.string.settings_palette_sand
-            ).forEach { (id, label) ->
-                LutealRadioRow(
-                    title = stringResource(label),
-                    selected = syncState.colorPalette == id,
-                    onClick = { viewModel.setColorPalette(id) }
-                )
-            }
+            SettingsDropdownField(
+                label = stringResource(R.string.settings_palette_title),
+                selectedLabel = paletteOptions.first { it.first == syncState.colorPalette }.second,
+                options = paletteOptions,
+                onSelect = viewModel::setColorPalette
+            )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingsInformationRow(
                 icon = Icons.Rounded.HealthAndSafety,

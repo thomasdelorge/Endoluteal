@@ -271,6 +271,7 @@
     <string name="settings_sync_last_error">Échec de la synchronisation : %1$s</string>
     <string name="settings_appearance_title">Apparence</string>
     <string name="settings_appearance_body">Choisissez le thème clair, le thème sombre, ou celui de l\'appareil.</string>
+    <string name="settings_theme_label">Thème</string>
     <string name="settings_theme_system">Système</string>
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
