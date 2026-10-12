@@ -56,6 +56,7 @@ class ReminderAlarmReceiver : BroadcastReceiver() {
         const val EXTRA_OPEN_PAIN_EVENT = "open_pain_event"
         const val EXTRA_OPEN_MEDICATION = "open_medication"
         const val EXTRA_OPEN_RECAP_DATE = "open_recap_date"
+        const val EXTRA_OPEN_MONTHLY_PERIOD = "open_monthly_period"
     }
 }
 
@@ -90,9 +91,16 @@ private suspend fun ReminderAlarmReceiver.handlePrimary(context: Context, id: St
             val payload = runCatching {
                 Json { ignoreUnknownKeys = true }.decodeFromString(RecapAlarmPayload.serializer(), reminder.payloadJson)
             }.getOrNull()
-            val date = payload?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
-            context.openEndoluteal {
-                putExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE, date)
+            val period = payload?.period?.takeIf { it.isNotBlank() }
+            if (period != null) {
+                context.openEndoluteal {
+                    putExtra(ReminderAlarmReceiver.EXTRA_OPEN_MONTHLY_PERIOD, period)
+                }
+            } else {
+                val date = payload?.date?.takeIf { it.isNotBlank() } ?: LocalDate.now().toString()
+                context.openEndoluteal {
+                    putExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE, date)
+                }
             }
         }
         else -> Unit

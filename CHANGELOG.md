@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Récap quotidien en cartes avec enregistrement par étape et rappel quotidien.
 - Étapes Cycle et Douleurs du récap (5D, carte corporelle min/max, dyspareunie masquable).
 - Étapes Psy, Général et Intestinal du récap ; suppression de l’ancienne saisie journalière.
+- Questionnaire mensuel inspiré (pas le texte EHP-5), score 0–100 et export des résultats.
 
 ### Changed
 

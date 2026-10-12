@@ -68,6 +68,7 @@ class DataImportManagerTest {
             professionalDao = database.professionalDao(),
             appointmentDao = database.appointmentDao(),
             dailyRecapDao = database.dailyRecapDao(),
+            questionnaireResultDao = database.questionnaireResultDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
 
@@ -85,6 +86,7 @@ class DataImportManagerTest {
             professionalDao = database.professionalDao(),
             appointmentDao = database.appointmentDao(),
             dailyRecapDao = database.dailyRecapDao(),
+            questionnaireResultDao = database.questionnaireResultDao(),
             userPreferencesDataStore = userPreferencesDataStore
         )
     }

@@ -901,6 +901,13 @@
     <string name="recap_bowel_constipation_question">Constipation aujourd’hui ?</string>
     <string name="recap_bowel_stool">Selles (type)</string>
     <string name="recap_bowel_bloating">Ballonnements</string>
+    <string name="monthly_questionnaire_title">Questionnaire mensuel inspiré</string>
+    <string name="monthly_questionnaire_subtitle">Formulations originales (pas l’EHP-5). Score indicatif 0–100.</string>
+    <string name="monthly_q1">Vos douleurs ont-elles limité vos activités ce mois-ci ?</string>
+    <string name="monthly_q2">Votre énergie a-t-elle été suffisante pour votre quotidien ?</string>
+    <string name="monthly_q3">Vous êtes-vous sentie soutenue dans votre entourage ?</string>
+    <string name="monthly_q4">Le sommeil vous a-t-il reposée ?</string>
+    <string name="monthly_q5">Globalement, comment évaluez-vous votre qualité de vie ce mois-ci ?</string>
     <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_action_symptom">Symptôme</string>
     <string name="agenda_action_care">Traitement</string>

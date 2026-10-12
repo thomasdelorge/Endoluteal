@@ -46,6 +46,7 @@ class MainActivity : FragmentActivity() {
     private var pendingPainEventId by mutableStateOf<String?>(null)
     private var pendingMedicationId by mutableStateOf<String?>(null)
     private var pendingRecapDate by mutableStateOf<String?>(null)
+    private var pendingMonthlyPeriod by mutableStateOf<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,11 +95,13 @@ class MainActivity : FragmentActivity() {
                             pendingPainEventId = if (!barrierUp) pendingPainEventId else null,
                             pendingMedicationId = if (!barrierUp) pendingMedicationId else null,
                             pendingRecapDate = if (!barrierUp) pendingRecapDate else null,
+                            pendingMonthlyPeriod = if (!barrierUp) pendingMonthlyPeriod else null,
                             onPendingImportConsumed = { bufferedImportJson = null },
                             onPendingReminderConsumed = {
                                 pendingPainEventId = null
                                 pendingMedicationId = null
                                 pendingRecapDate = null
+                                pendingMonthlyPeriod = null
                             }
                         )
                     }
@@ -131,6 +134,7 @@ class MainActivity : FragmentActivity() {
         pendingPainEventId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_PAIN_EVENT)
         pendingMedicationId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION)
         pendingRecapDate = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE)
+        pendingMonthlyPeriod = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MONTHLY_PERIOD)
     }
 
     private fun showBiometricPrompt() {

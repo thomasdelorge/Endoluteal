@@ -32,7 +32,8 @@ class NotificationScheduler @Inject constructor(
     private val cycleRepository: CycleRepository,
     private val dailyEntryRepository: DailyEntryRepository,
     private val treatmentPlanRepository: TreatmentPlanRepository,
-    private val recapReminderScheduler: RecapReminderScheduler
+    private val recapReminderScheduler: RecapReminderScheduler,
+    private val monthlyQuestionnaireScheduler: MonthlyQuestionnaireScheduler
 ) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
@@ -69,11 +70,13 @@ class NotificationScheduler @Inject constructor(
                 cancelAlarm(NotificationType.PERIOD_WINDOW)
                 cancelAlarm(NotificationType.LATE_CYCLE)
                 recapReminderScheduler.reconcile(now)
+                monthlyQuestionnaireScheduler.reconcile(now)
                 return@withContext
             }
 
             cancelAlarm(NotificationType.DAILY_CHECK_IN)
             recapReminderScheduler.reconcile(now)
+            monthlyQuestionnaireScheduler.reconcile(now)
 
             // Period Window Reminder
             val cycles = cycleRepository.getCyclesOnce()

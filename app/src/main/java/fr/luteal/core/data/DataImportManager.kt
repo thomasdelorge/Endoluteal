@@ -6,6 +6,7 @@ import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.CareTypeEntity
 import fr.luteal.core.data.entity.DailyRecapEntity
+import fr.luteal.core.data.entity.QuestionnaireResultEntity
 import fr.luteal.core.data.entity.ProfessionalEntity
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
@@ -21,6 +22,7 @@ import fr.luteal.core.data.entity.TreatmentPlanEntity
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.local.DailyRecapDao
+import fr.luteal.core.data.local.QuestionnaireResultDao
 import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
@@ -65,6 +67,7 @@ class DataImportManager @Inject constructor(
     private val professionalDao: ProfessionalDao,
     private val appointmentDao: AppointmentDao,
     private val dailyRecapDao: DailyRecapDao,
+    private val questionnaireResultDao: QuestionnaireResultDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -447,6 +450,20 @@ class DataImportManager @Inject constructor(
                                 location = appointment.location,
                                 report = appointment.report,
                                 reportStatus = appointment.reportStatus
+                            )
+                        )
+                    }
+                    for (result in payload.questionnaireResults) {
+                        if (result.period.isBlank()) continue
+                        questionnaireResultDao.upsert(
+                            QuestionnaireResultEntity(
+                                id = result.id,
+                                period = result.period,
+                                answersJson = result.answersJson,
+                                score = result.score,
+                                completedAtEpochMillis = runCatching {
+                                    Instant.parse(result.completedAt).toEpochMilli()
+                                }.getOrDefault(System.currentTimeMillis())
                             )
                         )
                     }

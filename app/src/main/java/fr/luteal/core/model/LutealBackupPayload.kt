@@ -29,7 +29,17 @@ data class LutealBackupPayload(
     @SerialName("professionals") val professionals: List<ProfessionalBackupDto> = emptyList(),
     @SerialName("appointments") val appointments: List<AppointmentBackupDto> = emptyList(),
     @SerialName("daily_recaps") val dailyRecaps: List<DailyRecapBackupDto> = emptyList(),
+    @SerialName("questionnaire_results") val questionnaireResults: List<QuestionnaireResultBackupDto> = emptyList(),
     @SerialName("preferences") val preferences: UserPreferencesBackupDto = UserPreferencesBackupDto()
+)
+
+@Serializable
+data class QuestionnaireResultBackupDto(
+    @SerialName("id") val id: String,
+    @SerialName("period") val period: String,
+    @SerialName("answers_json") val answersJson: String,
+    @SerialName("score") val score: Int,
+    @SerialName("completed_at") val completedAt: String
 )
 
 @Serializable

@@ -4,6 +4,7 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.local.DailyRecapDao
+import fr.luteal.core.data.local.QuestionnaireResultDao
 import fr.luteal.core.data.local.CareTypeDao
 import fr.luteal.core.data.local.ProfessionalDao
 import fr.luteal.core.data.local.CycleDao
@@ -33,6 +34,7 @@ import fr.luteal.core.model.PeriodDayBackupDto
 import fr.luteal.core.model.SubstanceBackupDto
 import fr.luteal.core.model.SymptomLogBackupDto
 import fr.luteal.core.model.TreatmentPlanBackupDto
+import fr.luteal.core.model.QuestionnaireResultBackupDto
 import fr.luteal.core.model.UserPreferencesBackupDto
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.encodeToString
@@ -57,6 +59,7 @@ class DataExportManager @Inject constructor(
     private val professionalDao: ProfessionalDao,
     private val appointmentDao: AppointmentDao,
     private val dailyRecapDao: DailyRecapDao,
+    private val questionnaireResultDao: QuestionnaireResultDao,
     private val userPreferencesDataStore: UserPreferencesDataStore
 ) {
     private val json = Json {
@@ -252,6 +255,15 @@ class DataExportManager @Inject constructor(
                 archived = entity.archived
             )
         }
+        val questionnaireResults = questionnaireResultDao.allOnce().map { entity ->
+            QuestionnaireResultBackupDto(
+                id = entity.id,
+                period = entity.period,
+                answersJson = entity.answersJson,
+                score = entity.score,
+                completedAt = Instant.ofEpochMilli(entity.completedAtEpochMillis).toString()
+            )
+        }
         val dailyRecaps = dailyRecapDao.allOnce().map { entity ->
             DailyRecapBackupDto(
                 date = entity.date,
@@ -316,6 +328,7 @@ class DataExportManager @Inject constructor(
             professionals = professionals,
             appointments = appointments,
             dailyRecaps = dailyRecaps,
+            questionnaireResults = questionnaireResults,
             preferences = preferencesDto
         )
     }
