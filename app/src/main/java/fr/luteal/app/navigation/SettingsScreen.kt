@@ -69,6 +69,7 @@ import fr.luteal.app.navigation.recap.MonthlyScoreHistoryCard
 import fr.luteal.app.navigation.settings.care.CareSettingsScreen
 import fr.luteal.app.navigation.settings.professionals.ProfessionalsSettingsScreen
 import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
+import fr.luteal.app.navigation.settings.meds.TreatmentPlansSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.LutealCheckboxRow
@@ -131,6 +132,7 @@ fun SettingsScreen(
     var showDisableLockDialog by remember { mutableStateOf(false) }
     var showTimeoutDialog by remember { mutableStateOf(false) }
     var showMeds by remember { mutableStateOf(false) }
+    var showPlans by remember { mutableStateOf(false) }
     var showCare by remember { mutableStateOf(false) }
     var showProfessionals by remember { mutableStateOf(false) }
     var showClinicalReportDialog by remember { mutableStateOf(false) }
@@ -266,6 +268,11 @@ fun SettingsScreen(
         return
     }
 
+    if (showPlans) {
+        TreatmentPlansSettingsScreen(onBack = { showPlans = false })
+        return
+    }
+
     if (showCare) {
         CareSettingsScreen(onBack = { showCare = false })
         return
@@ -303,6 +310,26 @@ fun SettingsScreen(
                     Text(stringResource(R.string.settings_meds_open), style = MaterialTheme.typography.titleMedium)
                     Text(
                         stringResource(R.string.settings_meds_open_body),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        LutealCard(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { showPlans = true }
+                    .padding(vertical = LutealSpacing.sm),
+                horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(Icons.Rounded.Sync, contentDescription = null)
+                Column {
+                    Text(stringResource(R.string.settings_plans_open), style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        stringResource(R.string.settings_plans_open_body),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

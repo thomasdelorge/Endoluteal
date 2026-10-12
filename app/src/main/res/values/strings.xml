@@ -1067,6 +1067,8 @@
     <string name="settings_meds_title">Médicaments</string>
     <string name="settings_meds_open">Base de médicaments</string>
     <string name="settings_meds_open_body">Substances, posologies et incompatibilités</string>
+    <string name="settings_plans_open">Plans récurrents</string>
+    <string name="settings_plans_open_body">Prises programmées et rappels</string>
     <string name="meds_disclaimer">Les alertes sont une aide et ne remplacent pas l’avis d’un médecin ou d’un pharmacien.</string>
     <string name="effect_title">Efficacité observée</string>
     <string name="effect_disclaimer">Comparaison des saisies avant et après. Ce n’est pas un avis médical.</string>
