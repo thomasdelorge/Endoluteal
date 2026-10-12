@@ -26,6 +26,7 @@ interface MedicationRepository {
     suspend fun upsertRule(rule: InteractionRule)
     suspend fun deleteRule(id: String)
     suspend fun applySeed(catalog: MedicationCatalog)
+    suspend fun mergeMissingSeed(catalog: MedicationCatalog)
 }
 
 @Singleton
@@ -80,6 +81,33 @@ class MedicationRepositoryImpl @Inject constructor(
             )
         }
         catalog.rules.forEach { medicationDao.upsertRule(it.toEntity()) }
+    }
+
+    override suspend fun mergeMissingSeed(catalog: MedicationCatalog) {
+        val current = catalogOnce()
+        val existingSubstances = current.substances.associateBy { it.id }
+        catalog.substances.forEach { seeded ->
+            val existing = existingSubstances[seeded.id]
+            if (existing == null) {
+                medicationDao.upsertSubstance(seeded.toEntity())
+            } else {
+                val merged = existing.copy(
+                    maxDailyMg = existing.maxDailyMg ?: seeded.maxDailyMg,
+                    maxPerIntakeMg = existing.maxPerIntakeMg ?: seeded.maxPerIntakeMg,
+                    minIntervalMinutes = existing.minIntervalMinutes ?: seeded.minIntervalMinutes
+                )
+                if (merged != existing) medicationDao.upsertSubstance(merged.toEntity())
+            }
+        }
+        val medicationIds = current.medications.map { it.id }.toSet()
+        catalog.medications.filter { it.id !in medicationIds }.forEach { medication ->
+            medicationDao.replaceMedication(
+                medication.toEntity(),
+                medication.compositions.map { it.toEntity(medication.id) }
+            )
+        }
+        val ruleIds = current.rules.map { it.id }.toSet()
+        catalog.rules.filter { it.id !in ruleIds }.forEach { medicationDao.upsertRule(it.toEntity()) }
     }
 
     private fun toCatalog(

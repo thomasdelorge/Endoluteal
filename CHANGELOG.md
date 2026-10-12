@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Carte du corps : silhouette féminine et points de douleur sur les zones touchées.
 - Numéro de version affiché en bas des Réglages.
 - La suppression d’un rendez-vous est dans le menu en haut à droite de la fiche.
+- Les plafonds de dose des substances courantes sont renseignés depuis les RCP déjà cités, sans écraser une saisie.
 
 ## [0.6.0] - 2026-10-12
 

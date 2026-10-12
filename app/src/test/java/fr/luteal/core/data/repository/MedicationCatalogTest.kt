@@ -81,6 +81,30 @@ class MedicationCatalogTest {
     }
 
     @Test
+    fun mergeMissingSeedFillsNullCeilingsAndKeepsEditedOnes() = runTest {
+        val raw = context.assets.open("medications_seed.json").bufferedReader().use { it.readText() }
+        val seed = MedicationSeed.parse(raw)
+        repository.upsertSubstance(
+            substance("paracetamol").copy(
+                name = "Paracétamol perso",
+                maxDailyMg = 3000.0
+            )
+        )
+        repository.mergeMissingSeed(seed)
+        repository.mergeMissingSeed(seed)
+
+        val catalog = repository.catalogOnce()
+        val paracetamol = catalog.substances.single { it.id == "paracetamol" }
+        assertEquals("Paracétamol perso", paracetamol.name)
+        assertEquals(3000.0, paracetamol.maxDailyMg!!, 0.01)
+        assertEquals(1000.0, paracetamol.maxPerIntakeMg!!, 0.01)
+        assertEquals(240, paracetamol.minIntervalMinutes)
+        assertEquals(seed.medications.size, catalog.medications.size)
+        assertEquals(seed.rules.size, catalog.rules.size)
+        assertEquals(seed.substances.size, catalog.substances.size)
+    }
+
+    @Test
     fun seedCreatesEightUnvalidatedMedications() = runTest {
         val raw = context.assets.open("medications_seed.json").bufferedReader().use { it.readText() }
         repository.applySeed(MedicationSeed.parse(raw))

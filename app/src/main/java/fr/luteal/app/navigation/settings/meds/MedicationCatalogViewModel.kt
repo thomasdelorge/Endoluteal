@@ -67,4 +67,11 @@ class MedicationCatalogViewModel @Inject constructor(
     fun setPainFollowupDelayMinutes(minutes: Int) {
         viewModelScope.launch { userPreferencesDataStore.setPainFollowupDelayMinutes(minutes) }
     }
+
+    init {
+        viewModelScope.launch {
+            val raw = context.assets.open("medications_seed.json").bufferedReader().use { it.readText() }
+            medicationRepository.mergeMissingSeed(MedicationSeed.parse(raw))
+        }
+    }
 }
