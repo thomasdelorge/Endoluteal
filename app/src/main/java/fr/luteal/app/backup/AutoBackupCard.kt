@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import fr.luteal.core.designsystem.component.TimeField
+import java.time.LocalTime
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -134,10 +136,13 @@ fun AutoBackupCard(viewModel: AutoBackupViewModel = hiltViewModel()) {
             TextButton(onClick = { folderLauncher.launch(null) }) {
                 Text(stringResource(R.string.backup_choose_folder))
             }
-            OutlinedTextField(
-                value = prefs.autoBackupHour,
-                onValueChange = viewModel::setHour,
-                label = { Text(stringResource(R.string.backup_hour)) },
+            val backupHour = remember(prefs.autoBackupHour) {
+                runCatching { LocalTime.parse(prefs.autoBackupHour) }.getOrDefault(LocalTime.of(3, 0))
+            }
+            TimeField(
+                value = backupHour,
+                onValueChange = { viewModel.setHour(String.format("%02d:%02d", it.hour, it.minute)) },
+                label = stringResource(R.string.backup_hour),
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(

@@ -616,6 +616,7 @@
     <string name="settings_notif_daily_title">Rappel quotidien d’observation</string>
     <string name="settings_notif_daily_desc">Rappel automatique en soirée, supprimé si vous avez déjà saisi vos notes.</string>
     <string name="settings_notif_time_label">Heure du rappel : %1$s</string>
+    <string name="settings_notif_time_picker_label">Heure du rappel</string>
     <string name="settings_notif_window_title">Alerte de fenêtre estimée</string>
     <string name="settings_notif_window_desc">Rappel à l’approche de la plage estimée des prochaines règles.</string>
     <string name="settings_notif_lead_label">Délai d’avance :</string>
@@ -1196,6 +1197,9 @@
     <string name="meds_take">Prendre</string>
     <string name="meds_log_intake">Noter une prise</string>
     <string name="meds_times">Horaires (HH:mm, séparés par une virgule)</string>
+    <string name="meds_times_label">Horaires de prise</string>
+    <string name="meds_add_time">Ajouter une heure</string>
+    <string name="meds_remove_time">Retirer cette heure</string>
     <string name="meds_start">Début</string>
     <string name="meds_end">Fin (optionnelle)</string>
     <string name="meds_clear_end">Effacer la fin</string>

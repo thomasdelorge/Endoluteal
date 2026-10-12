@@ -72,6 +72,8 @@ import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.LutealRadioRow
 import fr.luteal.core.designsystem.component.SettingsDropdownField
+import fr.luteal.core.designsystem.component.TimeField
+import java.time.LocalTime
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.LutealToggleRow
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -697,8 +699,6 @@ private fun NotificationSettingsCard(
     onCustomTitleChange: (String) -> Unit,
     onCustomBodyChange: (String) -> Unit
 ) {
-    var showTimeDialog by remember { mutableStateOf(false) }
-
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
         SettingsSectionHeader(title = stringResource(R.string.settings_notifications_title))
 
@@ -723,9 +723,16 @@ private fun NotificationSettingsCard(
                     )
 
                     if (state.isDailyCheckInEnabled) {
-                        LutealSecondaryButton(
-                            text = stringResource(R.string.settings_notif_time_label, state.dailyCheckInTime),
-                            onClick = { showTimeDialog = true },
+                        val checkInTime = remember(state.dailyCheckInTime) {
+                            runCatching { LocalTime.parse(state.dailyCheckInTime) }
+                                .getOrDefault(LocalTime.of(21, 0))
+                        }
+                        TimeField(
+                            value = checkInTime,
+                            onValueChange = {
+                                onDailyTimeChange(String.format("%02d:%02d", it.hour, it.minute))
+                            },
+                            label = stringResource(R.string.settings_notif_time_picker_label),
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -820,49 +827,6 @@ private fun NotificationSettingsCard(
         }
     }
 
-    if (showTimeDialog) {
-        TimeSelectionDialog(
-            currentTime = state.dailyCheckInTime,
-            onTimeSelected = {
-                onDailyTimeChange(it)
-                showTimeDialog = false
-            },
-            onDismiss = { showTimeDialog = false }
-        )
-    }
-}
-
-@Composable
-private fun TimeSelectionDialog(
-    currentTime: String,
-    onTimeSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val times = listOf("08:00", "09:00", "12:00", "20:00", "20:30", "21:00", "21:30", "22:00", "22:30")
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_notif_daily_title)) },
-        text = {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-            ) {
-                times.forEach { t ->
-                    LutealRadioRow(
-                        title = t,
-                        selected = t == currentTime,
-                        onClick = { onTimeSelected(t) }
-                    )
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_cancel))
-            }
-        }
-    )
 }
 
 @Composable

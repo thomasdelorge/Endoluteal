@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateField
 import fr.luteal.core.designsystem.component.SheetActions
+import fr.luteal.core.designsystem.component.TimeListField
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import java.time.LocalDate
 import java.time.LocalTime
@@ -38,16 +39,13 @@ fun TreatmentPlanEditor(
     var query by remember { mutableStateOf("") }
     var menuOpen by remember { mutableStateOf(false) }
     var units by remember { mutableStateOf("1") }
-    var times by remember { mutableStateOf("08:00") }
+    var times by remember { mutableStateOf(listOf(LocalTime.of(8, 0))) }
     var start by remember { mutableStateOf(LocalDate.now()) }
     var end by remember { mutableStateOf<LocalDate?>(null) }
     val selected = medications.find { it.first == medicationId }
     val filtering = selected == null || query != selected.second
     val options = medications.filter { (_, name) ->
         !filtering || query.isBlank() || name.contains(query, ignoreCase = true)
-    }
-    val parsedTimes = times.split(',', ' ').mapNotNull { token ->
-        token.trim().takeIf { it.isNotEmpty() }?.let { runCatching { LocalTime.parse(it) }.getOrNull() }
     }
     val count = units.replace(',', '.').toDoubleOrNull()
     val endDate = end
@@ -82,7 +80,12 @@ fun TreatmentPlanEditor(
         }
     }
     OutlinedTextField(units, { units = it }, label = { Text(stringResource(R.string.intake_units)) }, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(times, { times = it }, label = { Text(stringResource(R.string.meds_times)) }, modifier = Modifier.fillMaxWidth())
+    TimeListField(
+        times = times,
+        onTimesChange = { times = it },
+        label = stringResource(R.string.meds_times_label),
+        modifier = Modifier.fillMaxWidth()
+    )
     DateField(value = start, onValueChange = { start = it }, label = stringResource(R.string.meds_start))
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         DateField(
@@ -97,12 +100,12 @@ fun TreatmentPlanEditor(
     }
     SheetActions(
         onCancel = onCancel,
-        confirmEnabled = medicationId != null && count != null && count > 0.0 && parsedTimes.isNotEmpty() && endAfterStart,
+        confirmEnabled = medicationId != null && count != null && count > 0.0 && times.isNotEmpty() && endAfterStart,
         onConfirm = {
             val id = medicationId ?: return@SheetActions
             val unitsPerDose = count ?: return@SheetActions
-            if (parsedTimes.isEmpty() || !endAfterStart) return@SheetActions
-            onSave(id, unitsPerDose, parsedTimes, start, end, false)
+            if (times.isEmpty() || !endAfterStart) return@SheetActions
+            onSave(id, unitsPerDose, times, start, end, false)
         }
     )
 }
