@@ -21,6 +21,8 @@ object BodyMapGeometry {
     private val front = listOf(
         box(BodyZone.HEAD, 38f, 4f, 62f, 26f),
         box(BodyZone.NECK, 44f, 26f, 56f, 36f),
+        box(BodyZone.SHOULDER_FRONT_LEFT, 16f, 34f, 34f, 52f),
+        box(BodyZone.SHOULDER_FRONT_RIGHT, 66f, 34f, 84f, 52f),
         box(BodyZone.CHEST_LEFT, 26f, 36f, 48f, 60f),
         box(BodyZone.CHEST_RIGHT, 52f, 36f, 74f, 60f),
         box(BodyZone.HYPOCHONDRIUM_LEFT, 26f, 60f, 40f, 76f),
@@ -44,20 +46,20 @@ object BodyMapGeometry {
     )
 
     private val back = listOf(
-        box(BodyZone.NAPE, 42f, 4f, 58f, 22f),
-        box(BodyZone.SHOULDER_LEFT, 18f, 22f, 46f, 44f),
-        box(BodyZone.SHOULDER_RIGHT, 54f, 22f, 82f, 44f),
-        box(BodyZone.UPPER_BACK, 38f, 44f, 62f, 80f),
-        box(BodyZone.LUMBAR_LEFT, 26f, 80f, 48f, 106f),
-        box(BodyZone.LUMBAR_RIGHT, 52f, 80f, 74f, 106f),
-        box(BodyZone.SACRUM, 40f, 106f, 60f, 122f),
-        box(BodyZone.BUTTOCK_LEFT, 24f, 122f, 48f, 150f),
-        box(BodyZone.BUTTOCK_RIGHT, 52f, 122f, 76f, 150f),
-        box(BodyZone.COCCYX, 44f, 150f, 56f, 162f),
-        box(BodyZone.THIGH_BACK_LEFT, 26f, 162f, 46f, 198f),
-        box(BodyZone.THIGH_BACK_RIGHT, 54f, 162f, 74f, 198f),
-        box(BodyZone.CALF_LEFT, 30f, 198f, 46f, 234f),
-        box(BodyZone.CALF_RIGHT, 54f, 198f, 70f, 234f)
+        box(BodyZone.NAPE, 42f, 24f, 58f, 36f),
+        box(BodyZone.SHOULDER_LEFT, 16f, 34f, 38f, 52f),
+        box(BodyZone.SHOULDER_RIGHT, 62f, 34f, 84f, 52f),
+        box(BodyZone.UPPER_BACK, 36f, 36f, 64f, 76f),
+        box(BodyZone.LUMBAR_LEFT, 28f, 76f, 48f, 104f),
+        box(BodyZone.LUMBAR_RIGHT, 52f, 76f, 72f, 104f),
+        box(BodyZone.SACRUM, 42f, 104f, 58f, 122f),
+        box(BodyZone.COCCYX, 44f, 136f, 56f, 150f),
+        box(BodyZone.BUTTOCK_LEFT, 26f, 112f, 48f, 142f),
+        box(BodyZone.BUTTOCK_RIGHT, 52f, 112f, 74f, 142f),
+        box(BodyZone.THIGH_BACK_LEFT, 26f, 148f, 46f, 188f),
+        box(BodyZone.THIGH_BACK_RIGHT, 54f, 148f, 74f, 188f),
+        box(BodyZone.CALF_LEFT, 30f, 188f, 46f, 232f),
+        box(BodyZone.CALF_RIGHT, 54f, 188f, 70f, 232f)
     )
 
     fun shapes(side: BodySide): List<ZoneShape> = when (side) {

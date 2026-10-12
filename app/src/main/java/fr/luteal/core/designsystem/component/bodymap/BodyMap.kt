@@ -1,7 +1,6 @@
 package fr.luteal.core.designsystem.component.bodymap
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -26,15 +25,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,8 +51,8 @@ fun BodyMap(
     var side by remember { mutableStateOf(BodySide.FRONT) }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         SideToggle(side = side, onSide = { side = it })
-        ZoneCanvas(heat = heat, side = side, onZoneTap = null)
-        InternalZoneRow(heat = heat, onZone = {})
+        ZoneCanvas(heat = heat.mapKeys { it.key.id }, side = side, onZoneTap = null)
+        InternalZoneRow(heat = heat.mapKeys { it.key.id }, onZone = {})
     }
 }
 
@@ -71,7 +65,7 @@ fun BodyMap(
 ) {
     var side by remember { mutableStateOf(BodySide.FRONT) }
     var listMode by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf<BodyZone?>(null) }
+    var editing by remember { mutableStateOf<String?>(null) }
     val heat = remember(marks) { marks.toHeat() }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         if (listMode) {
@@ -79,7 +73,12 @@ fun BodyMap(
         } else {
             SideToggle(side = side, onSide = { side = it })
             ZoneCanvas(heat = heat, side = side, onZoneTap = { editing = it })
-            InternalZoneRow(heat = heat, onZone = { editing = it })
+            InternalZoneRow(heat = heat, onZone = { editing = it.id })
+            Text(
+                text = stringResource(R.string.choir_bodymap_attribution),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
         TextButton(onClick = { listMode = !listMode }) {
             Text(
@@ -91,15 +90,15 @@ fun BodyMap(
     }
     editing?.let { zone ->
         PainMarkSheet(
-            zone = zone,
-            existing = marks.firstOrNull { it.zone == zone.id },
+            zoneId = zone,
+            existing = marks.firstOrNull { it.zone == zone },
             onDismiss = { editing = null },
             onSave = { mark ->
-                onMarksChange(marks.filterNot { it.zone == zone.id } + mark)
+                onMarksChange(marks.filterNot { it.zone == zone } + mark)
                 editing = null
             },
             onRemove = {
-                onMarksChange(marks.filterNot { it.zone == zone.id })
+                onMarksChange(marks.filterNot { it.zone == zone })
                 editing = null
             }
         )
@@ -124,26 +123,28 @@ private fun SideToggle(side: BodySide, onSide: (BodySide) -> Unit) {
 
 @Composable
 private fun ZoneCanvas(
-    heat: Map<BodyZone, Int>,
+    heat: Map<String, Int>,
     side: BodySide,
-    onZoneTap: ((BodyZone) -> Unit)?
+    onZoneTap: ((String) -> Unit)?
 ) {
-    val shapes = BodyMapGeometry.shapes(side)
-    val paths = remember(side) { shapes.map { it.toPath() } }
+    val front = side == BodySide.FRONT
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bitmap = remember {
+        val source = android.graphics.BitmapFactory.decodeResource(
+            context.resources,
+            R.drawable.painmap_female
+        )
+        lineArt(source).asImageBitmap()
+    }
+    val regions = remember(context) { ChoirPainMap.regions(context) }
+    val visible = remember(front, regions) { regions.filter { it.front == front } }
     val ink = MaterialTheme.colorScheme.onSurface
+    val halfWidth = bitmap.width / 2
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(BodyMapGeometry.VIEWBOX_WIDTH / BodyMapGeometry.VIEWBOX_HEIGHT)
+            .aspectRatio(halfWidth.toFloat() / bitmap.height.toFloat())
     ) {
-        Image(
-            painter = painterResource(R.drawable.body_figure),
-            contentDescription = null,
-            contentScale = ContentScale.Fit,
-            colorFilter = ColorFilter.tint(ink),
-            modifier = Modifier.fillMaxSize(),
-            alignment = Alignment.Center
-        )
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -151,32 +152,39 @@ private fun ZoneCanvas(
                     if (onZoneTap == null) {
                         Modifier
                     } else {
-                        Modifier.pointerInput(side) {
+                        Modifier.pointerInput(front) {
                             detectTapGestures { offset ->
-                                val zone = BodyMapGeometry.zoneAt(
-                                    offset,
-                                    side,
-                                    Size(size.width.toFloat(), size.height.toFloat())
-                                )
-                                if (zone != null) onZoneTap(zone)
+                                val srcLeft = if (front) 0f else halfWidth.toFloat()
+                                val imageX = offset.x / size.width * halfWidth + srcLeft
+                                val imageY = offset.y / size.height * bitmap.height
+                                val key = ChoirPainMap.hit(imageX, imageY, front, regions)?.key
+                                if (key != null) onZoneTap(key)
                             }
                         }
                     }
                 )
         ) {
-            val scaleX = size.width / BodyMapGeometry.VIEWBOX_WIDTH
-            val scaleY = size.height / BodyMapGeometry.VIEWBOX_HEIGHT
-            scale(scaleX, scaleY, pivot = Offset.Zero) {
-                shapes.forEachIndexed { index, shape ->
-                    val intensity = heat[shape.zone] ?: return@forEachIndexed
-                    val color = painIntensityColor(intensity)
-                    drawPath(paths[index], color.copy(alpha = 0.45f))
-                    drawCircle(
-                        color = color,
-                        radius = 3f / scaleX,
-                        center = shape.rect.center
-                    )
+            val srcLeft = if (front) 0 else halfWidth
+            drawImage(
+                image = bitmap,
+                srcOffset = androidx.compose.ui.unit.IntOffset(srcLeft, 0),
+                srcSize = androidx.compose.ui.unit.IntSize(halfWidth, bitmap.height),
+                dstSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), size.height.toInt()),
+                colorFilter = ColorFilter.tint(ink)
+            )
+            val scaleX = size.width / halfWidth
+            val scaleY = size.height / bitmap.height
+            visible.forEach { region ->
+                val intensity = heat[region.key] ?: return@forEach
+                val path = androidx.compose.ui.graphics.Path().apply {
+                    region.points.forEachIndexed { index, point ->
+                        val x = (point.x - srcLeft) * scaleX
+                        val y = point.y * scaleY
+                        if (index == 0) moveTo(x, y) else lineTo(x, y)
+                    }
+                    close()
                 }
+                drawPath(path, painIntensityColor(intensity).copy(alpha = 0.45f))
             }
         }
     }
@@ -185,14 +193,14 @@ private fun ZoneCanvas(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun InternalZoneRow(
-    heat: Map<BodyZone, Int>,
+    heat: Map<String, Int>,
     onZone: (BodyZone) -> Unit
 ) {
     FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
         BodyZone.entries.filter { it.side == BodySide.INTERNAL }.forEach { zone ->
-            val label = zoneLabel(zone, heat[zone])
+            val label = zoneLabel(zone, heat[zone.id])
             FilterChip(
-                selected = heat.containsKey(zone),
+                selected = heat.containsKey(zone.id),
                 onClick = { onZone(zone) },
                 label = { Text(label) },
                 modifier = Modifier.semantics { contentDescription = label }
@@ -203,27 +211,38 @@ private fun InternalZoneRow(
 
 @Composable
 private fun ZoneList(
-    heat: Map<BodyZone, Int>,
-    onZone: (BodyZone) -> Unit
+    heat: Map<String, Int>,
+    onZone: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-        BodyRegion.entries.forEach { region ->
-            Text(
-                text = stringResource(region.labelRes),
-                style = MaterialTheme.typography.titleSmall
-            )
-            BodyZone.entries.filter { it.region() == region }.forEach { zone ->
-                val label = zoneLabel(zone, heat[zone])
+        listOf(true to R.string.body_side_front, false to R.string.body_side_back).forEach { (front, title) ->
+            Text(text = stringResource(title), style = MaterialTheme.typography.titleSmall)
+            ChoirPainMap.regions(androidx.compose.ui.platform.LocalContext.current)
+                .filter { it.front == front }
+                .forEach { region ->
+                val intensity = heat[region.key]
+                val label = if (intensity == null) region.title else "${region.title} ($intensity)"
                 Text(
                     text = label,
                     modifier = Modifier
                         .fillMaxWidth()
                         .sizeIn(minHeight = 48.dp)
                         .semantics { contentDescription = label }
-                        .clickable { onZone(zone) }
+                        .clickable { onZone(region.key) }
                         .padding(vertical = LutealSpacing.xs)
                 )
             }
+        }
+        BodyZone.entries.filter { it.side == BodySide.INTERNAL }.forEach { zone ->
+            val label = zoneLabel(zone, heat[zone.id])
+            Text(
+                text = label,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sizeIn(minHeight = 48.dp)
+                    .clickable { onZone(zone.id) }
+                    .padding(vertical = LutealSpacing.xs)
+            )
         }
     }
 }
@@ -231,19 +250,23 @@ private fun ZoneList(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PainMarkSheet(
-    zone: BodyZone,
+    zoneId: String,
     existing: PainMark?,
     onDismiss: () -> Unit,
     onSave: (PainMark) -> Unit,
     onRemove: () -> Unit
 ) {
-    var intensity by remember(zone) { mutableStateOf(existing?.intensity) }
-    var types by remember(zone) {
+    var intensity by remember(zoneId) { mutableStateOf(existing?.intensity) }
+    var types by remember(zoneId) {
         mutableStateOf(existing?.painTypes?.mapNotNull(PainType::fromId)?.toSet().orEmpty())
     }
+    val title = BodyZone.fromId(zoneId)?.let { stringResource(it.labelRes) }
+        ?: ChoirPainMap.regions(androidx.compose.ui.platform.LocalContext.current)
+            .firstOrNull { it.key == zoneId }?.title
+        ?: zoneId
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(zone.labelRes)) },
+        title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
                 PainScale(value = intensity, onValueChange = { intensity = it })
@@ -267,7 +290,7 @@ private fun PainMarkSheet(
                     onSave(
                         PainMark(
                             id = existing?.id ?: UUID.randomUUID().toString(),
-                            zone = zone.id,
+                            zone = zoneId,
                             intensity = level,
                             painTypes = types.map { it.id }
                         )
@@ -299,5 +322,26 @@ private fun zoneLabel(zone: BodyZone, intensity: Int?): String {
     return if (intensity == null) name else "$name ($intensity)"
 }
 
-private fun List<PainMark>.toHeat(): Map<BodyZone, Int> =
-    mapNotNull { mark -> BodyZone.fromId(mark.zone)?.let { zone -> zone to mark.intensity } }.toMap()
+private fun List<PainMark>.toHeat(): Map<String, Int> =
+    associate { mark -> mark.zone to mark.intensity }
+
+/** Keeps the region strokes and drops the paper fill plus the footer stamp. */
+private fun lineArt(source: android.graphics.Bitmap): android.graphics.Bitmap {
+    val copy = source.copy(android.graphics.Bitmap.Config.ARGB_8888, true)
+    val width = copy.width
+    val height = copy.height
+    val pixels = IntArray(width * height)
+    copy.getPixels(pixels, 0, width, 0, 0, width, height)
+    for (index in pixels.indices) {
+        val x = index % width
+        val y = index / width
+        val color = pixels[index]
+        val alpha = color ushr 24 and 0xFF
+        val red = color shr 16 and 0xFF
+        val stamp = x in 190..340 && y in 526..562
+        val ink = if (stamp || alpha == 0) 0 else (255 - red) * alpha / 255
+        pixels[index] = ink shl 24
+    }
+    copy.setPixels(pixels, 0, width, 0, 0, width, height)
+    return copy
+}

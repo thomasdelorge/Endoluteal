@@ -16,6 +16,8 @@ enum class BodyZone(
 ) {
     HEAD("head", BodySide.FRONT, R.string.body_zone_head),
     NECK("neck", BodySide.FRONT, R.string.body_zone_neck),
+    SHOULDER_FRONT_LEFT("shoulder_front_left", BodySide.FRONT, R.string.body_zone_shoulder_front_left),
+    SHOULDER_FRONT_RIGHT("shoulder_front_right", BodySide.FRONT, R.string.body_zone_shoulder_front_right),
     CHEST_LEFT("chest_left", BodySide.FRONT, R.string.body_zone_chest_left),
     CHEST_RIGHT("chest_right", BodySide.FRONT, R.string.body_zone_chest_right),
     EPIGASTRIUM("epigastrium", BodySide.FRONT, R.string.body_zone_epigastrium),

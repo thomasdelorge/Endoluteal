@@ -775,6 +775,8 @@
 
     <string name="body_zone_head">Tête</string>
     <string name="body_zone_neck">Cou</string>
+    <string name="body_zone_shoulder_front_left">Épaule gauche</string>
+    <string name="body_zone_shoulder_front_right">Épaule droite</string>
     <string name="body_zone_chest_left">Poitrine gauche</string>
     <string name="body_zone_chest_right">Poitrine droite</string>
     <string name="body_zone_epigastrium">Épigastre</string>
@@ -820,6 +822,7 @@
     <string name="body_region_limbs">Membres</string>
     <string name="body_region_internal">Zones internes</string>
     <string name="body_side_front">Avant</string>
+    <string name="choir_bodymap_attribution">Schéma CHOIR Bodymap, Université Stanford (Ming-Chih J. Kao et Sean Mackey), 2013-2015.</string>
     <string name="body_side_back">Arrière</string>
     <string name="body_map_list_mode">Saisir par liste</string>
     <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>

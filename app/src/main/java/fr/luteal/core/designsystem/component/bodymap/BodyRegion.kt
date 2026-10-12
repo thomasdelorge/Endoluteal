@@ -14,6 +14,7 @@ enum class BodyRegion(@StringRes val labelRes: Int) {
 
 fun BodyZone.region(): BodyRegion = when (this) {
     BodyZone.HEAD, BodyZone.NECK, BodyZone.NAPE -> BodyRegion.HEAD
+    BodyZone.SHOULDER_FRONT_LEFT, BodyZone.SHOULDER_FRONT_RIGHT,
     BodyZone.CHEST_LEFT, BodyZone.CHEST_RIGHT,
     BodyZone.EPIGASTRIUM, BodyZone.HYPOCHONDRIUM_LEFT, BodyZone.HYPOCHONDRIUM_RIGHT,
     BodyZone.FLANK_LEFT, BodyZone.FLANK_RIGHT, BodyZone.PERIUMBILICAL,
