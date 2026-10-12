@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Suppression des bannières informatives « Données et confidentialité » dans les Réglages.
 - Carte du corps : silhouette féminine et points de douleur sur les zones touchées.
 - Numéro de version affiché en bas des Réglages.
+- La suppression d’un rendez-vous est dans le menu en haut à droite de la fiche.
 
 ## [0.6.0] - 2026-10-12
 

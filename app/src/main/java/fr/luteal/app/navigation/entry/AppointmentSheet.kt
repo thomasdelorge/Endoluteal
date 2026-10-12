@@ -1,17 +1,25 @@
 package fr.luteal.app.navigation.entry
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
@@ -24,6 +32,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -59,6 +68,7 @@ fun AppointmentSheet(
     var location by remember { mutableStateOf("") }
     var report by remember { mutableStateOf("") }
     var confirmDelete by remember { mutableStateOf(false) }
+    var menuOpen by remember { mutableStateOf(false) }
     var showNewProfessional by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -119,7 +129,38 @@ fun AppointmentSheet(
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
-            Text(stringResource(R.string.appointment_title), style = MaterialTheme.typography.titleLarge)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.appointment_title),
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                if (existingEventId != null) {
+                    Box {
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(
+                                Icons.Rounded.MoreVert,
+                                contentDescription = stringResource(R.string.appointment_more_actions)
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuOpen,
+                            onDismissRequest = { menuOpen = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.appointment_delete)) },
+                                onClick = {
+                                    menuOpen = false
+                                    confirmDelete = true
+                                }
+                            )
+                        }
+                    }
+                }
+            }
             if (importedTitle.isNotBlank()) {
                 Text(importedTitle, style = MaterialTheme.typography.titleMedium)
             }
@@ -178,11 +219,6 @@ fun AppointmentSheet(
                     }
                 }
             )
-            if (existingEventId != null) {
-                TextButton(onClick = { confirmDelete = true }) {
-                    Text(stringResource(R.string.appointment_delete))
-                }
-            }
         }
     }
 }

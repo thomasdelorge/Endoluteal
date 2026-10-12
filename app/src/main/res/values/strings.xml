@@ -1024,6 +1024,7 @@
     <string name="appointment_location">Lieu</string>
     <string name="appointment_report">Compte rendu</string>
     <string name="appointment_delete">Supprimer</string>
+    <string name="appointment_more_actions">Autres actions</string>
     <string name="appointment_delete_title">Supprimer ce rendez-vous ?</string>
     <string name="appointment_delete_body">L’événement sera retiré de l’agenda.</string>
     <string name="appointment_delete_confirm">Supprimer</string>
