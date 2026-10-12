@@ -25,6 +25,7 @@ import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import java.time.Instant
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 
@@ -115,5 +116,49 @@ fun DateTimeField(
             },
             text = { TimePicker(state = state) }
         )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun DateField(
+    value: LocalDate?,
+    onValueChange: (LocalDate) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier
+) {
+    var showDate by remember { mutableStateOf(false) }
+    val shown = value?.let(LocalizedDateFormatter::formatNumericDate)
+    OutlinedButton(onClick = { showDate = true }, modifier = modifier.fillMaxWidth()) {
+        Text(if (shown == null) label else "$label $shown")
+    }
+    if (showDate) {
+        val initial = (value ?: LocalDate.now())
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
+        val state = rememberDatePickerState(initialSelectedDateMillis = initial)
+        DatePickerDialog(
+            onDismissRequest = { showDate = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        state.selectedDateMillis?.let { millis ->
+                            onValueChange(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                        }
+                        showDate = false
+                    }
+                ) {
+                    Text(stringResource(R.string.calendar_picker_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDate = false }) {
+                    Text(stringResource(R.string.action_cancel))
+                }
+            }
+        ) {
+            DatePicker(state = state)
+        }
     }
 }
