@@ -22,7 +22,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.app.navigation.recap.steps.CycleStep
+import fr.luteal.app.navigation.recap.steps.PainStep
 import fr.luteal.core.designsystem.theme.LutealSpacing
+import fr.luteal.core.model.recap.RecapCyclePayload
+import fr.luteal.core.model.recap.RecapPainPayload
 import fr.luteal.core.model.recap.RecapStep
 import java.time.LocalDate
 import kotlinx.coroutines.launch
@@ -36,6 +40,9 @@ fun RecapWizardSheet(
 ) {
     LaunchedEffect(date) { viewModel.open(date) }
     val recap by viewModel.recap.collectAsStateWithLifecycle()
+    val cycleUi by viewModel.cycleUi.collectAsStateWithLifecycle()
+    val dayEvents by viewModel.dayEventLines.collectAsStateWithLifecycle()
+    val hideDyspareunia by viewModel.hideDyspareunia.collectAsStateWithLifecycle()
     val steps = RecapStep.ordered
     val pagerState = rememberPagerState(
         initialPage = viewModel.initialPageIndex(),
@@ -48,6 +55,15 @@ fun RecapWizardSheet(
         val index = steps.indexOf(target)
         if (index >= 0 && index != pagerState.currentPage) {
             pagerState.scrollToPage(index)
+        }
+    }
+
+    fun advanceFrom(page: Int) {
+        if (page < steps.lastIndex) {
+            scope.launch { pagerState.animateScrollToPage(page + 1) }
+        } else {
+            viewModel.clear()
+            onDismiss()
         }
     }
 
@@ -67,32 +83,40 @@ fun RecapWizardSheet(
             )
             val progress = (recap?.completedSteps?.size ?: 0).toFloat() / steps.size
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
+            val currentRecap = recap
             HorizontalPager(state = pagerState) { page ->
                 val step = steps[page]
-                RecapPlaceholderStep(
-                    step = step,
-                    onContinue = {
-                        viewModel.completeStep(step)
-                        if (page < steps.lastIndex) {
-                            scope.launch { pagerState.animateScrollToPage(page + 1) }
-                        } else {
-                            viewModel.clear()
-                            onDismiss()
+                when (step) {
+                    RecapStep.CYCLE -> CycleStep(
+                        ui = cycleUi,
+                        initial = currentRecap?.cycle ?: RecapCyclePayload(),
+                        onContinue = { payload ->
+                            viewModel.finishCycleStep(payload) { advanceFrom(page) }
                         }
-                    }
-                )
+                    )
+                    RecapStep.PAIN -> PainStep(
+                        dayEventLines = dayEvents,
+                        hideDyspareunia = hideDyspareunia,
+                        initial = currentRecap?.pain ?: RecapPainPayload(),
+                        onContinue = { payload ->
+                            viewModel.finishPainStep(payload) { advanceFrom(page) }
+                        }
+                    )
+                    else -> RecapPlaceholderStep(
+                        step = step,
+                        onContinue = {
+                            viewModel.completeStep(step)
+                            advanceFrom(page)
+                        }
+                    )
+                }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(
                     onClick = {
                         val step = steps[pagerState.currentPage]
                         viewModel.completeStep(step)
-                        if (pagerState.currentPage < steps.lastIndex) {
-                            scope.launch { pagerState.animateScrollToPage(pagerState.currentPage + 1) }
-                        } else {
-                            viewModel.clear()
-                            onDismiss()
-                        }
+                        advanceFrom(pagerState.currentPage)
                     },
                     modifier = Modifier.testTag("recap_skip")
                 ) { Text(stringResource(R.string.recap_skip)) }

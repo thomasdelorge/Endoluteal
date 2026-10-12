@@ -64,7 +64,8 @@ data class UserPreferences(
     val autoBackupHour: String = "03:00",
     val autoBackupKeep: Int = 14,
     val autoBackupLastSuccess: String = "",
-    val autoBackupLastError: String = ""
+    val autoBackupLastError: String = "",
+    val hideDyspareuniaInRecap: Boolean = false
 ) {
     /** Contexts the user declared during onboarding. */
     val declaredContexts: Set<TrackingContext>
@@ -137,6 +138,7 @@ class UserPreferencesDataStore @Inject constructor(
         val AUTO_BACKUP_KEEP = androidx.datastore.preferences.core.intPreferencesKey("auto_backup_keep")
         val AUTO_BACKUP_LAST_SUCCESS = stringPreferencesKey("auto_backup_last_success")
         val AUTO_BACKUP_LAST_ERROR = stringPreferencesKey("auto_backup_last_error")
+        val HIDE_DYSPAREUNIA_IN_RECAP = booleanPreferencesKey("hide_dyspareunia_in_recap")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -194,7 +196,8 @@ class UserPreferencesDataStore @Inject constructor(
                 autoBackupHour = preferences[AUTO_BACKUP_HOUR] ?: "03:00",
                 autoBackupKeep = preferences[AUTO_BACKUP_KEEP] ?: 14,
                 autoBackupLastSuccess = preferences[AUTO_BACKUP_LAST_SUCCESS] ?: "",
-                autoBackupLastError = preferences[AUTO_BACKUP_LAST_ERROR] ?: ""
+                autoBackupLastError = preferences[AUTO_BACKUP_LAST_ERROR] ?: "",
+                hideDyspareuniaInRecap = preferences[HIDE_DYSPAREUNIA_IN_RECAP] ?: false
             )
         }
 
@@ -269,6 +272,7 @@ class UserPreferencesDataStore @Inject constructor(
         it[AUTO_BACKUP_LAST_SUCCESS] = success
         it[AUTO_BACKUP_LAST_ERROR] = error
     }
+    suspend fun setHideDyspareuniaInRecap(hidden: Boolean) = edit { it[HIDE_DYSPAREUNIA_IN_RECAP] = hidden }
     suspend fun clear() = edit { it.clear() }
 
     private suspend fun edit(block: suspend (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Hospitalisation sur plusieurs jours dans l’agenda (lieu, motif, examens, médicaments).
 - Rendez-vous manuels liés à un professionnel (spécialité, lieu, compte rendu).
 - Récap quotidien en cartes avec enregistrement par étape et rappel quotidien.
+- Étapes Cycle et Douleurs du récap (5D, carte corporelle min/max, dyspareunie masquable).
 
 ### Changed
 

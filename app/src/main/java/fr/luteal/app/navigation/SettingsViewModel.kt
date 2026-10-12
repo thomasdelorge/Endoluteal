@@ -100,7 +100,8 @@ class SettingsViewModel @Inject constructor(
             notificationVisibilityMode = NotificationVisibility.fromName(preferences.notificationVisibilityMode),
             notificationCustomTitle = preferences.notificationCustomTitle,
             notificationCustomBody = preferences.notificationCustomBody,
-            temperatureUnit = preferences.temperatureUnit
+            temperatureUnit = preferences.temperatureUnit,
+            hideDyspareuniaInRecap = preferences.hideDyspareuniaInRecap
         )
     }.stateIn(
         scope = viewModelScope,
@@ -123,6 +124,12 @@ class SettingsViewModel @Inject constructor(
     fun setTemperatureUnit(unit: String) {
         viewModelScope.launch {
             userPreferencesDataStore.setTemperatureUnit(unit)
+        }
+    }
+
+    fun setHideDyspareuniaInRecap(hidden: Boolean) {
+        viewModelScope.launch {
+            userPreferencesDataStore.setHideDyspareuniaInRecap(hidden)
         }
     }
 
@@ -484,7 +491,8 @@ data class SettingsSyncUiState(
     val notificationVisibilityMode: NotificationVisibility = NotificationVisibility.CONCEALED,
     val notificationCustomTitle: String = "",
     val notificationCustomBody: String = "",
-    val temperatureUnit: String = "CELSIUS"
+    val temperatureUnit: String = "CELSIUS",
+    val hideDyspareuniaInRecap: Boolean = false
 )
 
 /** Text drafts held together so [combine] stays within its five-flow limit. */

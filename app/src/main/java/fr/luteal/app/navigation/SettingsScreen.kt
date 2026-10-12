@@ -430,6 +430,15 @@ fun SettingsScreen(
             onSelectAgeBand = viewModel::setAgeBand
         )
 
+        LutealCard(modifier = Modifier.fillMaxWidth()) {
+            LutealToggleRow(
+                title = stringResource(R.string.settings_hide_dyspareunia_recap_title),
+                description = stringResource(R.string.settings_hide_dyspareunia_recap_body),
+                checked = syncState.hideDyspareuniaInRecap,
+                onCheckedChange = viewModel::setHideDyspareuniaInRecap
+            )
+        }
+
         SettingsSectionHeader(title = stringResource(R.string.settings_appearance_title))
 
         LutealCard(modifier = Modifier.fillMaxWidth()) {
