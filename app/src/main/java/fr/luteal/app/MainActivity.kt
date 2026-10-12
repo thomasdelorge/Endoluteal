@@ -94,7 +94,8 @@ class MainActivity : FragmentActivity() {
                 initialValue = UserPreferences()
             )
             LutealTheme(
-                darkTheme = resolveDarkTheme(preferences.themeMode, isSystemInDarkTheme())
+                darkTheme = resolveDarkTheme(preferences.themeMode, isSystemInDarkTheme()),
+                palette = preferences.colorPalette
             ) {
                 val lockState by appLockManager.lockState.collectAsStateWithLifecycle()
                 val barrierUp = lockState is AppLockState.Resolving || lockState is AppLockState.Locked

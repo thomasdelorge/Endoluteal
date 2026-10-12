@@ -1,5 +1,6 @@
 package fr.luteal.core.designsystem.theme
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -20,5 +21,13 @@ class ThemeModeTest {
     @Test
     fun unknownModeFallsBackToTheDevice() {
         assertTrue(resolveDarkTheme("NOPE", systemDark = true))
+    }
+
+    @Test
+    fun namedPaletteChangesThePrimaryColor() {
+        val evergreen = colorSchemeFor("EVERGREEN", dark = false).primary
+        val blue = colorSchemeFor("BLUE", dark = false).primary
+        assertTrue(evergreen != blue)
+        assertEquals(evergreen, colorSchemeFor("NOPE", dark = false).primary)
     }
 }

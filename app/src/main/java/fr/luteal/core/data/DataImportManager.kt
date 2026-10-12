@@ -504,6 +504,7 @@ class DataImportManager @Inject constructor(
                     userPreferencesDataStore.setAgeBand(prefs.ageBand)
                     userPreferencesDataStore.setTemperatureUnit(prefs.temperatureUnit)
                     userPreferencesDataStore.setThemeMode(prefs.themeMode)
+                    userPreferencesDataStore.setColorPalette(prefs.colorPalette)
                     userPreferencesDataStore.setCompletedOnboarding(true)
                     preferencesRestored = true
                 }

@@ -274,6 +274,11 @@
     <string name="settings_theme_system">Système</string>
     <string name="settings_theme_light">Clair</string>
     <string name="settings_theme_dark">Sombre</string>
+    <string name="settings_palette_title">Couleur</string>
+    <string name="settings_palette_evergreen">Vert</string>
+    <string name="settings_palette_blue">Bleu</string>
+    <string name="settings_palette_plum">Prune</string>
+    <string name="settings_palette_sand">Sable</string>
     <string name="settings_about_title">À propos des estimations</string>
     <string name="settings_about_body">Luteal sépare les observations enregistrées des calculs estimatifs. L’application ne pose aucun diagnostic et ne formule aucune conclusion médicale.</string>
     <string name="settings_test_data_title">Données de démonstration</string>

@@ -14,13 +14,14 @@ fun resolveDarkTheme(mode: String, systemDark: Boolean): Boolean = when (mode) {
 @Composable
 fun LutealTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
+    palette: String = "EVERGREEN",
     content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
         LocalPhaseColors provides if (darkTheme) DarkPhaseColors else LightPhaseColors
     ) {
         MaterialTheme(
-            colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+            colorScheme = colorSchemeFor(palette, darkTheme),
             typography = LutealTypography,
             shapes = LutealShapes,
             content = content

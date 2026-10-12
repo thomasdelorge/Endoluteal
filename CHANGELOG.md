@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Choix du thème clair, sombre, ou celui de l’appareil, dans les Réglages.
+- Quatre couleurs d’interface : vert, bleu, prune et sable.
 
 ### Changed
 

@@ -310,7 +310,8 @@ class DataExportManager @Inject constructor(
             trackThyroid = prefs.trackThyroid,
             ageBand = prefs.ageBand,
             temperatureUnit = prefs.temperatureUnit,
-            themeMode = prefs.themeMode
+            themeMode = prefs.themeMode,
+            colorPalette = prefs.colorPalette
         )
 
         return LutealBackupPayload(

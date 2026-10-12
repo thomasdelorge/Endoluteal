@@ -485,6 +485,23 @@ fun SettingsScreen(
                 onClick = { viewModel.setThemeMode("DARK") }
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+            Text(
+                text = stringResource(R.string.settings_palette_title),
+                style = MaterialTheme.typography.titleMedium
+            )
+            listOf(
+                "EVERGREEN" to R.string.settings_palette_evergreen,
+                "BLUE" to R.string.settings_palette_blue,
+                "PLUM" to R.string.settings_palette_plum,
+                "SAND" to R.string.settings_palette_sand
+            ).forEach { (id, label) ->
+                LutealRadioRow(
+                    title = stringResource(label),
+                    selected = syncState.colorPalette == id,
+                    onClick = { viewModel.setColorPalette(id) }
+                )
+            }
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingsInformationRow(
                 icon = Icons.Rounded.HealthAndSafety,
                 title = stringResource(R.string.settings_about_title),

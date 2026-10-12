@@ -1,5 +1,6 @@
 package fr.luteal.core.designsystem.theme
 
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Immutable
@@ -109,3 +110,86 @@ val DarkColorScheme = darkColorScheme(
     onErrorContainer = Color(0xFFFFDAD8),
     scrim = Color(0xFF0B0F0D)
 )
+
+private data class PaletteTones(
+    val primary: Color,
+    val onPrimary: Color,
+    val container: Color,
+    val onContainer: Color,
+    val background: Color,
+    val surface: Color
+)
+
+fun colorSchemeFor(palette: String, dark: Boolean): ColorScheme {
+    val base = if (dark) DarkColorScheme else LightColorScheme
+    val tones = paletteTones(palette, dark) ?: return base
+    return base.copy(
+        primary = tones.primary,
+        onPrimary = tones.onPrimary,
+        primaryContainer = tones.container,
+        onPrimaryContainer = tones.onContainer,
+        background = tones.background,
+        surface = tones.surface
+    )
+}
+
+private fun paletteTones(palette: String, dark: Boolean): PaletteTones? = when (palette) {
+    "BLUE" -> if (dark) {
+        PaletteTones(
+            primary = Color(0xFF9ECAFF),
+            onPrimary = Color(0xFF082844),
+            container = Color(0xFF1A3E62),
+            onContainer = Color(0xFFD3E4F8),
+            background = Color(0xFF101418),
+            surface = Color(0xFF161C22)
+        )
+    } else {
+        PaletteTones(
+            primary = Color(0xFF1F4E79),
+            onPrimary = Color(0xFFF4F8FF),
+            container = Color(0xFFD3E4F8),
+            onContainer = Color(0xFF0C2C4A),
+            background = Color(0xFFE8EEF2),
+            surface = Color(0xFFF7F9FB)
+        )
+    }
+    "PLUM" -> if (dark) {
+        PaletteTones(
+            primary = Color(0xFFE0B4E8),
+            onPrimary = Color(0xFF3A1848),
+            container = Color(0xFF4A2C58),
+            onContainer = Color(0xFFF3DDF6),
+            background = Color(0xFF161218),
+            surface = Color(0xFF1C1820)
+        )
+    } else {
+        PaletteTones(
+            primary = Color(0xFF5C3D6E),
+            onPrimary = Color(0xFFFBF6FF),
+            container = Color(0xFFE6D6F0),
+            onContainer = Color(0xFF2E1840),
+            background = Color(0xFFF0EAF3),
+            surface = Color(0xFFFBF8FC)
+        )
+    }
+    "SAND" -> if (dark) {
+        PaletteTones(
+            primary = Color(0xFFE6C48A),
+            onPrimary = Color(0xFF3A280E),
+            container = Color(0xFF5A4324),
+            onContainer = Color(0xFFF6E6C8),
+            background = Color(0xFF161410),
+            surface = Color(0xFF1E1A16)
+        )
+    } else {
+        PaletteTones(
+            primary = Color(0xFF6B4F2A),
+            onPrimary = Color(0xFFFFF8F0),
+            container = Color(0xFFF0E0C8),
+            onContainer = Color(0xFF3A280E),
+            background = Color(0xFFF3EDE2),
+            surface = Color(0xFFFBF7F1)
+        )
+    }
+    else -> null
+}
