@@ -11,7 +11,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,7 +41,6 @@ fun TreatmentPlanEditor(
     var times by remember { mutableStateOf("08:00") }
     var start by remember { mutableStateOf(LocalDate.now()) }
     var end by remember { mutableStateOf<LocalDate?>(null) }
-    var hormonal by remember { mutableStateOf(false) }
     val selected = medications.find { it.first == medicationId }
     val filtering = selected == null || query != selected.second
     val options = medications.filter { (_, name) ->
@@ -97,10 +95,6 @@ fun TreatmentPlanEditor(
             TextButton(onClick = { end = null }) { Text(stringResource(R.string.meds_clear_end)) }
         }
     }
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-        Text(stringResource(R.string.meds_hormonal))
-        Switch(checked = hormonal, onCheckedChange = { hormonal = it })
-    }
     SheetActions(
         onCancel = onCancel,
         confirmEnabled = medicationId != null && count != null && count > 0.0 && parsedTimes.isNotEmpty() && endAfterStart,
@@ -108,7 +102,7 @@ fun TreatmentPlanEditor(
             val id = medicationId ?: return@SheetActions
             val unitsPerDose = count ?: return@SheetActions
             if (parsedTimes.isEmpty() || !endAfterStart) return@SheetActions
-            onSave(id, unitsPerDose, parsedTimes, start, end, hormonal)
+            onSave(id, unitsPerDose, parsedTimes, start, end, false)
         }
     )
 }

@@ -203,12 +203,6 @@ fun AgendaScreen(
         }
 
         item {
-            if (state.hideCycleEstimate) {
-                Text(stringResource(R.string.agenda_hormonal_hidden))
-            }
-        }
-
-        item {
                 MonthNavigationBar(
                     currentMonth = currentMonth,
                     isCurrentMonthToday = currentMonth == YearMonth.from(state.today),
