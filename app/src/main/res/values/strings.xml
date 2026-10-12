@@ -989,7 +989,8 @@
     <string name="care_followup_skip">Non merci</string>
     <string name="settings_care_title">Traitements</string>
     <string name="settings_care_open">Soins non médicamenteux</string>
-    <string name="settings_care_open_body">TENS, bouillotte, kiné, programmes et durées</string>
+    <string name="settings_care_open_body">Programmes TENS et durées</string>
+    <string name="care_tens_programs_title">Programmes TENS</string>
     <string name="care_settings_back">Retour</string>
     <string name="care_seed_title">Types de soin suggérés</string>
     <string name="care_seed_body">TENS, bouillotte, bain chaud, kinésithérapie, ostéopathie et étirements.</string>

@@ -12,7 +12,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -44,10 +43,7 @@ fun CareSettingsScreen(
     viewModel: CareCatalogViewModel = hiltViewModel()
 ) {
     val types by viewModel.types.collectAsStateWithLifecycle()
-    val seedOffered by viewModel.seedOffered.collectAsStateWithLifecycle()
-    var editingId by remember { mutableStateOf<String?>(null) }
-    var newTypeName by remember { mutableStateOf("") }
-    var showNewType by remember { mutableStateOf(false) }
+    val tens = types.find { it.id == CareTypeSeed.TENS_ID && !it.archived }
 
     Column(
         modifier = Modifier
@@ -57,108 +53,10 @@ fun CareSettingsScreen(
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
     ) {
         ScreenBack(onClick = onBack)
-        if (!seedOffered) {
-            Text(stringResource(R.string.care_seed_title), style = MaterialTheme.typography.titleMedium)
-            Text(
-                stringResource(R.string.care_seed_body),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            TextButton(onClick = viewModel::acceptSeed) {
-                Text(stringResource(R.string.care_seed_accept))
-            }
-            TextButton(onClick = viewModel::dismissSeed) {
-                Text(stringResource(R.string.care_seed_dismiss))
-            }
+        Text(stringResource(R.string.care_tens_programs_title), style = MaterialTheme.typography.titleMedium)
+        if (tens != null) {
+            TensProgramsEditor(type = tens, viewModel = viewModel)
         }
-        types.filter { !it.archived }.forEach { type ->
-            if (type.id == CareTypeSeed.TENS_ID) {
-                Text(type.name, style = MaterialTheme.typography.titleMedium)
-                TensProgramsEditor(type = type, viewModel = viewModel)
-            } else {
-                TextButton(onClick = { editingId = type.id }) {
-                    Text(type.name, style = MaterialTheme.typography.titleMedium)
-                }
-                type.programs.forEach { program ->
-                    Text(
-                        "· ${program.name} (${program.defaultDurationMinutes} min)",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(start = LutealSpacing.md)
-                    )
-                }
-            }
-        }
-        TextButton(onClick = { showNewType = true }) {
-            Text(stringResource(R.string.care_add_type))
-        }
-    }
-
-    if (showNewType) {
-        AlertDialog(
-            onDismissRequest = { showNewType = false },
-            title = { Text(stringResource(R.string.care_add_type)) },
-            text = {
-                OutlinedTextField(
-                    value = newTypeName,
-                    onValueChange = { newTypeName = it },
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (newTypeName.isNotBlank()) {
-                        viewModel.addCustomType(newTypeName)
-                        newTypeName = ""
-                        showNewType = false
-                    }
-                }) { Text(stringResource(R.string.meds_save)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showNewType = false }) {
-                    Text(stringResource(R.string.intake_cancel))
-                }
-            }
-        )
-    }
-
-    types.find { it.id == editingId && it.id != CareTypeSeed.TENS_ID }?.let { type ->
-        var programName by remember(type.id) { mutableStateOf("") }
-        var programMinutes by remember(type.id) { mutableStateOf("20") }
-        AlertDialog(
-            onDismissRequest = { editingId = null },
-            title = { Text(type.name) },
-            text = {
-                Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                    OutlinedTextField(
-                        value = programName,
-                        onValueChange = { programName = it },
-                        label = { Text(stringResource(R.string.care_program)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    OutlinedTextField(
-                        value = programMinutes,
-                        onValueChange = { programMinutes = it.filter { ch -> ch.isDigit() } },
-                        label = { Text(stringResource(R.string.care_duration)) },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val minutes = programMinutes.toIntOrNull() ?: return@TextButton
-                    if (programName.isNotBlank() && minutes > 0) {
-                        viewModel.addProgram(type.id, CareProgram(programName.trim(), minutes))
-                        editingId = null
-                    }
-                }) { Text(stringResource(R.string.meds_save)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { editingId = null }) {
-                    Text(stringResource(R.string.intake_cancel))
-                }
-            }
-        )
     }
 }
 

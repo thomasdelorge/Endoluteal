@@ -24,11 +24,7 @@ class CareCatalogViewModel @Inject constructor(
     val types: StateFlow<List<CareType>> = careTypeRepository.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
-    val seedOffered: StateFlow<Boolean> = userPreferencesDataStore.userPreferencesFlow
-        .map { it.careTypesSeedOffered }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), false)
-
-    fun acceptSeed() {
+    fun setPainFollowupDelayMinutes(minutes: Int) {
         viewModelScope.launch {
             careTypeRepository.applySeed(CareTypeSeed.defaults())
             userPreferencesDataStore.setCareTypesSeedOffered(true)
@@ -78,6 +74,14 @@ class CareCatalogViewModel @Inject constructor(
             careTypeRepository.upsert(
                 current.copy(programs = current.programs.filterNot { it.name == name })
             )
+        }
+    }
+
+    init {
+        viewModelScope.launch {
+            if (careTypeRepository.allOnce().none { it.id == CareTypeSeed.TENS_ID }) {
+                careTypeRepository.upsert(CareTypeSeed.defaults().first { it.id == CareTypeSeed.TENS_ID })
+            }
         }
     }
 
