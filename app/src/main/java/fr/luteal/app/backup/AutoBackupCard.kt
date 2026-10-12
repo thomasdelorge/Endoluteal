@@ -63,6 +63,10 @@ class AutoBackupViewModel @Inject constructor(
     fun backupNow() {
         viewModelScope.launch { backupWriter.writeNow() }
     }
+
+    fun setEncryptionEnabled(enabled: Boolean) {
+        viewModelScope.launch { userPreferencesDataStore.setBackupEncryptionEnabled(enabled) }
+    }
 }
 
 @Composable
@@ -85,6 +89,12 @@ fun AutoBackupCard(viewModel: AutoBackupViewModel = hiltViewModel()) {
                 description = stringResource(R.string.backup_auto_body),
                 checked = prefs.autoBackupEnabled,
                 onCheckedChange = viewModel::setEnabled
+            )
+            LutealToggleRow(
+                title = stringResource(R.string.backup_encrypt_title),
+                description = stringResource(R.string.backup_encrypt_body),
+                checked = prefs.backupEncryptionEnabled,
+                onCheckedChange = viewModel::setEncryptionEnabled
             )
             TextButton(onClick = { folderLauncher.launch(null) }) {
                 Text(stringResource(R.string.backup_choose_folder))

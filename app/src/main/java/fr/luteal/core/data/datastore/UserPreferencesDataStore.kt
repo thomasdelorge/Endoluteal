@@ -66,7 +66,8 @@ data class UserPreferences(
     val autoBackupLastSuccess: String = "",
     val autoBackupLastError: String = "",
     val hideDyspareuniaInRecap: Boolean = false,
-    val hideLibidoInRecap: Boolean = false
+    val hideLibidoInRecap: Boolean = false,
+    val backupEncryptionEnabled: Boolean = false
 ) {
     /** Contexts the user declared during onboarding. */
     val declaredContexts: Set<TrackingContext>
@@ -141,6 +142,7 @@ class UserPreferencesDataStore @Inject constructor(
         val AUTO_BACKUP_LAST_ERROR = stringPreferencesKey("auto_backup_last_error")
         val HIDE_DYSPAREUNIA_IN_RECAP = booleanPreferencesKey("hide_dyspareunia_in_recap")
         val HIDE_LIBIDO_IN_RECAP = booleanPreferencesKey("hide_libido_in_recap")
+        val BACKUP_ENCRYPTION_ENABLED = booleanPreferencesKey("backup_encryption_enabled")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -200,7 +202,8 @@ class UserPreferencesDataStore @Inject constructor(
                 autoBackupLastSuccess = preferences[AUTO_BACKUP_LAST_SUCCESS] ?: "",
                 autoBackupLastError = preferences[AUTO_BACKUP_LAST_ERROR] ?: "",
                 hideDyspareuniaInRecap = preferences[HIDE_DYSPAREUNIA_IN_RECAP] ?: false,
-                hideLibidoInRecap = preferences[HIDE_LIBIDO_IN_RECAP] ?: false
+                hideLibidoInRecap = preferences[HIDE_LIBIDO_IN_RECAP] ?: false,
+                backupEncryptionEnabled = preferences[BACKUP_ENCRYPTION_ENABLED] ?: false
             )
         }
 
@@ -277,6 +280,7 @@ class UserPreferencesDataStore @Inject constructor(
     }
     suspend fun setHideDyspareuniaInRecap(hidden: Boolean) = edit { it[HIDE_DYSPAREUNIA_IN_RECAP] = hidden }
     suspend fun setHideLibidoInRecap(hidden: Boolean) = edit { it[HIDE_LIBIDO_IN_RECAP] = hidden }
+    suspend fun setBackupEncryptionEnabled(enabled: Boolean) = edit { it[BACKUP_ENCRYPTION_ENABLED] = enabled }
     suspend fun clear() = edit { it.clear() }
 
     private suspend fun edit(block: suspend (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

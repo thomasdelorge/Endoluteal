@@ -283,6 +283,8 @@ data class ImportSummary(
 
 sealed class DataImportError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     data object InvalidJsonSyntax : DataImportError("Invalid JSON syntax")
+    data object EncryptedBackupNeedsPassword : DataImportError("Encrypted backup needs password")
+    data object WrongBackupPassword : DataImportError("Wrong backup password")
     data class UnsupportedSchemaVersion(val version: Int) : DataImportError("Unsupported schema version: $version")
     data class CorruptedPayload(val detail: String) : DataImportError("Corrupted payload: $detail")
     data class IoError(val detail: String) : DataImportError("I/O error: $detail")

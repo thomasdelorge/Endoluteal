@@ -3,6 +3,8 @@ package fr.luteal.core.data
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
+import fr.luteal.core.data.backup.AutoBackupPassphraseStore
+import fr.luteal.core.data.backup.BackupCrypto
 import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.QuestionnaireResultDao
 import fr.luteal.core.data.local.CareTypeDao
@@ -60,7 +62,8 @@ class DataExportManager @Inject constructor(
     private val appointmentDao: AppointmentDao,
     private val dailyRecapDao: DailyRecapDao,
     private val questionnaireResultDao: QuestionnaireResultDao,
-    private val userPreferencesDataStore: UserPreferencesDataStore
+    private val userPreferencesDataStore: UserPreferencesDataStore,
+    private val autoBackupPassphraseStore: AutoBackupPassphraseStore
 ) {
     private val json = Json {
         prettyPrint = true
@@ -359,11 +362,23 @@ class DataExportManager @Inject constructor(
         return json.encodeToString(payload)
     }
 
-    suspend fun exportToStream(outputStream: OutputStream, appVersion: String = "1.3.0") {
-        val jsonString = exportToJsonString(appVersion)
-        outputStream.bufferedWriter(Charsets.UTF_8).use { writer ->
-            writer.write(jsonString)
-            writer.flush()
+    suspend fun exportToStream(
+        outputStream: OutputStream,
+        appVersion: String = "1.3.0",
+        encryptionPassword: CharArray? = null
+    ) {
+        val jsonBytes = exportToJsonString(appVersion).toByteArray(Charsets.UTF_8)
+        val prefs = userPreferencesDataStore.userPreferencesFlow.first()
+        if (prefs.backupEncryptionEnabled) {
+            val password = encryptionPassword ?: autoBackupPassphraseStore.passphrase()
+            val encrypted = BackupCrypto.encrypt(jsonBytes, password)
+            outputStream.write(encrypted)
+            outputStream.flush()
+        } else {
+            outputStream.bufferedWriter(Charsets.UTF_8).use { writer ->
+                writer.write(jsonBytes.decodeToString())
+                writer.flush()
+            }
         }
     }
 }

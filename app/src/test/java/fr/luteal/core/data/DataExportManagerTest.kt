@@ -3,6 +3,7 @@ package fr.luteal.core.data
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import fr.luteal.core.data.backup.AutoBackupPassphraseStore
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
@@ -57,7 +58,8 @@ class DataExportManagerTest {
             appointmentDao = database.appointmentDao(),
             dailyRecapDao = database.dailyRecapDao(),
             questionnaireResultDao = database.questionnaireResultDao(),
-            userPreferencesDataStore = userPreferencesDataStore
+            userPreferencesDataStore = userPreferencesDataStore,
+            autoBackupPassphraseStore = AutoBackupPassphraseStore(context)
         )
 
         purgeManager = LocalDataPurgeManager(

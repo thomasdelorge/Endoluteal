@@ -908,6 +908,8 @@
     <string name="monthly_q3">Vous êtes-vous sentie soutenue dans votre entourage ?</string>
     <string name="monthly_q4">Le sommeil vous a-t-il reposée ?</string>
     <string name="monthly_q5">Globalement, comment évaluez-vous votre qualité de vie ce mois-ci ?</string>
+    <string name="backup_encrypt_title">Chiffrer les sauvegardes</string>
+    <string name="backup_encrypt_body">AES-256-GCM ; mot de passe perdu = fichiers illisibles. L’auto-sauvegarde utilise une clé protégée par l’appareil.</string>
     <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_action_symptom">Symptôme</string>
     <string name="agenda_action_care">Traitement</string>

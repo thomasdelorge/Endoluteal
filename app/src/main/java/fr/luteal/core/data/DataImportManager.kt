@@ -5,6 +5,7 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.BiomarkerObservationEntity
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.CareTypeEntity
+import fr.luteal.core.data.backup.BackupCrypto
 import fr.luteal.core.data.entity.DailyRecapEntity
 import fr.luteal.core.data.entity.QuestionnaireResultEntity
 import fr.luteal.core.data.entity.ProfessionalEntity
@@ -75,13 +76,14 @@ class DataImportManager @Inject constructor(
         isLenient = true
     }
 
-    suspend fun inspectBackup(inputStream: InputStream): Result<Pair<LutealBackupPreview, LutealBackupPayload>> {
+    suspend fun inspectBackup(
+        inputStream: InputStream,
+        decryptionPassword: CharArray? = null
+    ): Result<Pair<LutealBackupPreview, LutealBackupPayload>> {
         return withContext(Dispatchers.IO) {
             runCatching {
-                val jsonString = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                if (jsonString.isBlank()) {
-                    throw DataImportError.InvalidJsonSyntax
-                }
+                val raw = inputStream.readBytes()
+                val jsonString = decodeBackupText(raw, decryptionPassword)
 
                 val payload = try {
                     json.decodeFromString<LutealBackupPayload>(jsonString)
@@ -520,6 +522,19 @@ class DataImportManager @Inject constructor(
                 )
             }
         }
+    }
+
+    private fun decodeBackupText(raw: ByteArray, decryptionPassword: CharArray?): String {
+        if (raw.isEmpty()) throw DataImportError.InvalidJsonSyntax
+        if (BackupCrypto.isEncrypted(raw)) {
+            if (decryptionPassword == null) throw DataImportError.EncryptedBackupNeedsPassword
+            return try {
+                BackupCrypto.decrypt(raw, decryptionPassword).decodeToString()
+            } catch (_: Exception) {
+                throw DataImportError.WrongBackupPassword
+            }
+        }
+        return raw.decodeToString()
     }
 
     private fun validateBackup(payload: LutealBackupPayload) {

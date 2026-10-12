@@ -3,6 +3,7 @@ package fr.luteal.core.data
 import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import fr.luteal.core.data.backup.AutoBackupPassphraseStore
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.entity.JournalEventEntity
@@ -49,7 +50,8 @@ class ProfessionalAppointmentBackupTest {
             database.appointmentDao(),
             database.dailyRecapDao(),
             database.questionnaireResultDao(),
-            preferences
+            preferences,
+            AutoBackupPassphraseStore(context)
         )
         importManager = DataImportManager(
             database,

@@ -5,6 +5,7 @@ import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import fr.luteal.core.data.DataExportManager
 import fr.luteal.core.data.DataImportManager
+import fr.luteal.core.data.backup.AutoBackupPassphraseStore
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.LutealDatabase
 import fr.luteal.core.model.ImportStrategy
@@ -130,7 +131,8 @@ class MedicationCatalogTest {
             database.appointmentDao(),
             database.dailyRecapDao(),
             database.questionnaireResultDao(),
-            preferences
+            preferences,
+            AutoBackupPassphraseStore(context)
         )
         val json = exportManager.exportToJsonString()
         database.medicationDao().deleteAllCompositions()
