@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Carte du corps : le même croquis transparent sert de silhouette de face et de dos.
+
 ## [0.7.0] - 2026-10-12
 
 ### Changed

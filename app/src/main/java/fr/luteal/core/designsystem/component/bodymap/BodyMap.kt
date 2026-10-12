@@ -131,16 +131,15 @@ private fun ZoneCanvas(
     val shapes = BodyMapGeometry.shapes(side)
     val paths = remember(side) { shapes.map { it.toPath() } }
     val ink = MaterialTheme.colorScheme.onSurface
-    val figure = if (side == BodySide.BACK) R.drawable.body_back else R.drawable.body_front
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(BodyMapGeometry.VIEWBOX_WIDTH / BodyMapGeometry.VIEWBOX_HEIGHT)
     ) {
         Image(
-            painter = painterResource(figure),
+            painter = painterResource(R.drawable.body_figure),
             contentDescription = null,
-            contentScale = ContentScale.FillBounds,
+            contentScale = ContentScale.Fit,
             colorFilter = ColorFilter.tint(ink),
             modifier = Modifier.fillMaxSize(),
             alignment = Alignment.Center
