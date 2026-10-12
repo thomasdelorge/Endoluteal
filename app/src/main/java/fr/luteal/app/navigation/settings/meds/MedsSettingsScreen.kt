@@ -11,7 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
@@ -218,9 +223,10 @@ private fun MedicationForm(
     onSave: (Medication) -> Unit
 ) {
     var name by rememberSaveable { mutableStateOf(medication?.name.orEmpty()) }
-    var form by rememberSaveable { mutableStateOf(medication?.form.orEmpty()) }
+    val storedForm = medication?.form.orEmpty()
     var contraindications by rememberSaveable { mutableStateOf(medication?.contraindications.orEmpty()) }
     var archived by rememberSaveable { mutableStateOf(medication?.archived ?: false) }
+    var confirmArchive by rememberSaveable { mutableStateOf(false) }
     var rows by androidx.compose.runtime.remember {
         mutableStateOf(
             medication?.compositions?.map { it.substanceId to it.amountMgPerUnit.toString() }
@@ -237,7 +243,7 @@ private fun MedicationForm(
                 Medication(
                     id = medication?.id ?: UUID.randomUUID().toString(),
                     name = name,
-                    form = form,
+                    form = storedForm,
                     contraindications = contraindications,
                     archived = archived,
                     compositions = compositions
@@ -253,7 +259,6 @@ private fun MedicationForm(
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.meds_name)) }, modifier = Modifier.fillMaxWidth())
-    OutlinedTextField(form, { form = it }, label = { Text(stringResource(R.string.meds_form)) }, modifier = Modifier.fillMaxWidth())
     OutlinedTextField(
         contraindications,
         { contraindications = it },
@@ -278,10 +283,51 @@ private fun MedicationForm(
         Text(stringResource(R.string.meds_add_composition))
     }
     if (medication != null) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(if (archived) R.string.meds_restore else R.string.meds_archive))
-            Switch(checked = archived, onCheckedChange = { archived = it })
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            IconButton(
+                onClick = {
+                    if (archived) {
+                        archived = false
+                        trySave()
+                    } else {
+                        confirmArchive = true
+                    }
+                }
+            ) {
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = stringResource(
+                        if (archived) R.string.meds_restore else R.string.meds_archive
+                    )
+                )
+            }
         }
+        if (archived) {
+            Text(
+                stringResource(R.string.meds_archived),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+    if (confirmArchive && medication != null) {
+        AlertDialog(
+            onDismissRequest = { confirmArchive = false },
+            title = { Text(stringResource(R.string.meds_archive)) },
+            text = { Text(stringResource(R.string.meds_archive_confirm)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    archived = true
+                    confirmArchive = false
+                    trySave()
+                }) { Text(stringResource(R.string.meds_archive)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmArchive = false }) {
+                    Text(stringResource(R.string.intake_cancel))
+                }
+            }
+        )
     }
         }
         FormSaveButton(

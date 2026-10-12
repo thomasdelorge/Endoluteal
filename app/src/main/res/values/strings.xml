@@ -1091,6 +1091,7 @@
     <string name="meds_rules">Incompatibilités</string>
     <string name="meds_archived">Archivé</string>
     <string name="meds_archive">Archiver</string>
+    <string name="meds_archive_confirm">Archiver ce médicament ? Il n’apparaîtra plus dans les listes de prise.</string>
     <string name="meds_restore">Réactiver</string>
     <string name="meds_save">Enregistrer</string>
     <string name="meds_name">Nom</string>
