@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Retour et enregistrement signalés par des icônes dans les feuilles de saisie et la fiche médicament.
 - Fiche médicament : plus de champ « forme », archivage par icône poubelle.
 - Événements du jour en tuiles cliquables, y compris les prises de médicament modifiables ou supprimables.
+- Calendrier en tête de l’agenda ; l’ajout d’historique de cycles reste sur la carte du jour.
 
 ## [0.6.0] - 2026-10-12
 

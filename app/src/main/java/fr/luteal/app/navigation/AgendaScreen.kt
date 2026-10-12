@@ -205,8 +205,6 @@ fun AgendaScreen(
         item {
             if (state.hideCycleEstimate) {
                 Text(stringResource(R.string.agenda_hormonal_hidden))
-            } else {
-                CycleEstimateSection(state = state, onBackfillCycle = onBackfillCycle)
             }
         }
 
@@ -307,6 +305,9 @@ fun AgendaScreen(
                     phaseCertainty = selectedDayProjection?.phaseCertainty,
                     isToday = selectedDate == state.today,
                     cycleStart = cycleStart,
+                    showBackfillHint = !state.hideCycleEstimate &&
+                        state.estimateResult is fr.luteal.core.model.CycleEstimateResult.NeedsMoreHistory,
+                    onBackfillCycle = onBackfillCycle,
                     onEditCycle = { cycleToEdit = it },
                     onDeleteCycle = { cycleToDelete = it },
                     onEditOrAdd = { onSelectDate(selectedDate) }
@@ -708,6 +709,8 @@ private fun SelectedDayInspectionCard(
     phaseCertainty: PhaseCertainty?,
     isToday: Boolean,
     cycleStart: Cycle?,
+    showBackfillHint: Boolean = false,
+    onBackfillCycle: () -> Unit = {},
     onEditCycle: (Cycle) -> Unit,
     onDeleteCycle: (Cycle) -> Unit,
     onEditOrAdd: () -> Unit,
@@ -925,6 +928,21 @@ private fun SelectedDayInspectionCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            if (showBackfillHint) {
+                Text(
+                    text = stringResource(R.string.estimate_unavailable_short),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Text(
+                    text = stringResource(R.string.estimate_unavailable_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                TextButton(onClick = onBackfillCycle) {
+                    Text(stringResource(R.string.backfill_action))
+                }
             }
 
             val hasAnyData = entry?.hasObservations == true || hasBiomarkerObservations
