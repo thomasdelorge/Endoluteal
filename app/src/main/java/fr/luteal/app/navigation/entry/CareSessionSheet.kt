@@ -98,14 +98,6 @@ fun CareSessionSheet(
 
     val selectedType = careTypes.find { it.id == selectedTypeId } ?: careTypes.firstOrNull()
     val isTens = selectedType?.id == CareTypeSeed.TENS_ID
-    LaunchedEffect(selectedType?.id, programName) {
-        val type = selectedType ?: return@LaunchedEffect
-        if (existingEventId != null) return@LaunchedEffect
-        val program = type.programs.find { it.name == programName }
-        if (program != null) {
-            durationMinutes = program.defaultDurationMinutes.toString()
-        }
-    }
 
     if (confirmDelete && existingEventId != null) {
         AlertDialog(
@@ -207,10 +199,7 @@ fun CareSessionSheet(
                         type.programs.forEach { program ->
                             FilterChip(
                                 selected = program.name == programName,
-                                onClick = {
-                                    programName = program.name
-                                    durationMinutes = program.defaultDurationMinutes.toString()
-                                },
+                                onClick = { programName = program.name },
                                 label = { Text(program.name) }
                             )
                         }
