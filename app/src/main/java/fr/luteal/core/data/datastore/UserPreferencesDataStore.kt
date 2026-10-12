@@ -68,6 +68,7 @@ data class UserPreferences(
     val hideDyspareuniaInRecap: Boolean = false,
     val hideLibidoInRecap: Boolean = false,
     val backupEncryptionEnabled: Boolean = false,
+    val themeMode: String = "SYSTEM",
     val calendarImportEnabled: Boolean = false,
     val calendarImportKeywords: String = "",
     val calendarSelectedIds: Set<String> = emptySet()
@@ -146,6 +147,7 @@ class UserPreferencesDataStore @Inject constructor(
         val HIDE_DYSPAREUNIA_IN_RECAP = booleanPreferencesKey("hide_dyspareunia_in_recap")
         val HIDE_LIBIDO_IN_RECAP = booleanPreferencesKey("hide_libido_in_recap")
         val BACKUP_ENCRYPTION_ENABLED = booleanPreferencesKey("backup_encryption_enabled")
+        val THEME_MODE = stringPreferencesKey("theme_mode")
         val CALENDAR_IMPORT_ENABLED = booleanPreferencesKey("calendar_import_enabled")
         val CALENDAR_IMPORT_KEYWORDS = stringPreferencesKey("calendar_import_keywords")
         val CALENDAR_SELECTED_IDS = stringPreferencesKey("calendar_selected_ids")
@@ -210,6 +212,7 @@ class UserPreferencesDataStore @Inject constructor(
                 hideDyspareuniaInRecap = preferences[HIDE_DYSPAREUNIA_IN_RECAP] ?: false,
                 hideLibidoInRecap = preferences[HIDE_LIBIDO_IN_RECAP] ?: false,
                 backupEncryptionEnabled = preferences[BACKUP_ENCRYPTION_ENABLED] ?: false,
+                themeMode = preferences[THEME_MODE] ?: "SYSTEM",
                 calendarImportEnabled = preferences[CALENDAR_IMPORT_ENABLED] ?: false,
                 calendarImportKeywords = preferences[CALENDAR_IMPORT_KEYWORDS] ?: "",
                 calendarSelectedIds = preferences[CALENDAR_SELECTED_IDS]
@@ -281,6 +284,7 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setNotificationCustomTitle(title: String) = edit { it[NOTIF_CUSTOM_TITLE] = title }
     suspend fun setNotificationCustomBody(body: String) = edit { it[NOTIF_CUSTOM_BODY] = body }
     suspend fun setTemperatureUnit(unit: String) = edit { it[TEMPERATURE_UNIT] = unit }
+    suspend fun setThemeMode(mode: String) = edit { it[THEME_MODE] = mode }
     suspend fun setMedicationsSeedOffered(offered: Boolean) = edit { it[MEDICATIONS_SEED_OFFERED] = offered }
     suspend fun setCareTypesSeedOffered(offered: Boolean) = edit { it[CARE_TYPES_SEED_OFFERED] = offered }
     suspend fun setPainFollowupDelayMinutes(minutes: Int) = edit { it[PAIN_FOLLOWUP_DELAY_MINUTES] = minutes }

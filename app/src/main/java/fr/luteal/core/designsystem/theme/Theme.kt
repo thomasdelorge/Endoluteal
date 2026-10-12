@@ -5,6 +5,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 
+fun resolveDarkTheme(mode: String, systemDark: Boolean): Boolean = when (mode) {
+    "LIGHT" -> false
+    "DARK" -> true
+    else -> systemDark
+}
+
 @Composable
 fun LutealTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

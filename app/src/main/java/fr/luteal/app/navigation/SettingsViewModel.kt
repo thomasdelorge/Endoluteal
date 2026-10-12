@@ -102,6 +102,7 @@ class SettingsViewModel @Inject constructor(
             notificationCustomTitle = preferences.notificationCustomTitle,
             notificationCustomBody = preferences.notificationCustomBody,
             temperatureUnit = preferences.temperatureUnit,
+            themeMode = preferences.themeMode,
             hideDyspareuniaInRecap = preferences.hideDyspareuniaInRecap,
             hideLibidoInRecap = preferences.hideLibidoInRecap
         )
@@ -126,6 +127,12 @@ class SettingsViewModel @Inject constructor(
     fun setTemperatureUnit(unit: String) {
         viewModelScope.launch {
             userPreferencesDataStore.setTemperatureUnit(unit)
+        }
+    }
+
+    fun setThemeMode(mode: String) {
+        viewModelScope.launch {
+            userPreferencesDataStore.setThemeMode(mode)
         }
     }
 
@@ -516,6 +523,7 @@ data class SettingsSyncUiState(
     val notificationCustomTitle: String = "",
     val notificationCustomBody: String = "",
     val temperatureUnit: String = "CELSIUS",
+    val themeMode: String = "SYSTEM",
     val hideDyspareuniaInRecap: Boolean = false,
     val hideLibidoInRecap: Boolean = false
 )

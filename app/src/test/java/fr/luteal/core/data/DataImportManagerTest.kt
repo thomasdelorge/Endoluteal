@@ -387,6 +387,7 @@ class DataImportManagerTest {
         )
         userPreferencesDataStore.setDisorderTracking("pmdd", true)
         userPreferencesDataStore.setAgeBand("AGE_30_34")
+        userPreferencesDataStore.setThemeMode("DARK")
 
         // Export to stream
         val outStream = ByteArrayOutputStream()
@@ -425,6 +426,7 @@ class DataImportManagerTest {
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         assertTrue(prefs.trackPmdd)
         assertEquals("AGE_30_34", prefs.ageBand)
+        assertEquals("DARK", prefs.themeMode)
     }
 
     @Test

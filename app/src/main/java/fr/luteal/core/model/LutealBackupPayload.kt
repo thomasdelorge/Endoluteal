@@ -238,7 +238,8 @@ data class UserPreferencesBackupDto(
     @SerialName("track_perimenopause") val trackPerimenopause: Boolean = false,
     @SerialName("track_thyroid") val trackThyroid: Boolean = false,
     @SerialName("age_band") val ageBand: String? = null,
-    @SerialName("temperature_unit") val temperatureUnit: String = "CELSIUS"
+    @SerialName("temperature_unit") val temperatureUnit: String = "CELSIUS",
+    @SerialName("theme_mode") val themeMode: String = "SYSTEM"
 )
 
 enum class ImportStrategy {

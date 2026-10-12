@@ -24,7 +24,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.Medication
@@ -465,10 +464,25 @@ fun SettingsScreen(
         SettingsSectionHeader(title = stringResource(R.string.settings_appearance_title))
 
         LutealCard(modifier = Modifier.fillMaxWidth()) {
-            SettingsInformationRow(
-                icon = Icons.Rounded.DarkMode,
-                title = stringResource(R.string.settings_appearance_title),
-                body = stringResource(R.string.settings_appearance_body)
+            Text(
+                text = stringResource(R.string.settings_appearance_body),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            LutealRadioRow(
+                title = stringResource(R.string.settings_theme_system),
+                selected = syncState.themeMode == "SYSTEM",
+                onClick = { viewModel.setThemeMode("SYSTEM") }
+            )
+            LutealRadioRow(
+                title = stringResource(R.string.settings_theme_light),
+                selected = syncState.themeMode == "LIGHT",
+                onClick = { viewModel.setThemeMode("LIGHT") }
+            )
+            LutealRadioRow(
+                title = stringResource(R.string.settings_theme_dark),
+                selected = syncState.themeMode == "DARK",
+                onClick = { viewModel.setThemeMode("DARK") }
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingsInformationRow(

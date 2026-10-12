@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.biometric.BiometricPrompt
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.getValue
@@ -28,9 +29,11 @@ import fr.luteal.app.navigation.LutealMainScaffold
 import fr.luteal.app.calendar.CalendarImportScheduler
 import fr.luteal.app.notification.AppointmentReportScheduler
 import fr.luteal.app.notification.ReminderAlarmReceiver
+import fr.luteal.core.data.datastore.UserPreferences
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.security.AppLockManager
 import fr.luteal.core.designsystem.theme.LutealTheme
+import fr.luteal.core.designsystem.theme.resolveDarkTheme
 import fr.luteal.core.model.AppLockState
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -87,7 +90,12 @@ class MainActivity : FragmentActivity() {
         }
 
         setContent {
-            LutealTheme {
+            val preferences by userPreferencesDataStore.userPreferencesFlow.collectAsStateWithLifecycle(
+                initialValue = UserPreferences()
+            )
+            LutealTheme(
+                darkTheme = resolveDarkTheme(preferences.themeMode, isSystemInDarkTheme())
+            ) {
                 val lockState by appLockManager.lockState.collectAsStateWithLifecycle()
                 val barrierUp = lockState is AppLockState.Resolving || lockState is AppLockState.Locked
                 // PIN length comes from a Keystore read: produceState keeps

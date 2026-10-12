@@ -270,7 +270,10 @@
     <string name="settings_recovery_error_foreign_account">Cet appareil contient déjà des enregistrements d\'un autre compte. Effacez les données locales avant de restaurer un autre compte.</string>
     <string name="settings_sync_last_error">Échec de la synchronisation : %1$s</string>
     <string name="settings_appearance_title">Apparence</string>
-    <string name="settings_appearance_body">Le thème clair ou sombre suit le réglage de votre appareil.</string>
+    <string name="settings_appearance_body">Choisissez le thème clair, le thème sombre, ou celui de l\'appareil.</string>
+    <string name="settings_theme_system">Système</string>
+    <string name="settings_theme_light">Clair</string>
+    <string name="settings_theme_dark">Sombre</string>
     <string name="settings_about_title">À propos des estimations</string>
     <string name="settings_about_body">Luteal sépare les observations enregistrées des calculs estimatifs. L’application ne pose aucun diagnostic et ne formule aucune conclusion médicale.</string>
     <string name="settings_test_data_title">Données de démonstration</string>

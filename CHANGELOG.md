@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Choix du thème clair, sombre, ou celui de l’appareil, dans les Réglages.
+
 ### Changed
 
 - Silhouette de localisation lisible en thème sombre.

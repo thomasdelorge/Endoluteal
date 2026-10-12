@@ -503,6 +503,7 @@ class DataImportManager @Inject constructor(
                     userPreferencesDataStore.setDisorderTracking("thyroid", prefs.trackThyroid)
                     userPreferencesDataStore.setAgeBand(prefs.ageBand)
                     userPreferencesDataStore.setTemperatureUnit(prefs.temperatureUnit)
+                    userPreferencesDataStore.setThemeMode(prefs.themeMode)
                     userPreferencesDataStore.setCompletedOnboarding(true)
                     preferencesRestored = true
                 }
