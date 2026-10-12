@@ -1102,6 +1102,12 @@
     <string name="notif_action_take_all">Tout pris</string>
     <string name="notif_channel_backup">Sauvegarde</string>
     <string name="notif_channel_backup_desc">Échec de la sauvegarde automatique</string>
+    <string name="calendar_import_title">Importer l’agenda du téléphone</string>
+    <string name="calendar_import_body">Crée des rendez-vous dans Endoluteal à partir de vos événements (mots-clés ou emojis).</string>
+    <string name="calendar_import_keywords">Mots-clés ou emojis (séparés par des virgules ou des retours à la ligne)</string>
+    <string name="calendar_import_calendars">Agendas à synchroniser</string>
+    <string name="calendar_import_grant_permission">Autoriser l’accès à l’agenda</string>
+    <string name="calendar_import_now">Synchroniser maintenant</string>
     <string name="backup_auto_title">Sauvegarde automatique</string>
     <string name="backup_auto_body">Écrit un fichier JSON dans le dossier choisi.</string>
     <string name="backup_choose_folder">Choisir un dossier</string>

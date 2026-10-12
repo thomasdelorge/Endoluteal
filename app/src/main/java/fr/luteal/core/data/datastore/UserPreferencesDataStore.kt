@@ -67,7 +67,10 @@ data class UserPreferences(
     val autoBackupLastError: String = "",
     val hideDyspareuniaInRecap: Boolean = false,
     val hideLibidoInRecap: Boolean = false,
-    val backupEncryptionEnabled: Boolean = false
+    val backupEncryptionEnabled: Boolean = false,
+    val calendarImportEnabled: Boolean = false,
+    val calendarImportKeywords: String = "",
+    val calendarSelectedIds: Set<String> = emptySet()
 ) {
     /** Contexts the user declared during onboarding. */
     val declaredContexts: Set<TrackingContext>
@@ -143,6 +146,9 @@ class UserPreferencesDataStore @Inject constructor(
         val HIDE_DYSPAREUNIA_IN_RECAP = booleanPreferencesKey("hide_dyspareunia_in_recap")
         val HIDE_LIBIDO_IN_RECAP = booleanPreferencesKey("hide_libido_in_recap")
         val BACKUP_ENCRYPTION_ENABLED = booleanPreferencesKey("backup_encryption_enabled")
+        val CALENDAR_IMPORT_ENABLED = booleanPreferencesKey("calendar_import_enabled")
+        val CALENDAR_IMPORT_KEYWORDS = stringPreferencesKey("calendar_import_keywords")
+        val CALENDAR_SELECTED_IDS = stringPreferencesKey("calendar_selected_ids")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
@@ -203,7 +209,15 @@ class UserPreferencesDataStore @Inject constructor(
                 autoBackupLastError = preferences[AUTO_BACKUP_LAST_ERROR] ?: "",
                 hideDyspareuniaInRecap = preferences[HIDE_DYSPAREUNIA_IN_RECAP] ?: false,
                 hideLibidoInRecap = preferences[HIDE_LIBIDO_IN_RECAP] ?: false,
-                backupEncryptionEnabled = preferences[BACKUP_ENCRYPTION_ENABLED] ?: false
+                backupEncryptionEnabled = preferences[BACKUP_ENCRYPTION_ENABLED] ?: false,
+                calendarImportEnabled = preferences[CALENDAR_IMPORT_ENABLED] ?: false,
+                calendarImportKeywords = preferences[CALENDAR_IMPORT_KEYWORDS] ?: "",
+                calendarSelectedIds = preferences[CALENDAR_SELECTED_IDS]
+                    ?.split(',')
+                    ?.map { it.trim() }
+                    ?.filter { it.isNotEmpty() }
+                    ?.toSet()
+                    ?: emptySet()
             )
         }
 
@@ -281,6 +295,11 @@ class UserPreferencesDataStore @Inject constructor(
     suspend fun setHideDyspareuniaInRecap(hidden: Boolean) = edit { it[HIDE_DYSPAREUNIA_IN_RECAP] = hidden }
     suspend fun setHideLibidoInRecap(hidden: Boolean) = edit { it[HIDE_LIBIDO_IN_RECAP] = hidden }
     suspend fun setBackupEncryptionEnabled(enabled: Boolean) = edit { it[BACKUP_ENCRYPTION_ENABLED] = enabled }
+    suspend fun setCalendarImportEnabled(enabled: Boolean) = edit { it[CALENDAR_IMPORT_ENABLED] = enabled }
+    suspend fun setCalendarImportKeywords(keywords: String) = edit { it[CALENDAR_IMPORT_KEYWORDS] = keywords }
+    suspend fun setCalendarSelectedIds(ids: Set<String>) = edit {
+        it[CALENDAR_SELECTED_IDS] = ids.joinToString(",")
+    }
     suspend fun clear() = edit { it.clear() }
 
     private suspend fun edit(block: suspend (androidx.datastore.preferences.core.MutablePreferences) -> Unit) {

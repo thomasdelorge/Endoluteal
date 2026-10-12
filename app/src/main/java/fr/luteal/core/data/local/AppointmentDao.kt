@@ -21,6 +21,12 @@ interface AppointmentDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: AppointmentEntity)
 
+    @Query("SELECT * FROM appointments WHERE calendarEventKey = :key LIMIT 1")
+    suspend fun getByCalendarEventKey(key: String): AppointmentEntity?
+
+    @Query("SELECT * FROM appointments WHERE calendarEventKey IS NOT NULL")
+    suspend fun allWithCalendarKeyOnce(): List<AppointmentEntity>
+
     @Query("DELETE FROM appointments")
     suspend fun deleteAll()
 }

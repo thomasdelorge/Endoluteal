@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Étapes Psy, Général et Intestinal du récap ; suppression de l’ancienne saisie journalière.
 - Questionnaire mensuel inspiré (pas le texte EHP-5), score 0–100 et export des résultats.
 - Historique des scores du questionnaire mensuel dans les Réglages.
+- Import des rendez-vous médicaux depuis l’agenda du téléphone (filtres, synchro périodique).
 - Chiffrement optionnel des sauvegardes (PBKDF2 + AES-256-GCM) avec mot de passe choisi et saisie à l’import.
 
 ### Changed

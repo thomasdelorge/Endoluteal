@@ -25,6 +25,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import fr.luteal.app.navigation.AppLockResolvingBarrier
 import fr.luteal.app.navigation.AppLockScreen
 import fr.luteal.app.navigation.LutealMainScaffold
+import fr.luteal.app.calendar.CalendarImportScheduler
 import fr.luteal.app.notification.ReminderAlarmReceiver
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.security.AppLockManager
@@ -42,6 +43,9 @@ class MainActivity : FragmentActivity() {
     @Inject
     lateinit var userPreferencesDataStore: UserPreferencesDataStore
 
+    @Inject
+    lateinit var calendarImportScheduler: CalendarImportScheduler
+
     private var bufferedImportJson by mutableStateOf<String?>(null)
     private var pendingPainEventId by mutableStateOf<String?>(null)
     private var pendingMedicationId by mutableStateOf<String?>(null)
@@ -52,6 +56,10 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         handleBackupImport(intent)
         handleReminderIntent(intent)
+        lifecycleScope.launch {
+            calendarImportScheduler.enqueueNow()
+            calendarImportScheduler.schedulePeriodic()
+        }
         enableEdgeToEdge()
 
         lifecycle.addObserver(appLockManager)
