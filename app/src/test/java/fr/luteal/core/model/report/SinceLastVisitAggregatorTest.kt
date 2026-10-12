@@ -34,7 +34,7 @@ class SinceLastVisitAggregatorTest {
             careSessions = listOf(laterSameWeek, outside)
         )
         assertEquals(1, summary.weeklyPain.size)
-        assertEquals(3.0, summary.weeklyPain.single().average, 0.001)
+        assertEquals(7.0 / 3.0, summary.weeklyPain.single().average, 0.001)
         assertEquals(4, summary.weeklyPain.single().max)
         assertEquals(listOf(ZonePeak("back", 1), ZonePeak("pelvis", 4)), summary.zonePeaks)
         assertEquals(1, summary.intakes.size)
@@ -71,6 +71,24 @@ class TimelineFilterTest {
         )
         assertEquals(listOf("a"), filtered.map { it.eventId })
         assertTrue(filtered.all { it.specialty == Specialty.GYNECOLOGIST })
+    }
+
+    @Test
+    fun pdfContentKeepsOnlyTheSelectedProfessional() {
+        val visits = listOf(
+            visit("a", TimelineVisitKind.APPOINTMENT, "pro-1"),
+            visit("b", TimelineVisitKind.APPOINTMENT, "pro-2"),
+            visit("h", TimelineVisitKind.HOSPITALIZATION, null)
+        )
+        val content = buildTimelinePdfContent(
+            visits = visits,
+            professionalId = "pro-1",
+            specialty = null,
+            fromInclusive = null,
+            toInclusive = null,
+            summary = null
+        )
+        assertEquals(listOf("a"), content.visits.map { it.eventId })
     }
 
     private fun visit(

@@ -22,6 +22,7 @@ import fr.luteal.core.model.report.SinceLastVisitSummary
 import fr.luteal.core.model.report.TimelineFilter
 import fr.luteal.core.model.report.TimelineIntakeSample
 import fr.luteal.core.model.report.TimelinePainSample
+import fr.luteal.core.model.report.TimelinePdfContent
 import fr.luteal.core.model.report.TimelineVisit
 import fr.luteal.core.model.report.TimelineVisitKind
 import java.time.Clock
@@ -89,6 +90,11 @@ class TimelineViewModel @Inject constructor(
 
     fun select(eventId: String?) {
         filters.value = filters.value.copy(selectedEventId = eventId)
+    }
+
+    fun pdfContent(): TimelinePdfContent {
+        val state = uiState.value
+        return TimelinePdfContent(state.visits, state.summary)
     }
 
     private fun buildState(data: TimelineSource, current: TimelineFilters): TimelineUiState {

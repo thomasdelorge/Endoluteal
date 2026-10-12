@@ -18,6 +18,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -38,6 +39,7 @@ import java.util.Locale
 @Composable
 fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.FRENCH)
     val zone = ZoneId.systemDefault()
 
@@ -73,6 +75,9 @@ fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
                 title = stringResource(R.string.nav_timeline),
                 subtitle = stringResource(R.string.timeline_subtitle)
             )
+            TextButton(onClick = { shareTimelinePdf(context, viewModel.pdfContent()) }) {
+                Text(stringResource(R.string.timeline_share))
+            }
         }
         item {
             Text(stringResource(R.string.timeline_filter_professional), style = MaterialTheme.typography.labelLarge)

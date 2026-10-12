@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Import des rendez-vous médicaux depuis l’agenda du téléphone (filtres, synchro périodique).
 - Rappel et saisie du compte rendu à la fin d’un rendez-vous.
 - Frise des rendez-vous et hospitalisations, avec résumé depuis le dernier rendez-vous.
+- Export PDF de la frise filtrée et partage vers une autre application.
 - Chiffrement optionnel des sauvegardes (PBKDF2 + AES-256-GCM) avec mot de passe choisi et saisie à l’import.
 
 ### Changed
