@@ -70,7 +70,6 @@ import androidx.compose.ui.unit.dp
 import fr.luteal.app.LutealUiState
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
-import fr.luteal.core.designsystem.component.CalendarLegendCard
 import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.LutealPrimaryButton
 import fr.luteal.core.designsystem.component.MonthCalendarGrid
@@ -280,10 +279,6 @@ fun AgendaScreen(
                         }
                     )
                 }
-            }
-
-            item {
-                CalendarLegendCard()
             }
 
             val cycleStart = state.cycles.firstOrNull { it.startDate == selectedDate }

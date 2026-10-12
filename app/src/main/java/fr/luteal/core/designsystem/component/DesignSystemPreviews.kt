@@ -79,7 +79,6 @@ private fun DesignSystemCatalogPreview() {
                 modifier = Modifier.fillMaxWidth()
             )
             PainScale(value = 5, onValueChange = {})
-            CalendarLegendCard()
         }
     }
 }
