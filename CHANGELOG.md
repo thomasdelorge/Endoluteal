@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Les plafonds de dose des substances courantes sont renseignés depuis les RCP déjà cités, sans écraser une saisie.
 - La question « traitement hormonal continu » n’est plus proposée à la saisie.
 - La section « Données de démonstration » est retirée des Réglages.
+- Les centres d’attention ne sont plus proposés dans les Réglages.
 
 ## [0.6.0] - 2026-10-12
 

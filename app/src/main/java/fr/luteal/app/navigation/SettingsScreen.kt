@@ -6,7 +6,6 @@ import fr.luteal.core.model.NotificationVisibility
 import android.content.Context
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -72,21 +70,17 @@ import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
 import fr.luteal.app.navigation.settings.meds.TreatmentPlansSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
-import fr.luteal.core.designsystem.component.LutealCheckboxRow
 import fr.luteal.core.designsystem.component.LutealRadioRow
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.LutealToggleRow
 import fr.luteal.core.designsystem.theme.LutealSpacing
-import fr.luteal.core.model.AgeBand
 import fr.luteal.core.model.AutoLockTimeout
 import fr.luteal.core.model.ClinicalReportConfig
-import fr.luteal.core.model.ContextGroup
 import fr.luteal.core.model.ImportStrategy
 import fr.luteal.core.model.LutealBackupPreview
 import fr.luteal.core.model.ReportDateRangePreset
 import fr.luteal.core.model.ReportFormat
 import fr.luteal.core.model.ReportLanguage
-import fr.luteal.core.model.TrackingContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -436,13 +430,6 @@ fun SettingsScreen(
         CalendarImportSettingsCard()
 
         AutoBackupCard()
-
-        TrackingContextCard(
-            declared = syncState.declaredContexts,
-            ageBand = syncState.ageBand,
-            onToggleContext = viewModel::setTrackingContext,
-            onSelectAgeBand = viewModel::setAgeBand
-        )
 
         LutealCard(modifier = Modifier.fillMaxWidth()) {
             LutealToggleRow(
@@ -1445,133 +1432,6 @@ private fun ClearAllDataDialog(
             }
         }
     )
-}
-
-@Composable
-private fun TrackingContextCard(
-    declared: Set<TrackingContext>,
-    ageBand: AgeBand?,
-    onToggleContext: (TrackingContext, Boolean) -> Unit,
-    onSelectAgeBand: (AgeBand?) -> Unit
-) {
-    var showAgePicker by remember { mutableStateOf(false) }
-
-    SettingsSectionHeader(title = stringResource(R.string.settings_contexts_title))
-
-    LutealCard(modifier = Modifier.fillMaxWidth()) {
-        Text(
-            text = stringResource(R.string.settings_contexts_body),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(LutealSpacing.sm))
-
-        TrackingContext.entries.forEach { context ->
-            LutealCheckboxRow(
-                title = stringResource(trackingContextLabel(context)),
-                description = stringResource(contextGroupExplanation(context.group)),
-                checked = context in declared,
-                onCheckedChange = { onToggleContext(context, it) }
-            )
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-        Spacer(Modifier.height(LutealSpacing.sm))
-
-        Text(
-            text = stringResource(R.string.settings_age_band_title),
-            style = MaterialTheme.typography.titleSmall
-        )
-        Spacer(Modifier.height(LutealSpacing.xxs))
-        Text(
-            text = stringResource(R.string.settings_age_band_body),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        Spacer(Modifier.height(LutealSpacing.xs))
-        LutealSecondaryButton(
-            text = ageBand?.let { stringResource(settingsAgeBandLabel(it)) }
-                ?: stringResource(R.string.settings_age_band_none),
-            onClick = { showAgePicker = true },
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-
-    if (showAgePicker) {
-        AgeBandPickerDialog(
-            selected = ageBand,
-            onSelect = {
-                onSelectAgeBand(it)
-                showAgePicker = false
-            },
-            onDismiss = { showAgePicker = false }
-        )
-    }
-}
-
-@Composable
-private fun AgeBandPickerDialog(
-    selected: AgeBand?,
-    onSelect: (AgeBand?) -> Unit,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.settings_age_band_title)) },
-        text = {
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .selectableGroup()
-            ) {
-                AgeBand.entries.forEach { band ->
-                    LutealRadioRow(
-                        title = stringResource(settingsAgeBandLabel(band)),
-                        selected = selected == band,
-                        onClick = { onSelect(band) }
-                    )
-                }
-                LutealRadioRow(
-                    title = stringResource(R.string.onboarding_age_skip),
-                    selected = selected == null,
-                    onClick = { onSelect(null) }
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.action_close))
-            }
-        }
-    )
-}
-
-@StringRes
-private fun trackingContextLabel(context: TrackingContext): Int = when (context) {
-    TrackingContext.PMS -> R.string.onboarding_focus_pms
-    TrackingContext.PMDD -> R.string.onboarding_focus_pmdd
-    TrackingContext.ENDOMETRIOSIS -> R.string.onboarding_focus_endometriosis
-    TrackingContext.PCOS -> R.string.onboarding_focus_pcos
-    TrackingContext.PERIMENOPAUSE -> R.string.onboarding_focus_perimenopause
-    TrackingContext.THYROID -> R.string.onboarding_focus_thyroid
-}
-
-@StringRes
-private fun contextGroupExplanation(group: ContextGroup): Int = when (group) {
-    ContextGroup.TIMING -> R.string.settings_context_group_timing
-    ContextGroup.OBSERVATION -> R.string.settings_context_group_observation
-}
-
-@StringRes
-private fun settingsAgeBandLabel(band: AgeBand): Int = when (band) {
-    AgeBand.UNDER_20 -> R.string.age_band_under_20
-    AgeBand.AGE_20_24 -> R.string.age_band_20_24
-    AgeBand.AGE_25_29 -> R.string.age_band_25_29
-    AgeBand.AGE_30_34 -> R.string.age_band_30_34
-    AgeBand.AGE_35_39 -> R.string.age_band_35_39
-    AgeBand.AGE_40_44 -> R.string.age_band_40_44
-    AgeBand.AGE_45_49 -> R.string.age_band_45_49
-    AgeBand.AGE_50_PLUS -> R.string.age_band_50_plus
 }
 
 @Composable
