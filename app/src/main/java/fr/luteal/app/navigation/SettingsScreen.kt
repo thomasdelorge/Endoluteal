@@ -381,22 +381,6 @@ fun SettingsScreen(
             }
         }
 
-        SettingsSectionHeader(title = stringResource(R.string.settings_privacy_title))
-
-        LutealCard(modifier = Modifier.fillMaxWidth()) {
-            SettingsInformationRow(
-                icon = Icons.Rounded.PhoneAndroid,
-                title = stringResource(R.string.settings_storage_title),
-                body = stringResource(R.string.settings_storage_body)
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            SettingsInformationRow(
-                icon = Icons.Rounded.Shield,
-                title = stringResource(R.string.settings_backup_title),
-                body = stringResource(R.string.settings_backup_body)
-            )
-        }
-
         if (BuildConfig.DEBUG) {
             TestDataCard(
                 state = syncState.testDataState,
