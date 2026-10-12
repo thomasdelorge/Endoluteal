@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,9 +28,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.care.CareProgram
+import fr.luteal.core.model.care.CareType
+import fr.luteal.core.model.care.CareTypeSeed
 
 @Composable
 fun CareSettingsScreen(
@@ -62,16 +69,21 @@ fun CareSettingsScreen(
             }
         }
         types.filter { !it.archived }.forEach { type ->
-            TextButton(onClick = { editingId = type.id }) {
+            if (type.id == CareTypeSeed.TENS_ID) {
                 Text(type.name, style = MaterialTheme.typography.titleMedium)
-            }
-            type.programs.forEach { program ->
-                Text(
-                    "· ${program.name} (${program.defaultDurationMinutes} min)",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = LutealSpacing.md)
-                )
+                TensProgramsEditor(type = type, viewModel = viewModel)
+            } else {
+                TextButton(onClick = { editingId = type.id }) {
+                    Text(type.name, style = MaterialTheme.typography.titleMedium)
+                }
+                type.programs.forEach { program ->
+                    Text(
+                        "· ${program.name} (${program.defaultDurationMinutes} min)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = LutealSpacing.md)
+                    )
+                }
             }
         }
         TextButton(onClick = { showNewType = true }) {
@@ -107,64 +119,18 @@ fun CareSettingsScreen(
         )
     }
 
-    types.find { it.id == editingId }?.let { type ->
+    types.find { it.id == editingId && it.id != CareTypeSeed.TENS_ID }?.let { type ->
         var programName by remember(type.id) { mutableStateOf("") }
         var programMinutes by remember(type.id) { mutableStateOf("20") }
-        var renaming by remember(type.id) { mutableStateOf<String?>(null) }
-        var renamed by remember(type.id) { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { editingId = null },
             title = { Text(type.name) },
             text = {
-                Column(
-                    modifier = Modifier.verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-                ) {
-                    type.programs.forEach { program ->
-                        if (renaming == program.name) {
-                            OutlinedTextField(
-                                value = renamed,
-                                onValueChange = { renamed = it },
-                                label = { Text(stringResource(R.string.care_program_name)) },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                            Row {
-                                TextButton(onClick = { renaming = null }) {
-                                    Text(stringResource(R.string.intake_cancel))
-                                }
-                                TextButton(onClick = {
-                                    val next = renamed.trim()
-                                    if (next.isNotEmpty()) {
-                                        viewModel.renameProgram(
-                                            type.id,
-                                            program.name,
-                                            CareProgram(next, program.defaultDurationMinutes)
-                                        )
-                                        renaming = null
-                                    }
-                                }) { Text(stringResource(R.string.meds_save)) }
-                            }
-                        } else {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    "${program.name} (${program.defaultDurationMinutes} min)",
-                                    modifier = Modifier.weight(1f),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                TextButton(onClick = {
-                                    renaming = program.name
-                                    renamed = program.name
-                                }) { Text(stringResource(R.string.care_rename_program)) }
-                                TextButton(onClick = { viewModel.removeProgram(type.id, program.name) }) {
-                                    Text(stringResource(R.string.meds_delete))
-                                }
-                            }
-                        }
-                    }
+                Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
                     OutlinedTextField(
                         value = programName,
                         onValueChange = { programName = it },
-                        label = { Text(stringResource(R.string.care_program_name)) },
+                        label = { Text(stringResource(R.string.care_program)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
@@ -178,18 +144,93 @@ fun CareSettingsScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val minutes = programMinutes.toIntOrNull() ?: return@TextButton
-                    val name = programName.trim()
-                    if (name.isNotEmpty() && minutes > 0) {
-                        viewModel.addProgram(type.id, CareProgram(name, minutes))
-                        programName = ""
+                    if (programName.isNotBlank() && minutes > 0) {
+                        viewModel.addProgram(type.id, CareProgram(programName.trim(), minutes))
+                        editingId = null
                     }
-                }) { Text(stringResource(R.string.care_add_program)) }
+                }) { Text(stringResource(R.string.meds_save)) }
             },
             dismissButton = {
                 TextButton(onClick = { editingId = null }) {
-                    Text(stringResource(R.string.action_close))
+                    Text(stringResource(R.string.intake_cancel))
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun TensProgramsEditor(type: CareType, viewModel: CareCatalogViewModel) {
+    var newName by remember { mutableStateOf("") }
+    var newMinutes by remember { mutableStateOf("20") }
+    var renaming by remember { mutableStateOf<String?>(null) }
+    var renamed by remember { mutableStateOf("") }
+    LutealCard(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.padding(LutealSpacing.sm),
+            verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
+        ) {
+            type.programs.forEach { program ->
+                if (renaming == program.name) {
+                    OutlinedTextField(
+                        value = renamed,
+                        onValueChange = { renamed = it },
+                        label = { Text(stringResource(R.string.care_program_name)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Row {
+                        TextButton(onClick = { renaming = null }) {
+                            Text(stringResource(R.string.intake_cancel))
+                        }
+                        TextButton(onClick = {
+                            val next = renamed.trim()
+                            if (next.isNotEmpty()) {
+                                viewModel.renameProgram(
+                                    type.id,
+                                    program.name,
+                                    CareProgram(next, program.defaultDurationMinutes)
+                                )
+                                renaming = null
+                            }
+                        }) { Text(stringResource(R.string.meds_save)) }
+                    }
+                } else {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            "${program.name} · ${program.defaultDurationMinutes} min",
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        TextButton(onClick = {
+                            renaming = program.name
+                            renamed = program.name
+                        }) { Text(stringResource(R.string.care_rename_program)) }
+                        IconButton(onClick = { viewModel.removeProgram(type.id, program.name) }) {
+                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.meds_delete))
+                        }
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = newName,
+                onValueChange = { newName = it },
+                label = { Text(stringResource(R.string.care_program_name)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = newMinutes,
+                onValueChange = { newMinutes = it.filter { ch -> ch.isDigit() } },
+                label = { Text(stringResource(R.string.care_duration)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            TextButton(onClick = {
+                val minutes = newMinutes.toIntOrNull() ?: return@TextButton
+                val name = newName.trim()
+                if (name.isNotEmpty() && minutes > 0) {
+                    viewModel.addProgram(type.id, CareProgram(name, minutes))
+                    newName = ""
+                }
+            }) { Text(stringResource(R.string.care_add_program)) }
+        }
     }
 }
