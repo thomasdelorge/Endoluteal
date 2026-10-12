@@ -283,6 +283,10 @@ fun LutealMainScaffold(
                                 onTake = { medicationId ->
                                     intakeMedicationId = medicationId
                                     intakeDate = uiState.today
+                                },
+                                onLogIntake = {
+                                    intakeMedicationId = null
+                                    intakeDate = uiState.today
                                 }
                             )
                             LutealDestination.SETTINGS -> SettingsScreen(viewModel = settingsViewModel)

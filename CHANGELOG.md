@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Carte du corps : silhouette féminine en image, et le récap peut défiler jusqu’à l’étape suivante.
 - Les saisies longues s’ouvrent en plein écran.
 - Les programmes TENS n’ont plus de durée enregistrée : elle se choisit à chaque séance.
+- L’onglet Médicaments propose « Noter une prise » sans historique préalable.
 
 ## [0.6.0] - 2026-10-12
 

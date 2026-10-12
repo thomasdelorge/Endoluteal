@@ -1165,6 +1165,7 @@
     <string name="meds_last_intake">Dernière prise : %1$s</string>
     <string name="meds_next_possible">Prochaine prise possible : %1$s</string>
     <string name="meds_take">Prendre</string>
+    <string name="meds_log_intake">Noter une prise</string>
     <string name="meds_times">Horaires (HH:mm, séparés par une virgule)</string>
     <string name="meds_start">Début</string>
     <string name="meds_end">Fin (optionnelle)</string>
