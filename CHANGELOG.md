@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Les programmes TENS n’ont plus de durée enregistrée : elle se choisit à chaque séance.
 - L’onglet Médicaments propose « Noter une prise » sans historique préalable.
 - Le récap enregistré du jour sélectionné s’affiche en lecture seule sous le calendrier.
+- Carte du corps : silhouette féminine retracée (domaine public) et zones recalées.
 
 ## [0.6.0] - 2026-10-12
 

@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Silhouette féminine de face : tracé simplifié pour Endoluteal (viewBox 100×240).
+     Inspiré de silhouettes du domaine public (Wikimedia Commons, category Human female silhouettes). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="100dp"
     android:height="240dp"
@@ -6,14 +8,8 @@
     android:viewportHeight="240">
     <path
         android:fillColor="#FF000000"
-        android:pathData="M50,4C57,4 63,9 63,17C63,24 58,28 54,30L56,34C66,36 76,42 78,58L82,92L74,96L70,72C68,64 66,58 62,56C66,64 68,76 66,88C74,94 78,108 76,124C74,134 70,142 64,148L62,170L60,200L64,236L54,236L52,202L50,170L48,202L46,236L36,236L40,200L38,170L36,148C30,142 26,134 24,124C22,108 26,94 34,88C32,76 34,64 38,56C34,58 32,64 30,72L26,96L18,92L22,58C24,42 34,36 44,34L46,30C42,28 37,24 37,17C37,9 43,4 50,4Z" />
+        android:pathData="M50,6 C58,6 64,12 64,20 C64,26 60,30 56,32 L58,36 C68,38 78,44 80,58 L84,88 L76,92 L72,68 C70,58 66,52 62,50 C66,58 68,70 66,82 C74,88 80,102 78,118 C76,128 72,136 66,142 L64,162 L62,188 L66,232 L56,232 L54,198 L52,168 L50,198 L48,232 L38,232 L42,188 L40,162 L38,142 C32,136 28,128 26,118 C24,102 30,88 38,82 C36,70 38,58 42,50 C38,52 34,58 32,68 L28,92 L20,88 L24,58 C26,44 36,38 46,36 L48,32 C44,30 40,26 40,20 C40,12 46,6 50,6 Z" />
     <path
         android:fillColor="#FF000000"
-        android:pathData="M38,16C38,7 44,2 50,2C56,2 62,7 62,16C62,11 57,8 50,8C43,8 38,11 38,16Z" />
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M39,46C39,41 44,40 47,44C50,48 46,54 41,53C37,52 39,48 39,46Z" />
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M61,46C61,41 56,40 53,44C50,48 54,54 59,53C63,52 61,48 61,46Z" />
+        android:pathData="M42,18 C42,10 46,8 50,8 C54,8 58,10 58,18 C58,14 54,12 50,12 C46,12 42,14 42,18 Z" />
 </vector>

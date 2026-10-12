@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Silhouette féminine de dos : tracé simplifié pour Endoluteal (viewBox 100×240).
+     Inspiré de silhouettes du domaine public (Wikimedia Commons, category Human female silhouettes). -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="100dp"
     android:height="240dp"
@@ -6,8 +8,5 @@
     android:viewportHeight="240">
     <path
         android:fillColor="#FF000000"
-        android:pathData="M50,4C57,4 63,9 63,17C63,24 58,28 54,30L56,34C66,36 76,42 78,56L82,90L74,94L70,70C68,62 66,56 62,54C64,62 64,74 62,86C72,92 80,108 78,128C76,140 70,150 62,156L60,172L58,200L64,236L54,236L52,202L50,172L48,202L46,236L36,236L42,200L40,172L38,156C30,150 24,140 22,128C20,108 28,92 38,86C36,74 36,62 38,54C34,56 32,62 30,70L26,94L18,90L22,56C24,42 34,36 44,34L46,30C42,28 37,24 37,17C37,9 43,4 50,4Z" />
-    <path
-        android:fillColor="#FF000000"
-        android:pathData="M38,16C38,7 44,2 50,2C56,2 62,7 62,16C62,11 57,8 50,8C43,8 38,11 38,16Z" />
+        android:pathData="M50,6 C57,6 63,11 63,19 C63,25 59,29 55,31 L57,35 C67,37 77,43 79,57 L83,87 L75,91 L71,67 C69,57 65,51 61,49 C65,57 67,69 65,81 C73,87 79,101 77,117 C75,127 71,135 65,141 L63,161 L61,187 L65,231 L55,231 L53,197 L51,167 L49,197 L47,231 L37,231 L41,187 L39,161 L37,141 C31,135 27,127 25,117 C23,101 29,87 37,81 C35,69 37,57 41,49 C37,51 33,57 31,67 L27,91 L19,87 L23,57 C25,43 35,37 45,35 L47,31 C43,29 39,25 39,19 C39,11 45,6 50,6 Z" />
 </vector>
