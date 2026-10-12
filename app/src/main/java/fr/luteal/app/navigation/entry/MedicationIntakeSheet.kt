@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
@@ -158,10 +159,10 @@ fun MedicationIntakeSheet(
             if (showMap) {
                 BodyMap(marks = marks, onMarksChange = { marks = it })
             }
-            TextButton(
+            Button(
                 onClick = {
-                    val id = medicationId ?: return@TextButton
-                    val count = unitCount ?: return@TextButton
+                    val id = medicationId ?: return@Button
+                    val count = unitCount ?: return@Button
                     val alerts = report?.alerts.orEmpty()
                     if (alerts.any { it.severity == AlertSeverity.DANGER }) {
                         askDanger = true
@@ -183,10 +184,10 @@ fun MedicationIntakeSheet(
             title = { Text(stringResource(R.string.intake_danger_title)) },
             text = { Text(stringResource(R.string.intake_danger_body)) },
             confirmButton = {
-                TextButton(onClick = {
+                Button(onClick = {
                     askDanger = false
-                    val id = medicationId ?: return@TextButton
-                    val count = unitCount ?: return@TextButton
+                    val id = medicationId ?: return@Button
+                    val count = unitCount ?: return@Button
                     scope.launch {
                         val saved = viewModel.saveIntake(id, count, at.atZone(zone).toInstant(), marksWith(intensity, marks), true)
                         doneAt = saved.nextPossibleIntakeAt
@@ -252,7 +253,7 @@ fun PainCheckSheet(
             PainScale(value = intensity, onValueChange = { intensity = it })
             TextButton(onClick = { showMap = !showMap }) { Text(stringResource(R.string.intake_body_map)) }
             if (showMap) BodyMap(marks = marks, onMarksChange = { marks = it })
-            TextButton(onClick = {
+            Button(onClick = {
                 scope.launch {
                     viewModel.savePainCheck(linkedEventId, marksWith(intensity, marks))
                     onDismiss()

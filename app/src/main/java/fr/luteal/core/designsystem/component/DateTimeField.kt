@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -63,7 +64,7 @@ fun DateTimeField(
         DatePickerDialog(
             onDismissRequest = { showDate = false },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         state.selectedDateMillis?.let { millis ->
                             val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
@@ -98,7 +99,7 @@ fun DateTimeField(
         AlertDialog(
             onDismissRequest = { showTime = false },
             confirmButton = {
-                TextButton(
+                Button(
                     onClick = {
                         onValueChange(value.withHour(state.hour).withMinute(state.minute))
                         showTime = false

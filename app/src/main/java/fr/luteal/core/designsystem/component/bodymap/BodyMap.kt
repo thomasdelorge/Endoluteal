@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -251,9 +252,9 @@ private fun PainMarkSheet(
                         Text(stringResource(R.string.body_map_remove))
                     }
                 }
-                TextButton(
+                Button(
                     onClick = {
-                        val level = intensity ?: return@TextButton
+                        val level = intensity ?: return@Button
                         onSave(
                             PainMark(
                                 id = existing?.id ?: UUID.randomUUID().toString(),
