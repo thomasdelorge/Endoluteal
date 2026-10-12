@@ -139,9 +139,16 @@ dependencies {
     implementation(libs.androidx.hilt.work)
     ksp(libs.androidx.hilt.compiler)
 
-    // Crash reporting (offline-friendly, user-consented dialog + mail)
-    implementation(libs.acra.dialog)
-    implementation(libs.acra.mail)
+    // Crash reporting (offline-friendly, user-consented dialog + mail).
+    // acra-core 5.13.1 depends on the AutoService processor at runtime. R8 then
+    // fails the release build on javax.annotation.processing.*, which Android
+    // does not ship. The generated service files are already in the ACRA jars.
+    implementation(libs.acra.dialog) {
+        exclude(group = "com.google.auto.service", module = "auto-service")
+    }
+    implementation(libs.acra.mail) {
+        exclude(group = "com.google.auto.service", module = "auto-service")
+    }
 
     // Testing
     testImplementation(libs.junit)
