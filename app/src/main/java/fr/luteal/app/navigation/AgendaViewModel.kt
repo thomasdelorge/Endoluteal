@@ -7,7 +7,9 @@ import fr.luteal.core.data.repository.AppointmentRepository
 import fr.luteal.core.data.repository.JournalEventRepository
 import fr.luteal.core.data.repository.MedicationIntakeRepository
 import fr.luteal.core.data.repository.MedicationRepository
+import fr.luteal.core.data.repository.DailyRecapRepository
 import fr.luteal.core.data.repository.ProfessionalRepository
+import fr.luteal.core.model.recap.DailyRecap
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.JournalEvent
 import fr.luteal.core.model.JournalEventType
@@ -27,7 +29,8 @@ class AgendaViewModel @Inject constructor(
     medicationRepository: MedicationRepository,
     intakeRepository: MedicationIntakeRepository,
     appointmentRepository: AppointmentRepository,
-    professionalRepository: ProfessionalRepository
+    professionalRepository: ProfessionalRepository,
+    dailyRecapRepository: DailyRecapRepository
 ) : ViewModel() {
     val events: StateFlow<List<JournalEvent>> = journalEventRepository
         .observeBetween(Instant.EPOCH, Instant.ofEpochMilli(Long.MAX_VALUE))
@@ -74,6 +77,10 @@ class AgendaViewModel @Inject constructor(
             row.eventId to label
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val recapsByDate: StateFlow<Map<LocalDate, DailyRecap>> = dailyRecapRepository.observeAll()
+        .map { list -> list.associateBy { it.date } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 }
 
 fun eventsOnDay(events: List<JournalEvent>, date: LocalDate): List<JournalEvent> =

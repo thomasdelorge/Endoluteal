@@ -874,6 +874,8 @@
     <string name="agenda_action_daily_recap">Récap du jour</string>
     <string name="recap_wizard_title">Récap du jour</string>
     <string name="recap_skip">Passer</string>
+    <string name="daily_recap_readonly_title">Récap du jour</string>
+    <string name="daily_recap_readonly_hint">Lecture seule. Pour modifier, utilisez le menu + « Récap du jour ».</string>
     <string name="recap_continue">Continuer</string>
     <string name="recap_step_placeholder">Contenu à venir dans les prochaines étapes.</string>
     <string name="recap_step_cycle">Cycle</string>

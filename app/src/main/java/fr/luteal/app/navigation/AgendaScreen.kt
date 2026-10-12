@@ -84,6 +84,8 @@ import fr.luteal.core.model.BleedingIntensity
 import fr.luteal.core.model.CycleEstimateResult
 import fr.luteal.core.model.DailyEntry
 import fr.luteal.core.model.MonthCalendarProjectionCalculator
+import fr.luteal.core.model.recap.DailyRecap
+import fr.luteal.app.navigation.recap.DailyRecapReadOnlyCard
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -97,6 +99,7 @@ fun AgendaScreen(
     state: LutealUiState,
     events: List<JournalEvent> = emptyList(),
     intakeLabels: Map<String, String> = emptyMap(),
+    dailyRecaps: Map<LocalDate, DailyRecap> = emptyMap(),
     onSelectDate: (LocalDate) -> Unit,
     onOpenRecap: (LocalDate) -> Unit = {},
     onRecordMedication: (LocalDate) -> Unit = {},
@@ -283,6 +286,11 @@ fun AgendaScreen(
 
             val cycleStart = state.cycles.firstOrNull { it.startDate == selectedDate }
             val selectedCycle = state.cycles.firstOrNull { it.startDate <= selectedDate && (it.endDate == null || it.endDate >= selectedDate) }
+            dailyRecaps[selectedDate]?.let { recap ->
+                if (recap.completedSteps.isNotEmpty()) {
+                    item { DailyRecapReadOnlyCard(recap = recap) }
+                }
+            }
             item {
                 SelectedDayInspectionCard(
                     date = selectedDate,

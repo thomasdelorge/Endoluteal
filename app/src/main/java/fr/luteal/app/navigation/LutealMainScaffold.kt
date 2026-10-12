@@ -86,6 +86,7 @@ fun LutealMainScaffold(
     val intakeLabels by agendaViewModel.intakeLabels.collectAsStateWithLifecycle()
     val careLabels by agendaViewModel.careLabels.collectAsStateWithLifecycle()
     val appointmentLabels by agendaViewModel.appointmentLabels.collectAsStateWithLifecycle()
+    val dailyRecaps by agendaViewModel.recapsByDate.collectAsStateWithLifecycle()
     val eventDetailLabels = intakeLabels + careLabels + appointmentLabels
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -213,6 +214,7 @@ fun LutealMainScaffold(
                                 state = uiState,
                                 events = events,
                                 intakeLabels = eventDetailLabels,
+                                dailyRecaps = dailyRecaps,
                                 onSelectDate = { recapDate = it },
                                 onOpenRecap = { date -> recapDate = date },
                                 onRecordMedication = { date ->
