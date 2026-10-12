@@ -478,6 +478,7 @@
     <string name="settings_import_error_generic">L’importation a échoué. Vérifiez que le fichier est valide.</string>
     <string name="settings_import_error_syntax">Le fichier sélectionné n’est pas un fichier JSON Luteal valide.</string>
     <string name="settings_import_error_schema">Version de sauvegarde non supportée. Mettez à jour l’application.</string>
+    <string name="settings_import_error_wrong_password">Mot de passe incorrect.</string>
     <string name="settings_import_dialog_title">Restaurer une sauvegarde</string>
     <string name="settings_import_dialog_cycles">Cycles : %1$d (%2$s au %3$s)</string>
     <string name="settings_import_dialog_cycles_no_dates">Cycles : %1$d</string>
@@ -912,7 +913,16 @@
     <string name="monthly_q4">Le sommeil vous a-t-il reposée ?</string>
     <string name="monthly_q5">Globalement, comment évaluez-vous votre qualité de vie ce mois-ci ?</string>
     <string name="backup_encrypt_title">Chiffrer les sauvegardes</string>
-    <string name="backup_encrypt_body">AES-256-GCM ; mot de passe perdu = fichiers illisibles. L’auto-sauvegarde utilise une clé protégée par l’appareil.</string>
+    <string name="backup_encrypt_body">Mot de passe choisi par vous. Perdu, les fichiers sont illisibles, y compris sur un autre appareil.</string>
+    <string name="backup_encrypt_dialog_title">Mot de passe des sauvegardes</string>
+    <string name="backup_encrypt_dialog_body">Saisissez-le deux fois. Il sert à l’export et à la restauration.</string>
+    <string name="backup_encrypt_password">Mot de passe</string>
+    <string name="backup_encrypt_password_confirm">Confirmation</string>
+    <string name="backup_encrypt_mismatch">Les deux saisies ne correspondent pas.</string>
+    <string name="backup_encrypt_save">Enregistrer</string>
+    <string name="backup_encrypt_missing">Le chiffrement est activé, mais aucun mot de passe n’est enregistré.</string>
+    <string name="settings_import_password_title">Sauvegarde chiffrée</string>
+    <string name="settings_import_password_body">Ce fichier est chiffré. Saisissez le mot de passe choisi lors de l’export.</string>
     <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_action_symptom">Symptôme</string>
     <string name="agenda_action_care">Traitement</string>

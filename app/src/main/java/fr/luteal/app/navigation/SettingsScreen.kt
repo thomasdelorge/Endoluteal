@@ -182,6 +182,16 @@ fun SettingsScreen(
         )
     }
 
+    if (currentImportState is DataImportState.NeedsPassword) {
+        ImportEncryptedBackupDialog(
+            wrongPassword = currentImportState.wrongPassword,
+            onConfirm = { password ->
+                viewModel.inspectBackup(context, currentImportState.uri, password)
+            },
+            onDismiss = viewModel::dismissImportPreview
+        )
+    }
+
     if (showClinicalReportDialog) {
         ClinicalReportDialog(
             onDismiss = { showClinicalReportDialog = false },
@@ -1223,6 +1233,48 @@ private fun DataManagementCard(
             }
         }
     }
+}
+
+@Composable
+private fun ImportEncryptedBackupDialog(
+    wrongPassword: Boolean,
+    onConfirm: (CharArray) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_import_password_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
+                Text(stringResource(R.string.settings_import_password_body))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(stringResource(R.string.backup_encrypt_password)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (wrongPassword) {
+                    Text(
+                        text = stringResource(R.string.settings_import_error_wrong_password),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(password.toCharArray()) },
+                enabled = password.isNotEmpty()
+            ) { Text(stringResource(R.string.backup_encrypt_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
+        }
+    )
 }
 
 @Composable

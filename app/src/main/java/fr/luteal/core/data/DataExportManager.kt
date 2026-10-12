@@ -4,6 +4,7 @@ import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.local.BiomarkerDao
 import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.data.backup.AutoBackupPassphraseStore
+import fr.luteal.core.data.backup.MissingBackupPassphrase
 import fr.luteal.core.data.backup.BackupCrypto
 import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.QuestionnaireResultDao
@@ -371,6 +372,7 @@ class DataExportManager @Inject constructor(
         val prefs = userPreferencesDataStore.userPreferencesFlow.first()
         if (prefs.backupEncryptionEnabled) {
             val password = encryptionPassword ?: autoBackupPassphraseStore.passphrase()
+                ?: throw MissingBackupPassphrase()
             val encrypted = BackupCrypto.encrypt(jsonBytes, password)
             outputStream.write(encrypted)
             outputStream.flush()

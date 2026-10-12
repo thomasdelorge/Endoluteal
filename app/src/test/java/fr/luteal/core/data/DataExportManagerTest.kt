@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import fr.luteal.core.data.backup.AutoBackupPassphraseStore
+import fr.luteal.core.data.backup.MissingBackupPassphrase
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.entity.CycleEntity
 import fr.luteal.core.data.entity.DailyEntryEntity
@@ -13,6 +14,7 @@ import fr.luteal.core.model.LutealBackupPayload
 import fr.luteal.core.data.security.InMemoryPinSecretStore
 import fr.luteal.core.data.security.PinCryptoManager
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.After
@@ -61,6 +63,7 @@ class DataExportManagerTest {
             userPreferencesDataStore = userPreferencesDataStore,
             autoBackupPassphraseStore = AutoBackupPassphraseStore(context)
         )
+        runBlocking { userPreferencesDataStore.setBackupEncryptionEnabled(false) }
 
         purgeManager = LocalDataPurgeManager(
             database = database,
@@ -71,6 +74,7 @@ class DataExportManagerTest {
 
     @After
     fun tearDown() {
+        runBlocking { userPreferencesDataStore.setBackupEncryptionEnabled(false) }
         database.close()
     }
 
@@ -105,6 +109,14 @@ class DataExportManagerTest {
 
         assertEquals(1, payload.cycles.size)
         assertEquals(1, payload.dailyEntries.size)
+    }
+
+    @Test
+    fun encryptedExportWithoutPassphraseFails() = runTest {
+        userPreferencesDataStore.setBackupEncryptionEnabled(true)
+        val output = ByteArrayOutputStream()
+        val error = runCatching { exportManager.exportToStream(output) }.exceptionOrNull()
+        assertTrue(error is MissingBackupPassphrase)
     }
 
     @Test

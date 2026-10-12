@@ -15,6 +15,7 @@ import fr.luteal.app.MainActivity
 import fr.luteal.app.R
 import fr.luteal.app.notification.NotificationChannelManager
 import fr.luteal.core.data.DataExportManager
+import fr.luteal.core.data.backup.MissingBackupPassphrase
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import java.time.Duration
 import java.time.LocalDateTime
@@ -47,7 +48,10 @@ class BackupWriter @Inject constructor(
                     )
                 }
                 .onFailure { error ->
-                    val message = error.message ?: context.getString(R.string.backup_error_generic)
+                    val message = when (error) {
+                        is MissingBackupPassphrase -> context.getString(R.string.backup_encrypt_missing)
+                        else -> error.message ?: context.getString(R.string.backup_error_generic)
+                    }
                     userPreferencesDataStore.setAutoBackupStatus(success = prefs.autoBackupLastSuccess, error = message)
                     notifyFailure(message)
                 }

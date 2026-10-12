@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import android.content.Context
 import android.net.Uri
 import fr.luteal.core.data.DataExportManager
+import fr.luteal.core.data.backup.MissingBackupPassphrase
 import fr.luteal.core.data.LocalDataPurgeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -188,7 +189,13 @@ class SettingsViewModel @Inject constructor(
             }.onSuccess {
                 exportState.value = DataExportState.Success
             }.onFailure { err ->
-                exportState.value = DataExportState.Error(err.message ?: "Export failed")
+                exportState.value = DataExportState.Error(
+                    if (err is MissingBackupPassphrase) {
+                        context.getString(R.string.backup_encrypt_missing)
+                    } else {
+                        err.message ?: "Export failed"
+                    }
+                )
             }
         }
     }
@@ -218,35 +225,34 @@ class SettingsViewModel @Inject constructor(
         wipeState.value = DataWipeState.Idle
     }
 
-    fun inspectBackup(context: Context, uri: Uri) {
+    fun inspectBackup(context: Context, uri: Uri, decryptionPassword: CharArray? = null) {
         viewModelScope.launch {
             importState.value = DataImportState.Inspecting
-            withContext(Dispatchers.IO) {
+            val opened = withContext(Dispatchers.IO) {
                 runCatching {
                     context.contentResolver.openInputStream(uri)?.use { stream ->
-                        dataImportManager.inspectBackup(stream)
+                        dataImportManager.inspectBackup(stream, decryptionPassword)
                     } ?: throw IllegalStateException("Cannot open input stream for URI")
                 }
-            }.onSuccess { result ->
+            }
+            opened.onSuccess { result ->
                 result.fold(
                     onSuccess = { (preview, payload) ->
                         importState.value = DataImportState.PreviewReady(preview, payload)
                     },
-                    onFailure = { err ->
-                        val resId = when (err) {
-                            is DataImportError.InvalidJsonSyntax -> R.string.settings_import_error_syntax
-                            is DataImportError.UnsupportedSchemaVersion -> R.string.settings_import_error_schema
-                            else -> R.string.settings_import_error_generic
-                        }
-                        importState.value = DataImportState.Error(message = err.message, messageResId = resId)
-                    }
+                    onFailure = { err -> applyImportFailure(uri, err) }
                 )
-            }.onFailure { err ->
-                importState.value = DataImportState.Error(
-                    message = err.message,
-                    messageResId = R.string.settings_import_error_generic
-                )
-            }
+            }.onFailure { err -> applyImportFailure(uri, err) }
+        }
+    }
+
+    private fun applyImportFailure(uri: Uri, err: Throwable) {
+        importState.value = when (err) {
+            is DataImportError.EncryptedBackupNeedsPassword -> DataImportState.NeedsPassword(uri)
+            is DataImportError.WrongBackupPassword -> DataImportState.NeedsPassword(uri, wrongPassword = true)
+            is DataImportError.InvalidJsonSyntax -> DataImportState.Error(messageResId = R.string.settings_import_error_syntax)
+            is DataImportError.UnsupportedSchemaVersion -> DataImportState.Error(messageResId = R.string.settings_import_error_schema)
+            else -> DataImportState.Error(message = err.message, messageResId = R.string.settings_import_error_generic)
         }
     }
 
@@ -266,12 +272,22 @@ class SettingsViewModel @Inject constructor(
                         importState.value = DataImportState.PreviewReady(preview, payload)
                     },
                     onFailure = { err ->
-                        val resId = when (err) {
-                            is DataImportError.InvalidJsonSyntax -> R.string.settings_import_error_syntax
-                            is DataImportError.UnsupportedSchemaVersion -> R.string.settings_import_error_schema
-                            else -> R.string.settings_import_error_generic
+                        importState.value = when (err) {
+                            is DataImportError.EncryptedBackupNeedsPassword,
+                            is DataImportError.WrongBackupPassword -> DataImportState.Error(
+                                messageResId = R.string.settings_import_error_generic
+                            )
+                            is DataImportError.InvalidJsonSyntax -> DataImportState.Error(
+                                messageResId = R.string.settings_import_error_syntax
+                            )
+                            is DataImportError.UnsupportedSchemaVersion -> DataImportState.Error(
+                                messageResId = R.string.settings_import_error_schema
+                            )
+                            else -> DataImportState.Error(
+                                message = err.message,
+                                messageResId = R.string.settings_import_error_generic
+                            )
                         }
-                        importState.value = DataImportState.Error(message = err.message, messageResId = resId)
                     }
                 )
             }.onFailure { err ->
@@ -466,6 +482,7 @@ sealed interface DataWipeState {
 sealed interface DataImportState {
     data object Idle : DataImportState
     data object Inspecting : DataImportState
+    data class NeedsPassword(val uri: Uri, val wrongPassword: Boolean = false) : DataImportState
     data class PreviewReady(val preview: LutealBackupPreview, val payload: LutealBackupPayload) : DataImportState
     data object Restoring : DataImportState
     data class Success(val summary: ImportSummary) : DataImportState

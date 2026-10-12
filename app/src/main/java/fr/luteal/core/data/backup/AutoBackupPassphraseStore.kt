@@ -3,10 +3,11 @@ package fr.luteal.core.data.backup
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import fr.luteal.core.data.security.KeystoreSecretStore
-import java.security.SecureRandom
-import java.util.Base64
 import javax.inject.Inject
 import javax.inject.Singleton
+
+/** Thrown when encryption is on but the user has not stored a passphrase. */
+class MissingBackupPassphrase : IllegalStateException("Backup encryption is enabled but no passphrase is stored")
 
 @Singleton
 class AutoBackupPassphraseStore @Inject constructor(
@@ -18,13 +19,16 @@ class AutoBackupPassphraseStore @Inject constructor(
         keyAlias = "endoluteal_auto_backup_aes"
     )
 
-    fun passphrase(): CharArray {
-        val existing = store.get(KEY)
-        if (existing != null) return existing.toCharArray()
-        val random = ByteArray(32).also { SecureRandom().nextBytes(it) }
-        val encoded = Base64.getEncoder().encodeToString(random)
-        store.put(KEY, encoded)
-        return encoded.toCharArray()
+    /** Stored user passphrase, or null when none has been set. */
+    fun passphrase(): CharArray? = store.get(KEY)?.toCharArray()
+
+    fun setPassphrase(value: CharArray) {
+        require(value.isNotEmpty())
+        store.put(KEY, String(value))
+    }
+
+    fun clear() {
+        store.remove(KEY)
     }
 
     private companion object {
