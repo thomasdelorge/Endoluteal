@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
+import fr.luteal.core.designsystem.component.bodymap.BodyMapInteraction
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.PainMark
 import fr.luteal.core.model.recap.RecapZoneRange
@@ -40,6 +41,7 @@ fun BodyMapDayRanges(
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         BodyMap(
             marks = marks,
+            interaction = BodyMapInteraction.Zones,
             onMarksChange = { updated ->
                 val next = updated.map { mark ->
                     RecapZoneRange(

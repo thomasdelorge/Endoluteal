@@ -17,6 +17,7 @@ import fr.luteal.core.data.local.DailyRecapDao
 import fr.luteal.core.data.local.QuestionnaireResultDao
 import fr.luteal.core.data.local.JournalEventDao
 import fr.luteal.core.data.local.LutealDatabase
+import fr.luteal.core.data.local.MIGRATION_10_11
 import fr.luteal.core.data.local.MedicationDao
 import fr.luteal.core.data.local.MedicationIntakeDao
 import fr.luteal.core.data.local.ReminderDao
@@ -39,6 +40,7 @@ object DatabaseModule {
             LutealDatabase::class.java,
             "endoluteal.db"
         )
+            .addMigrations(MIGRATION_10_11)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .build()
     }

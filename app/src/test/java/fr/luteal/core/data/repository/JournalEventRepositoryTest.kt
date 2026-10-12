@@ -70,6 +70,22 @@ class JournalEventRepositoryTest {
         assertTrue(database.journalEventDao().getAllMarksOnce().isEmpty())
     }
 
+    @Test
+    fun upsertPersistsPinCoordinates() = runTest {
+        val pin = mark("pin-1", "f08", 5).copy(
+            pinSide = "front",
+            pinX = 0.42f,
+            pinY = 0.67f
+        )
+        repo.upsert(event(id = "evt-pin", marks = listOf(pin)))
+
+        val loaded = repo.get("evt-pin")?.marks?.single()
+        assertEquals("front", loaded?.pinSide)
+        assertEquals(0.42f, loaded?.pinX)
+        assertEquals(0.67f, loaded?.pinY)
+        assertTrue(loaded?.isPin == true)
+    }
+
     private fun event(id: String, marks: List<PainMark>) = JournalEvent(
         id = id,
         type = JournalEventType.PAIN_CHECK,

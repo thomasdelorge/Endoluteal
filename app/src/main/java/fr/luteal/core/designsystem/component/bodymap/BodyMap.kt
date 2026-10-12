@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,9 +28,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -51,7 +56,15 @@ fun BodyMap(
     var side by remember { mutableStateOf(BodySide.FRONT) }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         SideToggle(side = side, onSide = { side = it })
-        ZoneCanvas(heat = heat.mapKeys { it.key.id }, side = side, onZoneTap = null)
+        ZoneCanvas(
+            side = side,
+            zoneHeat = heat.mapKeys { it.key.id },
+            pins = emptyList(),
+            interaction = null,
+            onZoneSelected = {},
+            onPinEdit = {},
+            onPinDraft = {}
+        )
         InternalZoneRow(heat = heat.mapKeys { it.key.id }, onZone = {})
     }
 }
@@ -61,45 +74,107 @@ fun BodyMap(
 fun BodyMap(
     marks: List<PainMark>,
     onMarksChange: (List<PainMark>) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    interaction: BodyMapInteraction = BodyMapInteraction.Pins
 ) {
     var side by remember { mutableStateOf(BodySide.FRONT) }
     var listMode by remember { mutableStateOf(false) }
-    var editing by remember { mutableStateOf<String?>(null) }
-    val heat = remember(marks) { marks.toHeat() }
+    var editingZone by remember { mutableStateOf<String?>(null) }
+    var editingPin by remember { mutableStateOf<PainMark?>(null) }
+    val zoneHeat = remember(marks) { marks.zoneHeat() }
+    val pinMode = interaction == BodyMapInteraction.Pins
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-        if (listMode) {
-            ZoneList(heat = heat, onZone = { editing = it })
+        if (!pinMode && listMode) {
+            ZoneList(heat = zoneHeat, onZone = { editingZone = it })
         } else {
             SideToggle(side = side, onSide = { side = it })
-            ZoneCanvas(heat = heat, side = side, onZoneTap = { editing = it })
-            InternalZoneRow(heat = heat, onZone = { editing = it.id })
-            Text(
-                text = stringResource(R.string.choir_bodymap_attribution),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            ZoneCanvas(
+                side = side,
+                zoneHeat = if (pinMode) null else zoneHeat,
+                pins = if (pinMode) marks else emptyList(),
+                interaction = interaction,
+                onZoneSelected = { editingZone = it },
+                onPinEdit = { editingPin = it },
+                onPinDraft = { editingPin = it }
             )
-        }
-        TextButton(onClick = { listMode = !listMode }) {
-            Text(
-                text = stringResource(
-                    if (listMode) R.string.body_map_silhouette_mode else R.string.body_map_list_mode
+            if (pinMode) {
+                Text(
+                    text = stringResource(R.string.body_map_pin_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+            InternalZoneRow(
+                heat = internalHeat(marks),
+                onZone = { zone ->
+                    if (pinMode) {
+                        editingPin = marks.firstOrNull { it.zone == zone.id && !it.isPin }
+                            ?: PainMark(
+                                id = UUID.randomUUID().toString(),
+                                zone = zone.id,
+                                intensity = 0,
+                                painTypes = emptyList()
+                            )
+                    } else {
+                        editingZone = zone.id
+                    }
+                }
             )
+            if (pinMode) {
+                Text(
+                    text = stringResource(R.string.choir_bodymap_attribution),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+        if (!pinMode) {
+            TextButton(onClick = { listMode = !listMode }) {
+                Text(
+                    text = stringResource(
+                        if (listMode) R.string.body_map_silhouette_mode else R.string.body_map_list_mode
+                    )
+                )
+            }
         }
     }
-    editing?.let { zone ->
+    editingZone?.let { zone ->
+        val existing = marks.zoneMark(zone)
         PainMarkSheet(
             zoneId = zone,
-            existing = marks.firstOrNull { it.zone == zone },
-            onDismiss = { editing = null },
+            existing = existing,
+            isDraft = false,
+            onDismiss = { editingZone = null },
             onSave = { mark ->
-                onMarksChange(marks.filterNot { it.zone == zone } + mark)
-                editing = null
+                val withoutZone = marks.filterNot { it.zone == zone && !it.isPin }
+                onMarksChange(withoutZone + mark.withoutPin())
+                editingZone = null
             },
             onRemove = {
-                onMarksChange(marks.filterNot { it.zone == zone })
-                editing = null
+                onMarksChange(marks.filterNot { it.zone == zone && !it.isPin })
+                editingZone = null
+            }
+        )
+    }
+    editingPin?.let { draft ->
+        val existing = marks.firstOrNull { it.id == draft.id }
+        PainMarkSheet(
+            zoneId = draft.zone,
+            existing = existing ?: draft,
+            isDraft = marks.none { it.id == draft.id },
+            onDismiss = { editingPin = null },
+            onSave = { mark ->
+                val saved = mark.copy(
+                    pinSide = draft.pinSide,
+                    pinX = draft.pinX,
+                    pinY = draft.pinY
+                )
+                onMarksChange(marks.filterNot { it.id == saved.id } + saved)
+                editingPin = null
+            },
+            onRemove = {
+                onMarksChange(marks.filterNot { it.id == draft.id })
+                editingPin = null
             }
         )
     }
@@ -123,12 +198,19 @@ private fun SideToggle(side: BodySide, onSide: (BodySide) -> Unit) {
 
 @Composable
 private fun ZoneCanvas(
-    heat: Map<String, Int>,
     side: BodySide,
-    onZoneTap: ((String) -> Unit)?
+    zoneHeat: Map<String, Int>?,
+    pins: List<PainMark>,
+    interaction: BodyMapInteraction?,
+    onZoneSelected: (String) -> Unit,
+    onPinEdit: (PainMark) -> Unit,
+    onPinDraft: (PainMark) -> Unit
 ) {
     val front = side == BodySide.FRONT
     val context = androidx.compose.ui.platform.LocalContext.current
+    val hitRadiusPx = with(LocalDensity.current) {
+        PainPinGeometry.PIN_EDIT_HIT_RADIUS_DP.dp.toPx()
+    }
     val bitmap = remember {
         val source = android.graphics.BitmapFactory.decodeResource(
             context.resources,
@@ -140,6 +222,8 @@ private fun ZoneCanvas(
     val visible = remember(front, regions) { regions.filter { it.front == front } }
     val ink = MaterialTheme.colorScheme.onSurface
     val halfWidth = bitmap.width / 2
+    val sideKey = PainPinGeometry.sideKey(side)
+    val pinsOnSide = remember(pins, sideKey) { pins.filter { it.pinSide == sideKey && it.isPin } }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -149,21 +233,57 @@ private fun ZoneCanvas(
             modifier = Modifier
                 .fillMaxSize()
                 .then(
-                    if (onZoneTap == null) {
+                    if (interaction == null) {
                         Modifier
                     } else {
-                        Modifier.pointerInput(front) {
+                        Modifier.pointerInput(front, pinsOnSide, interaction) {
                             detectTapGestures { offset ->
-                                val srcLeft = if (front) 0f else halfWidth.toFloat()
-                                val imageX = offset.x / size.width * halfWidth + srcLeft
-                                val imageY = offset.y / size.height * bitmap.height
-                                val key = ChoirPainMap.hit(imageX, imageY, front, regions)?.key
-                                if (key != null) onZoneTap(key)
+                                val canvasSize = Size(size.width.toFloat(), size.height.toFloat())
+                                when (interaction) {
+                                    BodyMapInteraction.Pins -> {
+                                        val nearest = PainPinGeometry.nearestPin(
+                                            pins,
+                                            side,
+                                            offset,
+                                            canvasSize,
+                                            hitRadiusPx
+                                        )
+                                        if (nearest != null) {
+                                            onPinEdit(nearest)
+                                        } else {
+                                            val srcLeft = if (front) 0f else halfWidth.toFloat()
+                                            val imageX = offset.x / canvasSize.width * halfWidth + srcLeft
+                                            val imageY = offset.y / canvasSize.height * bitmap.height
+                                            val region = ChoirPainMap.hit(imageX, imageY, front, regions)
+                                                ?: return@detectTapGestures
+                                            val (pinX, pinY) = PainPinGeometry.normalizedPin(offset, canvasSize)
+                                            onPinDraft(
+                                                PainMark(
+                                                    id = UUID.randomUUID().toString(),
+                                                    zone = region.key,
+                                                    intensity = 0,
+                                                    painTypes = emptyList(),
+                                                    pinSide = PainPinGeometry.sideKey(side),
+                                                    pinX = pinX,
+                                                    pinY = pinY
+                                                )
+                                            )
+                                        }
+                                    }
+                                    BodyMapInteraction.Zones -> {
+                                        val srcLeft = if (front) 0f else halfWidth.toFloat()
+                                        val imageX = offset.x / canvasSize.width * halfWidth + srcLeft
+                                        val imageY = offset.y / canvasSize.height * bitmap.height
+                                        ChoirPainMap.hit(imageX, imageY, front, regions)?.key
+                                            ?.let(onZoneSelected)
+                                    }
+                                }
                             }
                         }
                     }
                 )
         ) {
+            val canvasSize = Size(size.width, size.height)
             val srcLeft = if (front) 0 else halfWidth
             drawImage(
                 image = bitmap,
@@ -174,17 +294,34 @@ private fun ZoneCanvas(
             )
             val scaleX = size.width / halfWidth
             val scaleY = size.height / bitmap.height
-            visible.forEach { region ->
-                val intensity = heat[region.key] ?: return@forEach
-                val path = androidx.compose.ui.graphics.Path().apply {
-                    region.points.forEachIndexed { index, point ->
-                        val x = (point.x - srcLeft) * scaleX
-                        val y = point.y * scaleY
-                        if (index == 0) moveTo(x, y) else lineTo(x, y)
+            zoneHeat?.let { heat ->
+                visible.forEach { region ->
+                    val intensity = heat[region.key] ?: return@forEach
+                    val path = androidx.compose.ui.graphics.Path().apply {
+                        region.points.forEachIndexed { index, point ->
+                            val x = (point.x - srcLeft) * scaleX
+                            val y = point.y * scaleY
+                            if (index == 0) moveTo(x, y) else lineTo(x, y)
+                        }
+                        close()
                     }
-                    close()
+                    drawPath(path, painIntensityColor(intensity).copy(alpha = 0.45f))
                 }
-                drawPath(path, painIntensityColor(intensity).copy(alpha = 0.45f))
+            }
+            val pinRadius = 7.dp.toPx()
+            pinsOnSide.forEach { mark ->
+                val center = PainPinGeometry.canvasOffset(mark, canvasSize) ?: return@forEach
+                drawCircle(
+                    color = painIntensityColor(mark.intensity),
+                    radius = pinRadius,
+                    center = center
+                )
+                drawCircle(
+                    color = ink,
+                    radius = pinRadius,
+                    center = center,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5.dp.toPx())
+                )
             }
         }
     }
@@ -220,18 +357,18 @@ private fun ZoneList(
             ChoirPainMap.regions(androidx.compose.ui.platform.LocalContext.current)
                 .filter { it.front == front }
                 .forEach { region ->
-                val intensity = heat[region.key]
-                val label = if (intensity == null) region.title else "${region.title} ($intensity)"
-                Text(
-                    text = label,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .sizeIn(minHeight = 48.dp)
-                        .semantics { contentDescription = label }
-                        .clickable { onZone(region.key) }
-                        .padding(vertical = LutealSpacing.xs)
-                )
-            }
+                    val intensity = heat[region.key]
+                    val label = if (intensity == null) region.title else "${region.title} ($intensity)"
+                    Text(
+                        text = label,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .sizeIn(minHeight = 48.dp)
+                            .semantics { contentDescription = label }
+                            .clickable { onZone(region.key) }
+                            .padding(vertical = LutealSpacing.xs)
+                    )
+                }
         }
         BodyZone.entries.filter { it.side == BodySide.INTERNAL }.forEach { zone ->
             val label = zoneLabel(zone, heat[zone.id])
@@ -252,12 +389,15 @@ private fun ZoneList(
 private fun PainMarkSheet(
     zoneId: String,
     existing: PainMark?,
+    isDraft: Boolean,
     onDismiss: () -> Unit,
     onSave: (PainMark) -> Unit,
     onRemove: () -> Unit
 ) {
-    var intensity by remember(zoneId) { mutableStateOf(existing?.intensity) }
-    var types by remember(zoneId) {
+    var intensity by remember(zoneId, existing?.id) {
+        mutableStateOf(if (isDraft) null else existing?.intensity)
+    }
+    var types by remember(zoneId, existing?.id) {
         mutableStateOf(existing?.painTypes?.mapNotNull(PainType::fromId)?.toSet().orEmpty())
     }
     val title = BodyZone.fromId(zoneId)?.let { stringResource(it.labelRes) }
@@ -281,38 +421,57 @@ private fun PainMarkSheet(
                         )
                     }
                 }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val level = intensity ?: return@Button
-                    onSave(
-                        PainMark(
-                            id = existing?.id ?: UUID.randomUUID().toString(),
-                            zone = zoneId,
-                            intensity = level,
-                            painTypes = types.map { it.id }
+                val canRemove = existing != null && !isDraft
+                Button(
+                    onClick = {
+                        val level = intensity ?: return@Button
+                        onSave(
+                            PainMark(
+                                id = existing?.id ?: UUID.randomUUID().toString(),
+                                zone = zoneId,
+                                intensity = level,
+                                painTypes = types.map { it.id },
+                                pinSide = existing?.pinSide,
+                                pinX = existing?.pinX,
+                                pinY = existing?.pinY
+                            )
                         )
-                    )
-                },
-                enabled = intensity != null
-            ) {
-                Text(stringResource(R.string.meds_save))
-            }
-        },
-        dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                TextButton(onClick = onDismiss) {
-                    Text(stringResource(R.string.intake_cancel))
+                    },
+                    enabled = intensity != null,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(stringResource(R.string.meds_save))
                 }
-                if (existing != null) {
-                    TextButton(onClick = onRemove) {
-                        Text(stringResource(R.string.body_map_remove))
+                if (canRemove) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
+                    ) {
+                        OutlinedButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(stringResource(R.string.intake_cancel))
+                        }
+                        OutlinedButton(
+                            onClick = onRemove,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text(stringResource(R.string.body_map_remove))
+                        }
+                    }
+                } else {
+                    OutlinedButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) {
+                        Text(stringResource(R.string.intake_cancel))
                     }
                 }
             }
-        }
+        },
+        confirmButton = {},
+        dismissButton = {}
     )
 }
 
@@ -322,8 +481,19 @@ private fun zoneLabel(zone: BodyZone, intensity: Int?): String {
     return if (intensity == null) name else "$name ($intensity)"
 }
 
-private fun List<PainMark>.toHeat(): Map<String, Int> =
-    associate { mark -> mark.zone to mark.intensity }
+private fun List<PainMark>.zoneHeat(): Map<String, Int> =
+    groupBy { it.zone }.mapValues { (_, marks) -> marks.maxOf { it.intensity } }
+
+private fun List<PainMark>.zoneMark(zone: String): PainMark? =
+    firstOrNull { it.zone == zone && !it.isPin }
+
+private fun PainMark.withoutPin(): PainMark =
+    copy(pinSide = null, pinX = null, pinY = null)
+
+private fun internalHeat(marks: List<PainMark>): Map<String, Int> =
+    marks.filter { !it.isPin && BodyZone.fromId(it.zone)?.side == BodySide.INTERNAL }
+        .groupBy { it.zone }
+        .mapValues { (_, list) -> list.maxOf { it.intensity } }
 
 /** Keeps the region strokes and drops the paper fill plus the footer stamp. */
 private fun lineArt(source: android.graphics.Bitmap): android.graphics.Bitmap {

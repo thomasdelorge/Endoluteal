@@ -119,7 +119,10 @@ data class PainMarkBackupDto(
     @SerialName("event_id") val eventId: String,
     @SerialName("zone") val zone: String,
     @SerialName("intensity") val intensity: Int,
-    @SerialName("pain_types") val painTypes: List<String> = emptyList()
+    @SerialName("pain_types") val painTypes: List<String> = emptyList(),
+    @SerialName("pin_side") val pinSide: String? = null,
+    @SerialName("pin_x") val pinX: Float? = null,
+    @SerialName("pin_y") val pinY: Float? = null
 )
 
 @Serializable

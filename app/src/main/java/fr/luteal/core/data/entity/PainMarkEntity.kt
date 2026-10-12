@@ -24,5 +24,8 @@ data class PainMarkEntity(
     val eventId: String,
     val zone: String,
     val intensity: Int,
-    val painTypes: String
+    val painTypes: String,
+    val pinSide: String? = null,
+    val pinX: Float? = null,
+    val pinY: Float? = null
 )

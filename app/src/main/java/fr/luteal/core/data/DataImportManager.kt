@@ -326,7 +326,10 @@ class DataImportManager @Inject constructor(
                                 eventId = eventDto.id,
                                 zone = mark.zone,
                                 intensity = mark.intensity,
-                                painTypes = types.toString()
+                                painTypes = types.toString(),
+                                pinSide = mark.pinSide,
+                                pinX = mark.pinX,
+                                pinY = mark.pinY
                             )
                         }
                         journalEventDao.upsert(entity, marks)

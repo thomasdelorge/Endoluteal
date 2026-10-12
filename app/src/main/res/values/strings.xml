@@ -824,6 +824,7 @@
     <string name="body_side_front">Avant</string>
     <string name="choir_bodymap_attribution">Schéma CHOIR Bodymap, Université Stanford (Ming-Chih J. Kao et Sean Mackey), 2013-2015.</string>
     <string name="body_side_back">Arrière</string>
+    <string name="body_map_pin_hint">Touchez le corps pour ajouter un point. Touchez un point pour le modifier.</string>
     <string name="body_map_list_mode">Saisir par liste</string>
     <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
     <string name="body_map_remove">Retirer</string>

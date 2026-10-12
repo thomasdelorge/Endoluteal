@@ -78,7 +78,10 @@ class JournalEventRepositoryImpl @Inject constructor(
         id = id,
         zone = zone,
         intensity = intensity,
-        painTypes = painTypes.toStringList()
+        painTypes = painTypes.toStringList(),
+        pinSide = pinSide,
+        pinX = pinX,
+        pinY = pinY
     )
 
     private fun PainMark.toEntity(eventId: String) = PainMarkEntity(
@@ -86,7 +89,10 @@ class JournalEventRepositoryImpl @Inject constructor(
         eventId = eventId,
         zone = zone,
         intensity = intensity,
-        painTypes = painTypes.toJson()
+        painTypes = painTypes.toJson(),
+        pinSide = pinSide,
+        pinX = pinX,
+        pinY = pinY
     )
 
     private fun List<String>.toJson(): String {

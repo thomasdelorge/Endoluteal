@@ -188,7 +188,10 @@ class DataExportManager @Inject constructor(
                 eventId = entity.eventId,
                 zone = entity.zone,
                 intensity = entity.intensity,
-                painTypes = entity.painTypes.toStringList()
+                painTypes = entity.painTypes.toStringList(),
+                pinSide = entity.pinSide,
+                pinX = entity.pinX,
+                pinY = entity.pinY
             )
         }
         val compositions = medicationDao.compositionsOnce().groupBy { it.medicationId }

@@ -45,7 +45,7 @@ import fr.luteal.core.data.entity.UserProfileEntity
         DailyRecapEntity::class,
         QuestionnaireResultEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
