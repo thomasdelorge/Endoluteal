@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -148,7 +149,8 @@ private fun ZoneCanvas(
     ) {
         val scaleX = size.width / BodyMapGeometry.VIEWBOX_WIDTH
         val scaleY = size.height / BodyMapGeometry.VIEWBOX_HEIGHT
-        scale(scaleX, scaleY) {
+        // Default pivot is the canvas center, which throws the viewBox off-screen.
+        scale(scaleX, scaleY, pivot = Offset.Zero) {
             shapes.forEachIndexed { index, shape ->
                 val path = paths[index]
                 val intensity = heat[shape.zone]
@@ -158,7 +160,7 @@ private fun ZoneCanvas(
                     painIntensityColor(intensity).copy(alpha = 0.85f)
                 }
                 drawPath(path, fill)
-                drawPath(path, ink, style = Stroke(width = 1.2f))
+                drawPath(path, ink, style = Stroke(width = 1.5f / scaleX))
             }
         }
     }
