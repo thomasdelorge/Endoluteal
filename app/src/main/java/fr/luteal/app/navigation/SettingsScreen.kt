@@ -73,7 +73,6 @@ import fr.luteal.app.navigation.settings.meds.TreatmentPlansSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.LutealCheckboxRow
-import fr.luteal.core.designsystem.component.LutealPrimaryButton
 import fr.luteal.core.designsystem.component.LutealRadioRow
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.LutealToggleRow
@@ -379,15 +378,6 @@ fun SettingsScreen(
                     )
                 }
             }
-        }
-
-        if (BuildConfig.DEBUG) {
-            TestDataCard(
-                state = syncState.testDataState,
-                onSeed = viewModel::seedMockData,
-                onClear = viewModel::clearTestData,
-                onDismissMessage = viewModel::clearTestDataMessage
-            )
         }
 
         SecurityCard(
@@ -1595,97 +1585,6 @@ private fun SettingsSectionHeader(title: String) {
     )
 }
 
-
-@Composable
-private fun TestDataCard(
-    state: TestDataActionState,
-    onSeed: () -> Unit,
-    onClear: () -> Unit,
-    onDismissMessage: () -> Unit
-) {
-    var showClearConfirmation by remember { mutableStateOf(false) }
-
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-        SettingsSectionHeader(title = stringResource(R.string.settings_test_data_title))
-
-        LutealCard(modifier = Modifier.fillMaxWidth()) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-            ) {
-                Text(
-                    text = stringResource(R.string.settings_test_data_body),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                LutealPrimaryButton(
-                    text = stringResource(R.string.settings_test_data_seed_button),
-                    onClick = {
-                        onDismissMessage()
-                        onSeed()
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    loading = state is TestDataActionState.Loading,
-                    enabled = state !is TestDataActionState.Loading
-                )
-
-                LutealSecondaryButton(
-                    text = stringResource(R.string.settings_test_data_clear_button),
-                    onClick = { showClearConfirmation = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = state !is TestDataActionState.Loading
-                )
-
-                when (state) {
-                    is TestDataActionState.SuccessSeeded -> Text(
-                        text = stringResource(R.string.settings_test_data_success),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    is TestDataActionState.SuccessCleared -> Text(
-                        text = stringResource(R.string.settings_test_data_cleared),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    is TestDataActionState.Error -> {
-                        val errorMsg = state.messageResId?.let { stringResource(it) } ?: state.message.orEmpty()
-                        Text(
-                            text = stringResource(R.string.settings_test_data_error, errorMsg),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-                    else -> { /* Idle or Loading: no message */ }
-                }
-            }
-        }
-    }
-
-    if (showClearConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showClearConfirmation = false },
-            title = { Text(stringResource(R.string.settings_test_data_clear_title)) },
-            text = { Text(stringResource(R.string.settings_test_data_clear_body)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showClearConfirmation = false
-                        onDismissMessage()
-                        onClear()
-                    }
-                ) {
-                    Text(stringResource(R.string.settings_test_data_clear_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showClearConfirmation = false }) {
-                    Text(stringResource(R.string.settings_test_data_keep))
-                }
-            }
-        )
-    }
-}
 
 @Composable
 private fun SettingsInformationRow(

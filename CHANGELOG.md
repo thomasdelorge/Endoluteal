@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - La suppression d’un rendez-vous est dans le menu en haut à droite de la fiche.
 - Les plafonds de dose des substances courantes sont renseignés depuis les RCP déjà cités, sans écraser une saisie.
 - La question « traitement hormonal continu » n’est plus proposée à la saisie.
+- La section « Données de démonstration » est retirée des Réglages.
 
 ## [0.6.0] - 2026-10-12
 
