@@ -96,6 +96,7 @@ fun LutealMainScaffold(
     var symptomEventId by remember { mutableStateOf<String?>(null) }
     var careDate by remember { mutableStateOf<LocalDate?>(null) }
     var careEventId by remember { mutableStateOf<String?>(null) }
+    var careTensOnly by remember { mutableStateOf(false) }
     var hospitalDate by remember { mutableStateOf<LocalDate?>(null) }
     var hospitalEventId by remember { mutableStateOf<String?>(null) }
     var appointmentDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -225,6 +226,7 @@ fun LutealMainScaffold(
                                 },
                                 onRecordCare = { date ->
                                     careEventId = null
+                                    careTensOnly = true
                                     careDate = date
                                 },
                                 onRecordHospitalization = { date ->
@@ -245,6 +247,7 @@ fun LutealMainScaffold(
                                         JournalEventType.CARE_SESSION -> {
                                             careDate = event.startAt.atZone(zone).toLocalDate()
                                             careEventId = event.id
+                                            careTensOnly = false
                                         }
                                         JournalEventType.HOSPITALIZATION -> {
                                             hospitalDate = event.startAt.atZone(zone).toLocalDate()
@@ -339,10 +342,12 @@ fun LutealMainScaffold(
         CareSessionSheet(
             initialDate = date,
             existingEventId = careEventId,
+            tensOnly = careTensOnly,
             viewModel = careViewModel,
             onDismiss = {
                 careDate = null
                 careEventId = null
+                careTensOnly = false
             }
         )
     }

@@ -15,8 +15,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.layout.Row
+import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,6 +49,7 @@ import kotlinx.coroutines.launch
 fun CareSessionSheet(
     initialDate: LocalDate,
     existingEventId: String?,
+    tensOnly: Boolean = false,
     viewModel: CareSessionEntryViewModel,
     onDismiss: () -> Unit
 ) {
@@ -64,10 +68,13 @@ fun CareSessionSheet(
     var notes by remember { mutableStateOf("") }
     var confirmDelete by remember { mutableStateOf(false) }
     var followup by remember { mutableStateOf<CareSaveResult?>(null) }
+    var scheduleReminder by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(careTypes, existingEventId) {
-        if (existingEventId == null && selectedTypeId == null && careTypes.isNotEmpty()) {
+    LaunchedEffect(careTypes, existingEventId, tensOnly) {
+        if (tensOnly) {
+            selectedTypeId = CareTypeSeed.TENS_ID
+        } else if (existingEventId == null && selectedTypeId == null && careTypes.isNotEmpty()) {
             selectedTypeId = careTypes.first().id
         }
     }
@@ -128,7 +135,15 @@ fun CareSessionSheet(
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.care_followup_title)) },
-            text = { Text(stringResource(R.string.care_followup_body, whenLabel)) },
+            text = {
+                Text(
+                    if (tensOnly) {
+                        stringResource(R.string.care_tens_followup_body, whenLabel)
+                    } else {
+                        stringResource(R.string.care_followup_body, whenLabel)
+                    }
+                )
+            },
             confirmButton = {
                 Button(onClick = {
                     viewModel.schedulePainFollowup(saved.eventId, saved.endAt)
@@ -149,7 +164,10 @@ fun CareSessionSheet(
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
-            Text(stringResource(R.string.care_title), style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(if (tensOnly) R.string.agenda_action_tens else R.string.care_title),
+                style = MaterialTheme.typography.titleLarge
+            )
             if (careTypes.isEmpty()) {
                 Text(
                     stringResource(R.string.care_empty_types),
@@ -157,22 +175,30 @@ fun CareSessionSheet(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
-                Text(stringResource(R.string.care_type), style = MaterialTheme.typography.labelLarge)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                    careTypes.forEach { type ->
-                        FilterChip(
-                            selected = type.id == (selectedTypeId ?: careTypes.first().id),
-                            onClick = {
-                                selectedTypeId = type.id
-                                if (type.programs.none { it.name == programName }) {
-                                    programName = ""
-                                }
-                            },
-                            label = { Text(type.name) }
-                        )
+                if (!tensOnly) {
+                    Text(stringResource(R.string.care_type), style = MaterialTheme.typography.labelLarge)
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+                        careTypes.forEach { type ->
+                            FilterChip(
+                                selected = type.id == (selectedTypeId ?: careTypes.first().id),
+                                onClick = {
+                                    selectedTypeId = type.id
+                                    if (type.programs.none { it.name == programName }) {
+                                        programName = ""
+                                    }
+                                },
+                                label = { Text(type.name) }
+                            )
+                        }
                     }
                 }
                 val type = selectedType
+                if (tensOnly && type?.programs.isNullOrEmpty()) {
+                    Text(
+                        stringResource(R.string.care_tens_configure),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 if (type != null && type.programs.isNotEmpty()) {
                     Text(stringResource(R.string.care_program), style = MaterialTheme.typography.labelLarge)
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
@@ -188,13 +214,23 @@ fun CareSessionSheet(
                         }
                     }
                 }
-                if (isTens) {
+                if (isTens && !tensOnly) {
                     OutlinedTextField(
                         value = programName,
                         onValueChange = { programName = it },
                         label = { Text(stringResource(R.string.care_program_name)) },
                         modifier = Modifier.fillMaxWidth()
                     )
+                }
+            }
+            if (tensOnly) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(stringResource(R.string.care_tens_reminder))
+                    Switch(checked = scheduleReminder, onCheckedChange = { scheduleReminder = it })
                 }
             }
             DateTimeField(value = at, onValueChange = { at = it })
@@ -214,13 +250,18 @@ fun CareSessionSheet(
             )
             val duration = durationMinutes.toIntOrNull() ?: 0
             val namedProgram = programName.trim()
+            val programOk = when {
+                tensOnly && selectedType?.programs?.isNotEmpty() == true -> namedProgram.isNotEmpty()
+                isTens -> namedProgram.isNotEmpty()
+                else -> true
+            }
             SheetActions(
                 onCancel = onDismiss,
-                confirmEnabled = selectedType != null && duration > 0 && (!isTens || namedProgram.isNotEmpty()),
+                confirmEnabled = selectedType != null && duration > 0 && programOk,
                 onConfirm = {
                     val type = selectedType ?: return@SheetActions
                     scope.launch {
-                        followup = viewModel.save(
+                        val saved = viewModel.save(
                             eventId = existingEventId,
                             careType = type,
                             programName = namedProgram,
@@ -230,6 +271,11 @@ fun CareSessionSheet(
                             zoneId = zone,
                             notes = notes
                         )
+                        if (tensOnly && !scheduleReminder) {
+                            onDismiss()
+                        } else {
+                            followup = saved
+                        }
                     }
                 }
             )

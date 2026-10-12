@@ -129,7 +129,7 @@ fun AgendaScreen(
     val dailyRecapLabel = stringResource(R.string.agenda_action_daily_recap)
     val medicationLabel = stringResource(R.string.agenda_action_medication)
     val symptomLabel = stringResource(R.string.agenda_action_symptom)
-    val careLabel = stringResource(R.string.agenda_action_care)
+    val careLabel = stringResource(R.string.agenda_action_tens)
     val hospitalLabel = stringResource(R.string.agenda_action_hospital)
     val appointmentLabel = stringResource(R.string.agenda_action_appointment)
     val displayedEstimate = if (state.hideCycleEstimate) {

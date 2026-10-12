@@ -955,6 +955,10 @@
     <string name="agenda_action_medication">Médicament</string>
     <string name="agenda_action_symptom">Symptôme</string>
     <string name="agenda_action_care">Traitement</string>
+    <string name="agenda_action_tens">TENS</string>
+    <string name="care_tens_configure">Ajoutez des programmes TENS dans Réglages > Traitements.</string>
+    <string name="care_tens_reminder">Rappel 1 h après la fin</string>
+    <string name="care_tens_followup_body">Rappel vers %1$s : vous pourrez relancer un tour de programme TENS.</string>
     <string name="agenda_action_hospital">Hospitalisation</string>
     <string name="agenda_action_appointment">RDV</string>
     <string name="symptom_title">Symptôme douloureux</string>
