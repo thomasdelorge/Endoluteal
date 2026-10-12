@@ -400,10 +400,31 @@ private fun PainMarkSheet(
     var types by remember(zoneId, existing?.id) {
         mutableStateOf(existing?.painTypes?.mapNotNull(PainType::fromId)?.toSet().orEmpty())
     }
+    var confirmRemove by remember { mutableStateOf(false) }
     val title = BodyZone.fromId(zoneId)?.let { stringResource(it.labelRes) }
         ?: ChoirPainMap.regions(androidx.compose.ui.platform.LocalContext.current)
             .firstOrNull { it.key == zoneId }?.title
         ?: zoneId
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(stringResource(R.string.body_map_remove_confirm_title)) },
+            text = { Text(stringResource(R.string.body_map_remove_confirm_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemove = false
+                    onRemove()
+                }) {
+                    Text(stringResource(R.string.body_map_remove_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmRemove = false }) {
+                    Text(stringResource(R.string.intake_cancel))
+                }
+            }
+        )
+    }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
@@ -454,7 +475,7 @@ private fun PainMarkSheet(
                             Text(stringResource(R.string.intake_cancel))
                         }
                         OutlinedButton(
-                            onClick = onRemove,
+                            onClick = { confirmRemove = true },
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.outlinedButtonColors(
                                 contentColor = MaterialTheme.colorScheme.error

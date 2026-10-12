@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Carte du corps : points de douleur positionnés sur le schéma (intensité et type par point), pour une heatmap future.
 - Carte du corps : plusieurs points par zone sur la silhouette ; saisie par liste des régions CHOIR retirée (zones internes inchangées).
 - Fiche de douleur sur le schéma : actions Enregistrer, Annuler et Retirer regroupées sous le formulaire.
+- Fiche de douleur : confirmation avant de retirer un point.
 
 ## [0.8.0] - 2026-10-12
 

@@ -828,6 +828,9 @@
     <string name="body_map_list_mode">Saisir par liste</string>
     <string name="body_map_silhouette_mode">Saisir sur la silhouette</string>
     <string name="body_map_remove">Retirer</string>
+    <string name="body_map_remove_confirm_title">Retirer ce point de douleur ?</string>
+    <string name="body_map_remove_confirm_body">La localisation et l’intensité enregistrées pour ce point seront supprimées.</string>
+    <string name="body_map_remove_confirm">Retirer</string>
     <string name="body_map_sheet_title">%1$s</string>
     <string name="pain_type_shooting">Élancements</string>
     <string name="pain_type_lancinating">Lancinante</string>
