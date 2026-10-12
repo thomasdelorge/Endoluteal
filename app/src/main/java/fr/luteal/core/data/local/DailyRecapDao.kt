@@ -18,6 +18,9 @@ interface DailyRecapDao {
     @Query("SELECT * FROM daily_recaps")
     suspend fun allOnce(): List<DailyRecapEntity>
 
+    @Query("SELECT * FROM daily_recaps")
+    fun observeAll(): Flow<List<DailyRecapEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: DailyRecapEntity)
 

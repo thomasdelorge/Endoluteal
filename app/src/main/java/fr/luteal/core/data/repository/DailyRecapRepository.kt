@@ -27,6 +27,7 @@ interface DailyRecapRepository {
     suspend fun markStepComplete(date: LocalDate, step: RecapStep)
     suspend fun isFullyComplete(date: LocalDate): Boolean
     suspend fun allOnce(): List<DailyRecap>
+    fun observeAll(): Flow<List<DailyRecap>>
 }
 
 @Singleton
@@ -62,6 +63,9 @@ class DailyRecapRepositoryImpl @Inject constructor(
 
     override suspend fun allOnce(): List<DailyRecap> =
         dailyRecapDao.allOnce().map { it.toModel() }
+
+    override fun observeAll(): Flow<List<DailyRecap>> =
+        dailyRecapDao.observeAll().map { rows -> rows.map { it.toModel() } }
 
     private fun DailyRecapEntity.toModel(): DailyRecap = DailyRecap(
         date = LocalDate.parse(date),

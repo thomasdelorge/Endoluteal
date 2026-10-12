@@ -67,6 +67,7 @@ fun MedsScreen(
             Text(stringResource(R.string.meds_next_possible, next), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { onTake(row.medicationId) }) { Text(stringResource(R.string.meds_take)) }
         }
+        TreatmentEffectCard()
     }
 }
 
