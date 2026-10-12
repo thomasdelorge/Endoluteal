@@ -18,6 +18,9 @@ interface ProfessionalDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: ProfessionalEntity)
 
+    @Query("DELETE FROM professionals WHERE id = :id")
+    suspend fun delete(id: String)
+
     @Query("DELETE FROM professionals")
     suspend fun deleteAll()
 }

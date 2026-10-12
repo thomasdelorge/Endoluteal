@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Saisie d’un plan de médicament : liste déroulante des médicaments déjà enregistrés, dates au calendrier (JJ-MM-AAAA), bouton Enregistrer plein.
 - Un rendez-vous ouvert depuis la frise se modifie dans la même fiche que l’agenda, et exige un professionnel.
 - Un programme TENS se nomme à la saisie et se retrouve dans les Réglages, où il se renomme et se supprime.
+- Un professionnel de santé se modifie et se supprime depuis les Réglages.
 
 ## [0.5.0] - 2026-10-12
 

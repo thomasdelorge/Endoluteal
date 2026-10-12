@@ -39,4 +39,12 @@ class ProfessionalCatalogViewModel @Inject constructor(
             )
         }
     }
+
+    fun update(professional: Professional) {
+        viewModelScope.launch { professionalRepository.upsert(professional) }
+    }
+
+    fun delete(id: String) {
+        viewModelScope.launch { professionalRepository.delete(id) }
+    }
 }

@@ -1028,6 +1028,9 @@
     <string name="settings_professionals_open_body">Médecins et autres praticiens</string>
     <string name="professionals_settings_back">Retour</string>
     <string name="professional_add">Ajouter un professionnel</string>
+    <string name="professional_edit">Modifier le professionnel</string>
+    <string name="professional_delete_title">Supprimer ce professionnel ?</string>
+    <string name="professional_delete_body">Les rendez-vous déjà notés restent dans l’historique.</string>
     <string name="professional_name">Nom</string>
     <string name="professional_custom_specialty">Spécialité (libre)</string>
     <string name="agenda_fab_open">Ouvrir les saisies</string>

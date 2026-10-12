@@ -13,6 +13,7 @@ interface ProfessionalRepository {
     fun observeAll(): Flow<List<Professional>>
     suspend fun allOnce(): List<Professional>
     suspend fun upsert(professional: Professional)
+    suspend fun delete(id: String)
 }
 
 @Singleton
@@ -28,6 +29,10 @@ class ProfessionalRepositoryImpl @Inject constructor(
     override suspend fun upsert(professional: Professional) {
         require(professional.name.isNotBlank()) { "Professional name is required" }
         professionalDao.upsert(professional.toEntity())
+    }
+
+    override suspend fun delete(id: String) {
+        professionalDao.delete(id)
     }
 
     private fun ProfessionalEntity.toModel(): Professional = Professional(
