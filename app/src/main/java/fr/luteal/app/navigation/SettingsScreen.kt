@@ -65,6 +65,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import fr.luteal.app.BuildConfig
 import fr.luteal.app.R
 import fr.luteal.app.backup.AutoBackupCard
+import fr.luteal.app.navigation.recap.MonthlyScoreHistoryCard
 import fr.luteal.app.navigation.settings.care.CareSettingsScreen
 import fr.luteal.app.navigation.settings.professionals.ProfessionalsSettingsScreen
 import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
@@ -445,6 +446,8 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::setHideLibidoInRecap
             )
         }
+
+        MonthlyScoreHistoryCard()
 
         SettingsSectionHeader(title = stringResource(R.string.settings_appearance_title))
 

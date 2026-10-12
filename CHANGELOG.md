@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Étapes Cycle et Douleurs du récap (5D, carte corporelle min/max, dyspareunie masquable).
 - Étapes Psy, Général et Intestinal du récap ; suppression de l’ancienne saisie journalière.
 - Questionnaire mensuel inspiré (pas le texte EHP-5), score 0–100 et export des résultats.
+- Historique des scores du questionnaire mensuel dans les Réglages.
 - Chiffrement optionnel des sauvegardes (PBKDF2 + AES-256-GCM).
 
 ### Changed

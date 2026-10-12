@@ -903,6 +903,9 @@
     <string name="recap_bowel_bloating">Ballonnements</string>
     <string name="monthly_questionnaire_title">Questionnaire mensuel inspiré</string>
     <string name="monthly_questionnaire_subtitle">Formulations originales (pas l’EHP-5). Score indicatif 0–100.</string>
+    <string name="monthly_score_history_title">Scores du questionnaire mensuel</string>
+    <string name="monthly_score_history_empty">Aucun score enregistré pour l’instant.</string>
+    <string name="monthly_score_history_row">%1$s · %2$d / 100</string>
     <string name="monthly_q1">Vos douleurs ont-elles limité vos activités ce mois-ci ?</string>
     <string name="monthly_q2">Votre énergie a-t-elle été suffisante pour votre quotidien ?</string>
     <string name="monthly_q3">Vous êtes-vous sentie soutenue dans votre entourage ?</string>
