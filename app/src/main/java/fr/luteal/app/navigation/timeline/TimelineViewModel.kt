@@ -38,7 +38,7 @@ import kotlinx.coroutines.flow.stateIn
 
 data class TimelineFilters(
     val professionalId: String? = null,
-    val specialty: Specialty? = null,
+    val specialties: Set<Specialty> = emptySet(),
     val periodDays: Int? = null,
     val selectedEventId: String? = null
 )
@@ -80,8 +80,10 @@ class TimelineViewModel @Inject constructor(
         filters.value = filters.value.copy(professionalId = id, selectedEventId = null)
     }
 
-    fun setSpecialty(specialty: Specialty?) {
-        filters.value = filters.value.copy(specialty = specialty, selectedEventId = null)
+    fun toggleSpecialty(specialty: Specialty) {
+        val current = filters.value.specialties
+        val next = if (specialty in current) current - specialty else current + specialty
+        filters.value = filters.value.copy(specialties = next, selectedEventId = null)
     }
 
     fun setPeriodDays(days: Int?) {
@@ -109,7 +111,7 @@ class TimelineViewModel @Inject constructor(
         val filtered = TimelineFilter.apply(
             visits = visits,
             professionalId = current.professionalId,
-            specialty = current.specialty,
+            specialties = current.specialties,
             fromInclusive = from,
             toInclusive = if (from == null) null else now
         )

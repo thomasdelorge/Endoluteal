@@ -11,11 +11,11 @@ data class TimelinePdfContent(
 fun buildTimelinePdfContent(
     visits: List<TimelineVisit>,
     professionalId: String?,
-    specialty: Specialty?,
+    specialties: Set<Specialty>,
     fromInclusive: Instant?,
     toInclusive: Instant?,
     summary: SinceLastVisitSummary?
 ): TimelinePdfContent = TimelinePdfContent(
-    visits = TimelineFilter.apply(visits, professionalId, specialty, fromInclusive, toInclusive),
+    visits = TimelineFilter.apply(visits, professionalId, specialties, fromInclusive, toInclusive),
     summary = if (professionalId == null) null else summary
 )

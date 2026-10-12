@@ -23,14 +23,14 @@ object TimelineFilter {
     fun apply(
         visits: List<TimelineVisit>,
         professionalId: String?,
-        specialty: Specialty?,
+        specialties: Set<Specialty>,
         fromInclusive: Instant?,
         toInclusive: Instant?
     ): List<TimelineVisit> {
         return visits.filter { visit ->
             val professionalOk = professionalId == null ||
                 (visit.kind == TimelineVisitKind.APPOINTMENT && visit.professionalId == professionalId)
-            val specialtyOk = specialty == null || visit.specialty == specialty
+            val specialtyOk = specialties.isEmpty() || visit.specialty in specialties
             val after = fromInclusive == null || !visit.at.isBefore(fromInclusive)
             val before = toInclusive == null || !visit.at.isAfter(toInclusive)
             professionalOk && specialtyOk && after && before
