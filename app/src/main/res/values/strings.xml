@@ -912,6 +912,11 @@
     <string name="recap_5d_dyschezia">Dyschezie (0–10)</string>
     <string name="recap_5d_dysuria">Dysurie (0–10)</string>
     <string name="recap_5d_chronic_pelvic">Douleur pelvienne chronique (0–10)</string>
+    <string name="recap_5d_dysmenorrhea_help">Douleur pendant les règles</string>
+    <string name="recap_5d_dyspareunia_help">Douleur pendant ou après un rapport</string>
+    <string name="recap_5d_dyschezia_help">Douleur en allant à la selle</string>
+    <string name="recap_5d_dysuria_help">Douleur en urinant</string>
+    <string name="recap_5d_chronic_pelvic_help">Douleur du bas-ventre qui dure, en dehors des règles</string>
     <string name="settings_hide_dyspareunia_recap_title">Masquer la dyspareunie dans le récap</string>
     <string name="settings_hide_dyspareunia_recap_body">Retire la question de dyspareunie de l’étape Douleurs du récap quotidien.</string>
     <string name="settings_hide_libido_recap_title">Masquer la libido dans le récap</string>

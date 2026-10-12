@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Le récap enregistré du jour sélectionné s’affiche en lecture seule sous le calendrier.
 - Carte du corps : silhouette féminine retracée (domaine public) et zones recalées.
 - L’échelle de douleur 0–10 devient un curseur pleine largeur avec une phrase d’aide par niveau.
+- Récap douleur : une courte explication sous chaque question des cinq douleurs.
 
 ## [0.6.0] - 2026-10-12
 
