@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,7 +31,9 @@ import fr.luteal.core.model.recap.RecapCyclePayload
 fun CycleStep(
     ui: RecapCycleUiState?,
     initial: RecapCyclePayload,
-    onContinue: (RecapCyclePayload) -> Unit
+    onContinue: (RecapCyclePayload) -> Unit,
+    active: Boolean = true,
+    onBindSave: (() -> Unit) -> Unit = {}
 ) {
     val estimated = ui?.estimatedPhase
     var phaseOverride by rememberSaveable { mutableStateOf(initial.phaseOverride.ifBlank { estimated?.name ?: "" }) }
@@ -40,6 +42,30 @@ fun CycleStep(
     var bleeding by rememberSaveable { mutableStateOf(initial.bleedingIntensity.ifBlank { BleedingIntensity.LIGHT.name }) }
     var hasMucus by rememberSaveable { mutableStateOf(initial.hasCervicalMucus) }
     var mucus by rememberSaveable { mutableStateOf(initial.mucusTexture.ifBlank { CervicalMucusTexture.STICKY.name }) }
+
+    LaunchedEffect(
+        phaseOverride,
+        acceptEstimate,
+        hasBleeding,
+        bleeding,
+        hasMucus,
+        mucus,
+        active
+    ) {
+        if (!active) return@LaunchedEffect
+        onBindSave {
+            onContinue(
+                RecapCyclePayload(
+                    phaseOverride = if (acceptEstimate) "" else phaseOverride,
+                    acceptEstimatedPhase = acceptEstimate,
+                    hasBleeding = hasBleeding,
+                    bleedingIntensity = if (hasBleeding) bleeding else "",
+                    hasCervicalMucus = hasMucus,
+                    mucusTexture = if (hasMucus) mucus else ""
+                )
+            )
+        }
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         Text(stringResource(R.string.recap_step_cycle), style = MaterialTheme.typography.titleMedium)
@@ -105,21 +131,6 @@ fun CycleStep(
                 )
             }
         }
-        TextButton(
-            onClick = {
-                onContinue(
-                    RecapCyclePayload(
-                        phaseOverride = if (acceptEstimate) "" else phaseOverride,
-                        acceptEstimatedPhase = acceptEstimate,
-                        hasBleeding = hasBleeding,
-                        bleedingIntensity = if (hasBleeding) bleeding else "",
-                        hasCervicalMucus = hasMucus,
-                        mucusTexture = if (hasMucus) mucus else ""
-                    )
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.recap_continue)) }
     }
 }
 

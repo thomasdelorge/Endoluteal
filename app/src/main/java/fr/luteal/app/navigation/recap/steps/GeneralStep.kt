@@ -8,8 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,7 +26,9 @@ import fr.luteal.core.model.recap.RecapGeneralPayload
 @Composable
 fun GeneralStep(
     initial: RecapGeneralPayload,
-    onContinue: (RecapGeneralPayload) -> Unit
+    onContinue: (RecapGeneralPayload) -> Unit,
+    active: Boolean = true,
+    onBindSave: (() -> Unit) -> Unit = {}
 ) {
     var fatigue by remember(initial) { mutableStateOf(initial.fatigue) }
     var stress by remember(initial) { mutableStateOf(initial.stress) }
@@ -35,6 +37,23 @@ fun GeneralStep(
     var nausea by remember(initial) { mutableStateOf(initial.nausea) }
     var alcohol by remember(initial) { mutableStateOf(initial.alcoholDrinks) }
     var impact by remember(initial) { mutableStateOf(initial.dailyImpact.ifBlank { RecapDailyImpact.NONE.name }) }
+
+    LaunchedEffect(fatigue, stress, sleepQuality, headache, nausea, alcohol, impact, active) {
+        if (!active) return@LaunchedEffect
+        onBindSave {
+            onContinue(
+                RecapGeneralPayload(
+                    fatigue = fatigue,
+                    stress = stress,
+                    sleepQuality = sleepQuality,
+                    headache = headache,
+                    nausea = nausea,
+                    alcoholDrinks = alcohol,
+                    dailyImpact = impact
+                )
+            )
+        }
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
         Text(stringResource(R.string.recap_step_general), style = MaterialTheme.typography.titleMedium)
@@ -72,22 +91,6 @@ fun GeneralStep(
                 )
             }
         }
-        TextButton(
-            onClick = {
-                onContinue(
-                    RecapGeneralPayload(
-                        fatigue = fatigue,
-                        stress = stress,
-                        sleepQuality = sleepQuality,
-                        headache = headache,
-                        nausea = nausea,
-                        alcoholDrinks = alcohol,
-                        dailyImpact = impact
-                    )
-                )
-            },
-            modifier = Modifier.fillMaxWidth()
-        ) { Text(stringResource(R.string.recap_continue)) }
     }
 }
 

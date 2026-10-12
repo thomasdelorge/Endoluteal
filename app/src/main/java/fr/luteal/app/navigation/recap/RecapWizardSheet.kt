@@ -17,7 +17,10 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -58,6 +61,12 @@ fun RecapWizardSheet(
         pageCount = { steps.size }
     )
     val scope = rememberCoroutineScope()
+    var saveCurrentStep by remember { mutableStateOf<(() -> Unit)?>(null) }
+    val activePage = pagerState.settledPage
+
+    LaunchedEffect(activePage) {
+        saveCurrentStep = null
+    }
 
     LaunchedEffect(recap?.completedSteps) {
         val target = recap?.firstIncompleteStep() ?: return@LaunchedEffect
@@ -98,6 +107,7 @@ fun RecapWizardSheet(
                 state = pagerState,
                 modifier = Modifier.weight(1f)
             ) { page ->
+                val stepActive = page == activePage
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -109,6 +119,8 @@ fun RecapWizardSheet(
                         RecapStep.CYCLE -> CycleStep(
                             ui = cycleUi,
                             initial = currentRecap?.cycle ?: RecapCyclePayload(),
+                            active = stepActive,
+                            onBindSave = { saveCurrentStep = it },
                             onContinue = { payload ->
                                 viewModel.finishCycleStep(payload) { advanceFrom(page) }
                             }
@@ -117,6 +129,8 @@ fun RecapWizardSheet(
                             dayEventLines = dayEvents,
                             hideDyspareunia = hideDyspareunia,
                             initial = currentRecap?.pain ?: RecapPainPayload(),
+                            active = stepActive,
+                            onBindSave = { saveCurrentStep = it },
                             onContinue = { payload ->
                                 viewModel.finishPainStep(payload) { advanceFrom(page) }
                             }
@@ -124,18 +138,24 @@ fun RecapWizardSheet(
                         RecapStep.PSY -> PsyStep(
                             hideLibido = hideLibido,
                             initial = currentRecap?.psy ?: RecapPsyPayload(),
+                            active = stepActive,
+                            onBindSave = { saveCurrentStep = it },
                             onContinue = { payload ->
                                 viewModel.finishPsyStep(payload) { advanceFrom(page) }
                             }
                         )
                         RecapStep.GENERAL -> GeneralStep(
                             initial = currentRecap?.general ?: RecapGeneralPayload(),
+                            active = stepActive,
+                            onBindSave = { saveCurrentStep = it },
                             onContinue = { payload ->
                                 viewModel.finishGeneralStep(payload) { advanceFrom(page) }
                             }
                         )
                         RecapStep.BOWEL -> BowelStep(
                             initial = currentRecap?.bowel ?: RecapBowelPayload(),
+                            active = stepActive,
+                            onBindSave = { saveCurrentStep = it },
                             onContinue = { payload ->
                                 viewModel.finishBowelStep(payload) { advanceFrom(page) }
                             }
@@ -145,13 +165,10 @@ fun RecapWizardSheet(
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                 TextButton(
-                    onClick = {
-                        val step = steps[pagerState.currentPage]
-                        viewModel.completeStep(step)
-                        advanceFrom(pagerState.currentPage)
-                    },
-                    modifier = Modifier.testTag("recap_skip")
-                ) { Text(stringResource(R.string.recap_skip)) }
+                    onClick = { saveCurrentStep?.invoke() },
+                    enabled = saveCurrentStep != null,
+                    modifier = Modifier.testTag("recap_continue")
+                ) { Text(stringResource(R.string.recap_continue)) }
             }
         }
     }
