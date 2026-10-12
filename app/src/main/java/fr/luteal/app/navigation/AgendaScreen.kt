@@ -398,9 +398,9 @@ private fun DayEventList(
             )
         } else {
             roots.forEach { event ->
-                EventLine(event, intakeLabels[event.id], onClick = { onOpenEvent(event) })
+                DayEventCard(event, intakeLabels[event.id], onClick = { onOpenEvent(event) })
                 children[event.id].orEmpty().forEach { child ->
-                    EventLine(child, intakeLabels[child.id], nested = true, onClick = { onOpenEvent(child) })
+                    DayEventCard(child, intakeLabels[child.id], nested = true, onClick = { onOpenEvent(child) })
                 }
             }
         }
@@ -408,7 +408,7 @@ private fun DayEventList(
 }
 
 @Composable
-private fun EventLine(
+private fun DayEventCard(
     event: JournalEvent,
     intakeLabel: String?,
     nested: Boolean = false,
@@ -416,25 +416,31 @@ private fun EventLine(
 ) {
     val typeLabel = stringResource(event.type.labelRes())
     val pain = event.marks.maxOfOrNull { it.intensity }
-    val text = buildString {
+    val headline = buildString {
         if (nested) append("· ")
         append(typeLabel)
         if (!intakeLabel.isNullOrBlank()) append(" · ").append(intakeLabel)
         if (pain != null) append(" · ").append(pain)
     }
-    Text(
-        text = text,
-        style = if (nested) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+    LutealCard(
         modifier = Modifier
+            .fillMaxWidth()
             .clickable(onClick = onClick)
-            .semantics { contentDescription = text }
-    )
-    if (event.notes.isNotBlank()) {
-        Text(
-            text = event.notes,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+            .semantics { contentDescription = headline }
+    ) {
+        Column(modifier = Modifier.padding(LutealSpacing.sm)) {
+            Text(
+                text = headline,
+                style = if (nested) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium
+            )
+            if (event.notes.isNotBlank()) {
+                Text(
+                    text = event.notes,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

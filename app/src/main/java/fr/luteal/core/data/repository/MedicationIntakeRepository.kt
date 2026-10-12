@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.Flow
 interface MedicationIntakeRepository {
     fun observeRows(): Flow<List<MedicationIntakeRow>>
     suspend fun record(event: JournalEvent, medicationId: String, units: Double)
+    suspend fun intakeForEvent(eventId: String): MedicationIntakeEntity?
+    suspend fun delete(eventId: String)
     suspend fun historyUntil(until: Instant, windowStart: Instant): List<RecordedIntake>
 }
 
@@ -22,6 +24,13 @@ class MedicationIntakeRepositoryImpl @Inject constructor(
     private val journalEventRepository: JournalEventRepository
 ) : MedicationIntakeRepository {
     override fun observeRows(): Flow<List<MedicationIntakeRow>> = medicationIntakeDao.observeRows()
+
+    override suspend fun intakeForEvent(eventId: String): MedicationIntakeEntity? =
+        medicationIntakeDao.find(eventId)
+
+    override suspend fun delete(eventId: String) {
+        journalEventRepository.delete(eventId)
+    }
 
     override suspend fun record(event: JournalEvent, medicationId: String, units: Double) {
         require(units > 0.0) { "Units must be positive" }

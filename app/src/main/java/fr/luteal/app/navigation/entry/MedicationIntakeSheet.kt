@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 fun MedicationIntakeSheet(
     initialDate: LocalDate,
     initialMedicationId: String?,
+    existingEventId: String? = null,
     viewModel: MedicationIntakeViewModel,
     onDismiss: () -> Unit
 ) {
@@ -76,7 +77,40 @@ fun MedicationIntakeSheet(
     var report by remember { mutableStateOf<SafetyReport?>(null) }
     var askDanger by remember { mutableStateOf(false) }
     var doneAt by remember { mutableStateOf<Instant?>(null) }
+    var confirmDelete by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(existingEventId) {
+        val id = existingEventId ?: return@LaunchedEffect
+        val event = viewModel.getEvent(id) ?: return@LaunchedEffect
+        val intake = viewModel.intakeForEvent(id) ?: return@LaunchedEffect
+        at = LocalDateTime.ofInstant(event.startAt, zone)
+        medicationId = intake.medicationId
+        units = intake.units.toString()
+        marks = event.marks
+        intensity = event.marks.maxOfOrNull { it.intensity }
+    }
+
+    if (confirmDelete && existingEventId != null) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text(stringResource(R.string.intake_delete_title)) },
+            text = { Text(stringResource(R.string.intake_delete_body)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    scope.launch {
+                        viewModel.deleteIntake(existingEventId)
+                        onDismiss()
+                    }
+                }) { Text(stringResource(R.string.intake_delete_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDelete = false }) {
+                    Text(stringResource(R.string.intake_cancel))
+                }
+            }
+        )
+    }
     val selected = catalog.medications.find { it.id == medicationId }
     val unitCount = units.toDoubleOrNull()
     val filtering = selected == null || query != selected.name
@@ -171,12 +205,28 @@ fun MedicationIntakeSheet(
                         askDanger = true
                     } else {
                         scope.launch {
-                            val saved = viewModel.saveIntake(id, count, at.atZone(zone).toInstant(), marksWith(intensity, marks), false)
-                            doneAt = saved.nextPossibleIntakeAt
+                            val saved = viewModel.saveIntake(
+                                id,
+                                count,
+                                at.atZone(zone).toInstant(),
+                                marksWith(intensity, marks),
+                                false,
+                                existingEventId
+                            )
+                            if (existingEventId == null) {
+                                doneAt = saved.nextPossibleIntakeAt
+                            } else {
+                                onDismiss()
+                            }
                         }
                     }
                 }
             )
+            if (existingEventId != null) {
+                TextButton(onClick = { confirmDelete = true }) {
+                    Text(stringResource(R.string.intake_delete))
+                }
+            }
         }
     }
 
@@ -191,8 +241,19 @@ fun MedicationIntakeSheet(
                     val id = medicationId ?: return@Button
                     val count = unitCount ?: return@Button
                     scope.launch {
-                        val saved = viewModel.saveIntake(id, count, at.atZone(zone).toInstant(), marksWith(intensity, marks), true)
-                        doneAt = saved.nextPossibleIntakeAt
+                        val saved = viewModel.saveIntake(
+                            id,
+                            count,
+                            at.atZone(zone).toInstant(),
+                            marksWith(intensity, marks),
+                            true,
+                            existingEventId
+                        )
+                        if (existingEventId == null) {
+                            doneAt = saved.nextPossibleIntakeAt
+                        } else {
+                            onDismiss()
+                        }
                     }
                 }) { Text(stringResource(R.string.intake_confirm)) }
             },

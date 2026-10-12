@@ -56,17 +56,27 @@ class MedicationIntakeViewModel @Inject constructor(
         )
     }
 
+    suspend fun getEvent(eventId: String): JournalEvent? = journalEventRepository.get(eventId)
+
+    suspend fun intakeForEvent(eventId: String) = intakeRepository.intakeForEvent(eventId)
+
+    suspend fun deleteIntake(eventId: String) {
+        intakeRepository.delete(eventId)
+    }
+
     suspend fun saveIntake(
         medicationId: String,
         units: Double,
         at: Instant,
         marks: List<PainMark>,
-        dangerAcknowledged: Boolean
+        dangerAcknowledged: Boolean,
+        eventId: String? = null
     ): SafetyReport {
         val report = evaluate(medicationId, units, at)
         val now = clock.instant()
+        val existing = eventId?.let { journalEventRepository.get(it) }
         val event = JournalEvent(
-            id = UUID.randomUUID().toString(),
+            id = eventId ?: UUID.randomUUID().toString(),
             type = JournalEventType.MEDICATION_INTAKE,
             startAt = at,
             endAt = null,
@@ -75,12 +85,12 @@ class MedicationIntakeViewModel @Inject constructor(
             linkedEventId = null,
             payload = EventPayload.MedicationIntake(dangerAcknowledged),
             marks = marks,
-            createdAt = now,
+            createdAt = existing?.createdAt ?: now,
             updatedAt = now
         )
         intakeRepository.record(event, medicationId, units)
         val delay = userPreferencesDataStore.userPreferencesFlow.first().painFollowupDelayMinutes
-        if (delay > 0) {
+        if (delay > 0 && existing == null) {
             reminderScheduler.schedule(
                 id = UUID.randomUUID().toString(),
                 type = ReminderType.PAIN_FOLLOWUP,

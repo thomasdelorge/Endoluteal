@@ -1128,6 +1128,10 @@
     <string name="intake_danger_body">Cette prise dépasse une limite ou une incompatibilité. Confirmez seulement si vous décidez de l’enregistrer quand même.</string>
     <string name="intake_confirm">Enregistrer quand même</string>
     <string name="intake_cancel">Annuler</string>
+    <string name="intake_delete">Supprimer</string>
+    <string name="intake_delete_title">Supprimer cette prise ?</string>
+    <string name="intake_delete_body">La prise sera retirée de l’agenda.</string>
+    <string name="intake_delete_confirm">Supprimer</string>
     <string name="intake_next_title">Prochaine prise possible</string>
     <string name="intake_next_possible">Prochaine prise possible à %1$s</string>
     <string name="intake_next_now">Vous pouvez reprendre maintenant.</string>

@@ -90,6 +90,7 @@ fun LutealMainScaffold(
     var selectedDestination by rememberSaveable { mutableStateOf(LutealDestination.AGENDA) }
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
     var intakeMedicationId by remember { mutableStateOf<String?>(null) }
+    var intakeEventId by remember { mutableStateOf<String?>(null) }
     var painCheckEventId by remember { mutableStateOf<String?>(null) }
     var symptomDate by remember { mutableStateOf<LocalDate?>(null) }
     var symptomEventId by remember { mutableStateOf<String?>(null) }
@@ -215,6 +216,7 @@ fun LutealMainScaffold(
                                 onOpenRecap = { date -> recapDate = date },
                                 onRecordMedication = { date ->
                                     intakeMedicationId = null
+                                    intakeEventId = null
                                     intakeDate = date
                                 },
                                 onRecordSymptom = { date ->
@@ -251,6 +253,11 @@ fun LutealMainScaffold(
                                         JournalEventType.APPOINTMENT -> {
                                             appointmentDate = event.startAt.atZone(zone).toLocalDate()
                                             appointmentEventId = event.id
+                                        }
+                                        JournalEventType.MEDICATION_INTAKE -> {
+                                            intakeDate = event.startAt.atZone(zone).toLocalDate()
+                                            intakeEventId = event.id
+                                            intakeMedicationId = null
                                         }
                                         else -> Unit
                                     }
@@ -298,10 +305,12 @@ fun LutealMainScaffold(
         MedicationIntakeSheet(
             initialDate = date,
             initialMedicationId = intakeMedicationId,
+            existingEventId = intakeEventId,
             viewModel = intakeViewModel,
             onDismiss = {
                 intakeDate = null
                 intakeMedicationId = null
+                intakeEventId = null
             }
         )
     }

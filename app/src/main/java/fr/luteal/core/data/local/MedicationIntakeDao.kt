@@ -19,6 +19,9 @@ interface MedicationIntakeDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(entity: MedicationIntakeEntity)
 
+    @Query("SELECT * FROM medication_intakes WHERE eventId = :eventId LIMIT 1")
+    suspend fun find(eventId: String): MedicationIntakeEntity?
+
     @Query("SELECT * FROM medication_intakes")
     suspend fun allOnce(): List<MedicationIntakeEntity>
 
