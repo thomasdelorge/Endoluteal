@@ -1,5 +1,8 @@
 package fr.luteal.core.model.recap
 
+import androidx.annotation.StringRes
+import fr.luteal.app.R
+
 /**
  * Bristol stool scale labels for recap (descriptive, no illustration in v1).
  */
@@ -15,14 +18,15 @@ object BristolTypeDescriptions {
         else -> "Type $type"
     }
 
-    fun description(type: Int): String = when (type) {
-        1 -> "Petites boules dures, difficiles à évacuer."
-        2 -> "Forme de saucisse mais grumeleuse."
-        3 -> "Saucisse avec des fissures en surface."
-        4 -> "Saucisse lisse et souple, facile à passer."
-        5 -> "Morceaux mous aux bords nets."
-        6 -> "Morceaux pâteux aux bords irréguliers."
-        7 -> "Entièrement liquide, sans morceaux solides."
-        else -> ""
+    @StringRes
+    fun descriptionResId(type: Int): Int = when (type) {
+        1 -> R.string.bristol_desc_1
+        2 -> R.string.bristol_desc_2
+        3 -> R.string.bristol_desc_3
+        4 -> R.string.bristol_desc_4
+        5 -> R.string.bristol_desc_5
+        6 -> R.string.bristol_desc_6
+        7 -> R.string.bristol_desc_7
+        else -> 0
     }
 }

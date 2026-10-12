@@ -950,6 +950,13 @@
     <string name="recap_impact_bedrest">Alitement</string>
     <string name="recap_bowel_constipation_question">Constipation aujourd’hui ?</string>
     <string name="recap_bowel_stool">Selles (type)</string>
+    <string name="bristol_desc_1">Petites boules dures, difficiles à évacuer.</string>
+    <string name="bristol_desc_2">Forme de saucisse mais grumeleuse.</string>
+    <string name="bristol_desc_3">Saucisse avec des fissures en surface.</string>
+    <string name="bristol_desc_4">Saucisse lisse et souple, facile à passer.</string>
+    <string name="bristol_desc_5">Morceaux mous aux bords nets.</string>
+    <string name="bristol_desc_6">Morceaux pâteux aux bords irréguliers.</string>
+    <string name="bristol_desc_7">Entièrement liquide, sans morceaux solides.</string>
     <string name="recap_bowel_bloating">Ballonnements</string>
     <string name="monthly_questionnaire_title">Questionnaire mensuel inspiré</string>
     <string name="monthly_questionnaire_subtitle">Formulations originales (pas l’EHP-5). Score indicatif 0–100.</string>
