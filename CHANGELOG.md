@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Récap psychologique : visages sur les échelles à cinq niveaux.
 - Récap selles : types Bristol en rangée 1–7 avec description sous la sélection.
 - Récap du jour : le bouton fixe « Continuer » enregistre l’étape courante puis avance.
+- Agenda : une seule carte « Récap du jour » en lecture seule avec « Modifier » ou « Compléter ».
 
 ## [0.6.0] - 2026-10-12
 

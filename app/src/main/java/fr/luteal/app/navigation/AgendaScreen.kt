@@ -85,7 +85,7 @@ import fr.luteal.core.model.CycleEstimateResult
 import fr.luteal.core.model.DailyEntry
 import fr.luteal.core.model.MonthCalendarProjectionCalculator
 import fr.luteal.core.model.recap.DailyRecap
-import fr.luteal.app.navigation.recap.DailyRecapReadOnlyCard
+import fr.luteal.app.navigation.recap.DailyRecapReadOnlyContent
 import java.time.Instant
 import java.time.LocalDate
 import java.time.YearMonth
@@ -100,7 +100,6 @@ fun AgendaScreen(
     events: List<JournalEvent> = emptyList(),
     intakeLabels: Map<String, String> = emptyMap(),
     dailyRecaps: Map<LocalDate, DailyRecap> = emptyMap(),
-    onSelectDate: (LocalDate) -> Unit,
     onOpenRecap: (LocalDate) -> Unit = {},
     onRecordMedication: (LocalDate) -> Unit = {},
     onRecordSymptom: (LocalDate) -> Unit = {},
@@ -285,18 +284,11 @@ fun AgendaScreen(
             }
 
             val cycleStart = state.cycles.firstOrNull { it.startDate == selectedDate }
-            val selectedCycle = state.cycles.firstOrNull { it.startDate <= selectedDate && (it.endDate == null || it.endDate >= selectedDate) }
-            dailyRecaps[selectedDate]?.let { recap ->
-                if (recap.completedSteps.isNotEmpty()) {
-                    item { DailyRecapReadOnlyCard(recap = recap) }
-                }
-            }
             item {
                 SelectedDayInspectionCard(
                     date = selectedDate,
                     entry = entriesByDate[selectedDate],
-                    biomarker = biomarkersByDate[selectedDate],
-                    cycle = selectedCycle,
+                    recap = dailyRecaps[selectedDate],
                     cycleDayNumber = selectedDayProjection?.cycleDayNumber,
                     phase = selectedDayProjection?.cyclePhase,
                     phaseCertainty = selectedDayProjection?.phaseCertainty,
@@ -307,7 +299,7 @@ fun AgendaScreen(
                     onBackfillCycle = onBackfillCycle,
                     onEditCycle = { cycleToEdit = it },
                     onDeleteCycle = { cycleToDelete = it },
-                    onEditOrAdd = { onSelectDate(selectedDate) }
+                    onOpenRecap = { onOpenRecap(selectedDate) }
                 )
             }
             item {
@@ -699,8 +691,7 @@ fun MonthYearPickerDialog(
 private fun SelectedDayInspectionCard(
     date: LocalDate,
     entry: DailyEntry?,
-    biomarker: BiomarkerObservation?,
-    cycle: Cycle?,
+    recap: DailyRecap?,
     cycleDayNumber: Int?,
     phase: CyclePhase?,
     phaseCertainty: PhaseCertainty?,
@@ -710,11 +701,10 @@ private fun SelectedDayInspectionCard(
     onBackfillCycle: () -> Unit = {},
     onEditCycle: (Cycle) -> Unit,
     onDeleteCycle: (Cycle) -> Unit,
-    onEditOrAdd: () -> Unit,
+    onOpenRecap: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val hasEntryObservations = entry?.hasObservations == true
-    val hasBiomarkerObservations = biomarker != null && !biomarker.isEmpty
+    val hasRecapContent = recap?.completedSteps?.isNotEmpty() == true
 
     LutealCard(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -826,106 +816,11 @@ private fun SelectedDayInspectionCard(
                 }
             }
 
-            // Bleeding detail
-            if (entry?.bleedingIntensity != null && entry.bleedingIntensity != BleedingIntensity.NONE) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-                ) {
-                    Text(
-                        text = bleedingLabel(entry.bleedingIntensity),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-
-            // Biomarkers section
-            if (biomarker != null && !biomarker.isEmpty) {
-                Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xxs)) {
-                    biomarker.cervicalFluid?.let { fluid ->
-                        if (fluid.hasObservation) {
-                            val parts = mutableListOf<String>()
-                            fluid.sensation?.let { sensation ->
-                                parts.add(sensationLabel(sensation))
-                            }
-                            fluid.texture?.let { texture ->
-                                parts.add(textureLabel(texture))
-                            }
-                            if (parts.isNotEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.inspection_biomarker_fluid, parts.joinToString(", ")),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Symptoms section with FlowRow of individual chips
-            if (entry?.symptomIds?.isNotEmpty() == true) {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs),
-                    verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-                ) {
-                    entry.symptomIds.forEach { symptomId ->
-                        Surface(
-                            shape = MaterialTheme.shapes.extraSmall,
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-                        ) {
-                            Text(
-                                text = symptomDisplayName(symptomId),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (hasEntryObservations) {
-                val levels = listOfNotNull(
-                    entry.painLevel?.let { stringResource(R.string.level_label_pain) to it },
-                    entry.moodLevel?.let { stringResource(R.string.level_label_mood) to it },
-                    entry.energyLevel?.let { stringResource(R.string.level_label_energy) to it }
-                )
-                if (levels.isNotEmpty()) {
-                    FlowRow(
-                        horizontalArrangement = Arrangement.spacedBy(LutealSpacing.md),
-                        verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)
-                    ) {
-                        levels.forEach { (label, level) ->
-                            MiniLevel(label = label, level = level)
-                        }
-                    }
-                }
-
-                val trailing = journalEntryTrailingSummary(entry)
-                if (trailing.isNotEmpty()) {
-                    Text(
-                        text = trailing,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-
-                if (entry.notes.isNotBlank()) {
-                    Text(
-                        text = entry.notes,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            } else if (!hasBiomarkerObservations && (entry?.bleedingIntensity == null || entry.bleedingIntensity == BleedingIntensity.NONE)) {
-                Text(
-                    text = stringResource(R.string.calendar_day_empty_inspection),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = stringResource(R.string.daily_recap_readonly_title),
+                style = MaterialTheme.typography.titleSmall
+            )
+            recap?.let { DailyRecapReadOnlyContent(recap = it, modifier = Modifier.fillMaxWidth()) }
 
             if (showBackfillHint) {
                 Text(
@@ -942,15 +837,14 @@ private fun SelectedDayInspectionCard(
                 }
             }
 
-            val hasAnyData = entry?.hasObservations == true || hasBiomarkerObservations
             LutealPrimaryButton(
-                text = when {
-                    hasAnyData -> stringResource(R.string.action_edit_today)
-                    isToday -> stringResource(R.string.action_log_today)
-                    else -> stringResource(R.string.action_add_observation)
+                text = if (hasRecapContent) {
+                    stringResource(R.string.daily_recap_edit)
+                } else {
+                    stringResource(R.string.daily_recap_complete)
                 },
-                onClick = onEditOrAdd,
-                icon = if (hasAnyData) Icons.Rounded.Edit else Icons.Rounded.Add,
+                onClick = onOpenRecap,
+                icon = if (hasRecapContent) Icons.Rounded.Edit else Icons.Rounded.Add,
                 modifier = Modifier.fillMaxWidth()
             )
         }

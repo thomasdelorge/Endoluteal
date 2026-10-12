@@ -215,7 +215,6 @@ fun LutealMainScaffold(
                                 events = events,
                                 intakeLabels = eventDetailLabels,
                                 dailyRecaps = dailyRecaps,
-                                onSelectDate = { recapDate = it },
                                 onOpenRecap = { date -> recapDate = date },
                                 onRecordMedication = { date ->
                                     intakeMedicationId = null

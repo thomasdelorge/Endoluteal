@@ -35,13 +35,13 @@ class LutealScreensTest {
                             DailyEntry(date = today, painLevel = 2)
                         )
                     ),
-                    onSelectDate = { openedDate = it }
+                    onOpenRecap = { openedDate = it }
                 )
             }
         }
 
         composeRule.onNodeWithText(string(R.string.agenda_title)).assertIsDisplayed()
-        composeRule.onNodeWithText(string(R.string.action_edit_today)).performClick()
+        composeRule.onNodeWithText(string(R.string.daily_recap_complete)).performClick()
         assertEquals(today, openedDate)
     }
 }

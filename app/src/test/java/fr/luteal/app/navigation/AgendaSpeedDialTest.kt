@@ -29,7 +29,6 @@ class AgendaSpeedDialTest {
             LutealTheme {
                 AgendaScreen(
                     state = LutealUiState(today = today),
-                    onSelectDate = {},
                     onOpenRecap = { recapDate = it }
                 )
             }
