@@ -3,17 +3,15 @@ package fr.luteal.app.navigation.recap
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -21,12 +19,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.FullScreenEntry
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.app.navigation.recap.steps.BowelStep
 import fr.luteal.app.navigation.recap.steps.CycleStep
 import fr.luteal.app.navigation.recap.steps.GeneralStep
@@ -42,7 +40,6 @@ import fr.luteal.core.model.recap.RecapStep
 import java.time.LocalDate
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecapWizardSheet(
     date: LocalDate,
@@ -79,18 +76,17 @@ fun RecapWizardSheet(
         }
     }
 
-    val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.9f
-    ModalBottomSheet(onDismissRequest = {
-        viewModel.clear()
-        onDismiss()
-    }) {
+    FullScreenEntry {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(sheetHeight)
+                .fillMaxSize()
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
+            ScreenBack(onClick = {
+                viewModel.clear()
+                onDismiss()
+            })
             Text(
                 text = stringResource(R.string.recap_wizard_title),
                 style = MaterialTheme.typography.titleLarge

@@ -2,14 +2,13 @@ package fr.luteal.app.navigation.entry
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -26,6 +25,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.FullScreenEntry
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -35,7 +36,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HospitalizationSheet(
     initialDate: LocalDate,
@@ -101,14 +101,15 @@ fun HospitalizationSheet(
         )
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    FullScreenEntry {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
+            ScreenBack(onClick = onDismiss)
             Text(stringResource(R.string.hospital_title), style = MaterialTheme.typography.titleLarge)
             Text(stringResource(R.string.hospital_admission))
             DateTimeField(value = admissionAt, onValueChange = { admissionAt = it })

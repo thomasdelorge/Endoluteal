@@ -3,6 +3,7 @@ package fr.luteal.app.navigation.entry
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -34,7 +35,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.FullScreenEntry
 import fr.luteal.core.designsystem.component.PainScale
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -50,7 +53,6 @@ import java.time.ZoneId
 import java.util.UUID
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MedicationIntakeSheet(
     initialDate: LocalDate,
@@ -135,14 +137,15 @@ fun MedicationIntakeSheet(
         }
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    FullScreenEntry {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
+            ScreenBack(onClick = onDismiss)
             Text(stringResource(R.string.intake_title), style = MaterialTheme.typography.titleLarge)
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(

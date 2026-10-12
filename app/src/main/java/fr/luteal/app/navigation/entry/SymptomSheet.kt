@@ -2,14 +2,13 @@ package fr.luteal.app.navigation.entry
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,6 +23,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.FullScreenEntry
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -34,7 +35,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SymptomSheet(
     initialDate: LocalDate,
@@ -87,14 +87,15 @@ fun SymptomSheet(
         )
     }
 
-    ModalBottomSheet(onDismissRequest = onDismiss) {
+    FullScreenEntry {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
+            ScreenBack(onClick = onDismiss)
             Text(stringResource(R.string.symptom_title), style = MaterialTheme.typography.titleLarge)
             DateTimeField(value = at, onValueChange = { at = it })
             BodyMap(marks = marks, onMarksChange = { marks = it })
