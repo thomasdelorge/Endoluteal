@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-12
+
 ### Changed
 
-- Carte du corps : le même croquis transparent sert de silhouette de face et de dos.
+- Carte du corps : schéma clinique CHOIR (femme, face et dos), régions cliquables.
 
 ## [0.7.0] - 2026-10-12
 
