@@ -19,7 +19,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -37,7 +36,6 @@ import java.time.temporal.ChronoUnit
 
 @Composable
 fun CycleEstimateSection(state: LutealUiState, onBackfillCycle: () -> Unit) {
-    val locale = LocalConfiguration.current.locales[0]
     LutealCard(modifier = Modifier.fillMaxWidth()) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -101,7 +99,7 @@ fun CycleEstimateSection(state: LutealUiState, onBackfillCycle: () -> Unit) {
                 Text(
                     text = stringResource(
                         R.string.estimate_target_headline,
-                        LocalizedDateFormatter.formatShortDate(estimate.centralDate, locale)
+                        LocalizedDateFormatter.formatNumericDate(estimate.centralDate)
                     ),
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -109,8 +107,8 @@ fun CycleEstimateSection(state: LutealUiState, onBackfillCycle: () -> Unit) {
                 Text(
                     text = stringResource(
                         R.string.estimate_window_subhead,
-                        LocalizedDateFormatter.formatShortDate(estimate.earliestDate, locale),
-                        LocalizedDateFormatter.formatShortDate(estimate.latestDate, locale)
+                        LocalizedDateFormatter.formatNumericDate(estimate.earliestDate),
+                        LocalizedDateFormatter.formatNumericDate(estimate.latestDate)
                     ),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -144,7 +142,7 @@ fun CycleEstimateSection(state: LutealUiState, onBackfillCycle: () -> Unit) {
                         leadDays = daysUntilEarliest,
                         windowDays = windowDays,
                         centralOffsetDays = centralOffsetDays,
-                        latestLabel = LocalizedDateFormatter.formatShortDate(estimate.latestDate, locale)
+                        latestLabel = LocalizedDateFormatter.formatNumericDate(estimate.latestDate)
                     )
                 }
 

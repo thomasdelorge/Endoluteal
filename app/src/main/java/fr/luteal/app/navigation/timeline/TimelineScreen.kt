@@ -32,15 +32,13 @@ import fr.luteal.core.model.report.TimelineVisit
 import fr.luteal.core.model.report.TimelineVisitKind
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
-import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val dateFormat = DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM).withLocale(Locale.FRENCH)
+    val dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy")
     val zone = ZoneId.systemDefault()
 
     state.selected?.let { visit ->

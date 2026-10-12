@@ -1,6 +1,8 @@
 package fr.luteal.core.common
 
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
@@ -20,6 +22,15 @@ object LocalizedDateFormatter {
     private val shortDateFormatters = ConcurrentHashMap<Locale, DateTimeFormatter>()
     private val monthYearFormatters = ConcurrentHashMap<Locale, DateTimeFormatter>()
     private val dayNumberFormatters = ConcurrentHashMap<Locale, DateTimeFormatter>()
+    private val numericDate = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+    private val numericTime = DateTimeFormatter.ofPattern("HH:mm")
+
+    fun formatNumericDate(date: LocalDate): String = date.format(numericDate)
+
+    fun formatTime(time: LocalTime): String = time.format(numericTime)
+
+    fun formatNumericDateTime(dateTime: LocalDateTime): String =
+        "${formatNumericDate(dateTime.toLocalDate())} ${formatTime(dateTime.toLocalTime())}"
 
     fun formatFullDate(date: LocalDate, locale: Locale): String =
         date.format(formatter(fullDateFormatters, "EEEE d MMMM yyyy", locale)).sentenceCase(locale)

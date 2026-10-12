@@ -36,4 +36,14 @@ class LocalizedDateFormatterTest {
         assertEquals("15", LocalizedDateFormatter.formatDayNumber(date, Locale.FRENCH))
         assertEquals("15", LocalizedDateFormatter.formatDayNumber(date, Locale.ENGLISH))
     }
+
+    @Test
+    fun formatsNumericDateAndTime() {
+        assertEquals("15-08-2026", LocalizedDateFormatter.formatNumericDate(date))
+        assertEquals("14:05", LocalizedDateFormatter.formatTime(java.time.LocalTime.of(14, 5)))
+        assertEquals(
+            "15-08-2026 14:05",
+            LocalizedDateFormatter.formatNumericDateTime(date.atTime(14, 5))
+        )
+    }
 }

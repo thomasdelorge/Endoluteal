@@ -10,11 +10,7 @@ object HtmlReportBuilder {
 
     fun buildHtml(data: ClinicalReportData): String {
         val isFr = data.config.language == ReportLanguage.FRENCH
-        val dateFormatter = if (isFr) {
-            DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH)
-        } else {
-            DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-        }
+        val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
 
         val formattedStart = data.dateRangeStart.format(dateFormatter)
         val formattedEnd = data.dateRangeEnd.format(dateFormatter)

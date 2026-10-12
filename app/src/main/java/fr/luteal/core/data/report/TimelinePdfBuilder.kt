@@ -25,7 +25,7 @@ object TimelinePdfBuilder {
             color = Color.parseColor("#235B4E")
             style = Paint.Style.FILL
         }
-        val dates = DateTimeFormatter.ISO_LOCAL_DATE
+        val dates = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         var pageNumber = 1
         var page = document.startPage(PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, pageNumber).create())
         var canvas = page.canvas

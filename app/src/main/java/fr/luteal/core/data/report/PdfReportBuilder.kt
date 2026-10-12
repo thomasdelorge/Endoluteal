@@ -126,11 +126,7 @@ object PdfReportBuilder {
         canvas.drawText(title, MARGIN, y, titlePaint)
         y += 14f
 
-        val dateFormatter = if (isFr) {
-            DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.FRENCH)
-        } else {
-            DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
-        }
+        val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
         val periodText = "${if (isFr) "Période" else "Period"} : ${data.dateRangeStart.format(dateFormatter)} - ${data.dateRangeEnd.format(dateFormatter)}  |  ${if (isFr) "Émis le" else "Issued on"} : ${data.generatedAt.format(dateFormatter)}"
         canvas.drawText(periodText, MARGIN, y, secondaryPaint)
         y += 12f

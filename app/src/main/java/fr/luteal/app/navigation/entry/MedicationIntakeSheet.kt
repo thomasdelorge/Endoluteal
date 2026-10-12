@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
@@ -37,8 +38,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.UUID
 import kotlinx.coroutines.launch
 
@@ -164,7 +163,7 @@ fun MedicationIntakeSheet(
 
     val finished = doneAt
     if (finished != null && selected != null && unitCount != null) {
-        val whenLabel = finished.atZone(zone).format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+        val whenLabel = LocalizedDateFormatter.formatNumericDateTime(finished.atZone(zone).toLocalDateTime())
         val now = Instant.now()
         AlertDialog(
             onDismissRequest = onDismiss,

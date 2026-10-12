@@ -23,12 +23,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @Composable
 fun MedsScreen(
@@ -37,7 +36,6 @@ fun MedsScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val zone = remember { ZoneId.systemDefault() }
-    val formatter = remember { DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT) }
     var editor by remember { mutableStateOf(false) }
     Column(
         modifier = Modifier
@@ -50,7 +48,12 @@ fun MedsScreen(
         Text(stringResource(R.string.meds_plans), style = MaterialTheme.typography.titleMedium)
         state.plans.forEach { row ->
             Text("${row.name} · ${row.plan.timesOfDay.joinToString { it.toString() }}")
-            row.nextAt?.let { Text(stringResource(R.string.meds_next_slot, it.format(formatter)), style = MaterialTheme.typography.bodySmall) }
+            row.nextAt?.let {
+                Text(
+                    stringResource(R.string.meds_next_slot, LocalizedDateFormatter.formatNumericDateTime(it)),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
         TextButton(onClick = { editor = !editor }) { Text(stringResource(R.string.meds_add_plan)) }
         if (editor) {
@@ -61,8 +64,8 @@ fun MedsScreen(
         }
         Text(stringResource(R.string.meds_recent), style = MaterialTheme.typography.titleMedium)
         state.history.forEach { row ->
-            val last = row.lastAt?.atZone(zone)?.format(formatter).orEmpty()
-            val next = row.nextAt?.atZone(zone)?.format(formatter).orEmpty()
+            val last = row.lastAt?.atZone(zone)?.toLocalDateTime()?.let(LocalizedDateFormatter::formatNumericDateTime).orEmpty()
+            val next = row.nextAt?.atZone(zone)?.toLocalDateTime()?.let(LocalizedDateFormatter::formatNumericDateTime).orEmpty()
             Text("${row.name} · ${stringResource(R.string.meds_last_intake, last)}")
             Text(stringResource(R.string.meds_next_possible, next), style = MaterialTheme.typography.bodySmall)
             TextButton(onClick = { onTake(row.medicationId) }) { Text(stringResource(R.string.meds_take)) }

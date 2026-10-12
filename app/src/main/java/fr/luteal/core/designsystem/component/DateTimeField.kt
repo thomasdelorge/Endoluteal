@@ -19,7 +19,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
@@ -27,8 +26,6 @@ import fr.luteal.core.designsystem.theme.LutealSpacing
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,9 +36,8 @@ fun DateTimeField(
 ) {
     var showDate by remember { mutableStateOf(false) }
     var showTime by remember { mutableStateOf(false) }
-    val locale = LocalConfiguration.current.locales[0]
-    val timeLabel = remember(value, locale) {
-        value.toLocalTime().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT).withLocale(locale))
+    val timeLabel = remember(value) {
+        LocalizedDateFormatter.formatTime(value.toLocalTime())
     }
 
     Row(
@@ -52,7 +48,7 @@ fun DateTimeField(
             Text(
                 text = stringResource(
                     R.string.datetime_field_date
-                ) + " " + LocalizedDateFormatter.formatFullDate(value.toLocalDate(), locale)
+                ) + " " + LocalizedDateFormatter.formatNumericDate(value.toLocalDate())
             )
         }
         OutlinedButton(onClick = { showTime = true }, modifier = Modifier.weight(1f)) {

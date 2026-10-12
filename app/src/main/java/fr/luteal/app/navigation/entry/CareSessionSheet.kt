@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -35,8 +36,6 @@ import fr.luteal.core.model.care.CareType
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
@@ -119,9 +118,9 @@ fun CareSessionSheet(
 
     val saved = followup
     if (saved != null) {
-        val whenLabel = saved.endAt.plus(java.time.Duration.ofHours(1))
-            .atZone(zone)
-            .format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT))
+        val whenLabel = LocalizedDateFormatter.formatNumericDateTime(
+            saved.endAt.plus(java.time.Duration.ofHours(1)).atZone(zone).toLocalDateTime()
+        )
         AlertDialog(
             onDismissRequest = onDismiss,
             title = { Text(stringResource(R.string.care_followup_title)) },

@@ -709,7 +709,6 @@ private fun SelectedDayInspectionCard(
 ) {
     val hasEntryObservations = entry?.hasObservations == true
     val hasBiomarkerObservations = biomarker != null && !biomarker.isEmpty
-    val locale = LocalConfiguration.current.locales[0]
 
     LutealCard(modifier = modifier.fillMaxWidth()) {
         Column(
@@ -728,13 +727,13 @@ private fun SelectedDayInspectionCard(
                         text = if (isToday) {
                             stringResource(R.string.journal_today)
                         } else {
-                            LocalizedDateFormatter.formatFullDate(date, locale)
+                            LocalizedDateFormatter.formatNumericDate(date)
                         },
                         style = MaterialTheme.typography.titleMedium
                     )
                     if (isToday) {
                         Text(
-                            text = LocalizedDateFormatter.formatFullDate(date, locale),
+                            text = LocalizedDateFormatter.formatNumericDate(date),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
