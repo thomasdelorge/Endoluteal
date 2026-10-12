@@ -1,6 +1,7 @@
 package fr.luteal.core.designsystem.component.bodymap
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -9,14 +10,15 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -24,12 +26,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -57,7 +62,7 @@ fun BodyMap(
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun BodyMap(
     marks: List<PainMark>,
@@ -126,48 +131,53 @@ private fun ZoneCanvas(
     val shapes = BodyMapGeometry.shapes(side)
     val paths = remember(side) { shapes.map { it.toPath() } }
     val ink = MaterialTheme.colorScheme.onSurface
-    Canvas(
+    val figure = if (side == BodySide.BACK) R.drawable.body_back else R.drawable.body_front
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(BodyMapGeometry.VIEWBOX_WIDTH / BodyMapGeometry.VIEWBOX_HEIGHT)
-            .then(
-                if (onZoneTap == null) {
-                    Modifier
-                } else {
-                    Modifier.pointerInput(side) {
-                        detectTapGestures { offset ->
-                            val zone = BodyMapGeometry.zoneAt(
-                                offset,
-                                side,
-                                Size(size.width.toFloat(), size.height.toFloat())
-                            )
-                            if (zone != null) onZoneTap(zone)
+    ) {
+        Image(
+            painter = painterResource(figure),
+            contentDescription = null,
+            contentScale = ContentScale.FillBounds,
+            colorFilter = ColorFilter.tint(ink),
+            modifier = Modifier.fillMaxSize(),
+            alignment = Alignment.Center
+        )
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (onZoneTap == null) {
+                        Modifier
+                    } else {
+                        Modifier.pointerInput(side) {
+                            detectTapGestures { offset ->
+                                val zone = BodyMapGeometry.zoneAt(
+                                    offset,
+                                    side,
+                                    Size(size.width.toFloat(), size.height.toFloat())
+                                )
+                                if (zone != null) onZoneTap(zone)
+                            }
                         }
                     }
-                }
-            )
-    ) {
-        val scaleX = size.width / BodyMapGeometry.VIEWBOX_WIDTH
-        val scaleY = size.height / BodyMapGeometry.VIEWBOX_HEIGHT
-        // Default pivot is the canvas center, which throws the viewBox off-screen.
-        val silhouette = BodySilhouettePaths.path(side)
-        scale(scaleX, scaleY, pivot = Offset.Zero) {
-            drawPath(
-                silhouette,
-                ink.copy(alpha = 0.4f),
-                style = Stroke(width = 1.8f / scaleX)
-            )
-            shapes.forEachIndexed { index, shape ->
-                val path = paths[index]
-                val intensity = heat[shape.zone] ?: return@forEachIndexed
-                val color = painIntensityColor(intensity)
-                drawPath(path, color.copy(alpha = 0.85f))
-                val center = shape.rect.center
-                drawCircle(
-                    color = color,
-                    radius = 3f / scaleX,
-                    center = center
                 )
+        ) {
+            val scaleX = size.width / BodyMapGeometry.VIEWBOX_WIDTH
+            val scaleY = size.height / BodyMapGeometry.VIEWBOX_HEIGHT
+            scale(scaleX, scaleY, pivot = Offset.Zero) {
+                shapes.forEachIndexed { index, shape ->
+                    val intensity = heat[shape.zone] ?: return@forEachIndexed
+                    val color = painIntensityColor(intensity)
+                    drawPath(paths[index], color.copy(alpha = 0.45f))
+                    drawCircle(
+                        color = color,
+                        radius = 3f / scaleX,
+                        center = shape.rect.center
+                    )
+                }
             }
         }
     }
@@ -219,7 +229,7 @@ private fun ZoneList(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PainMarkSheet(
     zone: BodyZone,
@@ -232,62 +242,56 @@ private fun PainMarkSheet(
     var types by remember(zone) {
         mutableStateOf(existing?.painTypes?.mapNotNull(PainType::fromId)?.toSet().orEmpty())
     }
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            Text(
-                text = stringResource(zone.labelRes),
-                style = MaterialTheme.typography.titleMedium
-            )
-            PainScale(value = intensity, onValueChange = { intensity = it })
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                PainType.entries.forEach { type ->
-                    FilterChip(
-                        selected = type in types,
-                        onClick = {
-                            types = if (type in types) types - type else types + type
-                        },
-                        label = { Text(stringResource(type.labelRes)) }
-                    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(zone.labelRes)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
+                PainScale(value = intensity, onValueChange = { intensity = it })
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+                    PainType.entries.forEach { type ->
+                        FilterChip(
+                            selected = type in types,
+                            onClick = {
+                                types = if (type in types) types - type else types + type
+                            },
+                            label = { Text(stringResource(type.labelRes)) }
+                        )
+                    }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
-                    TextButton(onClick = onDismiss) {
-                        Text(stringResource(R.string.intake_cancel))
-                    }
-                    if (existing != null) {
-                        TextButton(onClick = onRemove) {
-                            Text(stringResource(R.string.body_map_remove))
-                        }
-                    }
-                }
-                Button(
-                    onClick = {
-                        val level = intensity ?: return@Button
-                        onSave(
-                            PainMark(
-                                id = existing?.id ?: UUID.randomUUID().toString(),
-                                zone = zone.id,
-                                intensity = level,
-                                painTypes = types.map { it.id }
-                            )
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val level = intensity ?: return@Button
+                    onSave(
+                        PainMark(
+                            id = existing?.id ?: UUID.randomUUID().toString(),
+                            zone = zone.id,
+                            intensity = level,
+                            painTypes = types.map { it.id }
                         )
-                    },
-                    enabled = intensity != null
-                ) {
-                    Text(stringResource(R.string.meds_save))
+                    )
+                },
+                enabled = intensity != null
+            ) {
+                Text(stringResource(R.string.meds_save))
+            }
+        },
+        dismissButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm)) {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.intake_cancel))
+                }
+                if (existing != null) {
+                    TextButton(onClick = onRemove) {
+                        Text(stringResource(R.string.body_map_remove))
+                    }
                 }
             }
         }
-    }
+    )
 }
 
 @Composable

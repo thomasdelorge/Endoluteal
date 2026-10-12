@@ -4,7 +4,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -18,8 +21,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.app.navigation.recap.steps.BowelStep
@@ -74,6 +79,7 @@ fun RecapWizardSheet(
         }
     }
 
+    val sheetHeight = LocalConfiguration.current.screenHeightDp.dp * 0.9f
     ModalBottomSheet(onDismissRequest = {
         viewModel.clear()
         onDismiss()
@@ -81,6 +87,7 @@ fun RecapWizardSheet(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .height(sheetHeight)
                 .padding(LutealSpacing.md),
             verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
         ) {
@@ -91,43 +98,53 @@ fun RecapWizardSheet(
             val progress = (recap?.completedSteps?.size ?: 0).toFloat() / steps.size
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
             val currentRecap = recap
-            HorizontalPager(state = pagerState) { page ->
-                val step = steps[page]
-                when (step) {
-                    RecapStep.CYCLE -> CycleStep(
-                        ui = cycleUi,
-                        initial = currentRecap?.cycle ?: RecapCyclePayload(),
-                        onContinue = { payload ->
-                            viewModel.finishCycleStep(payload) { advanceFrom(page) }
-                        }
-                    )
-                    RecapStep.PAIN -> PainStep(
-                        dayEventLines = dayEvents,
-                        hideDyspareunia = hideDyspareunia,
-                        initial = currentRecap?.pain ?: RecapPainPayload(),
-                        onContinue = { payload ->
-                            viewModel.finishPainStep(payload) { advanceFrom(page) }
-                        }
-                    )
-                    RecapStep.PSY -> PsyStep(
-                        hideLibido = hideLibido,
-                        initial = currentRecap?.psy ?: RecapPsyPayload(),
-                        onContinue = { payload ->
-                            viewModel.finishPsyStep(payload) { advanceFrom(page) }
-                        }
-                    )
-                    RecapStep.GENERAL -> GeneralStep(
-                        initial = currentRecap?.general ?: RecapGeneralPayload(),
-                        onContinue = { payload ->
-                            viewModel.finishGeneralStep(payload) { advanceFrom(page) }
-                        }
-                    )
-                    RecapStep.BOWEL -> BowelStep(
-                        initial = currentRecap?.bowel ?: RecapBowelPayload(),
-                        onContinue = { payload ->
-                            viewModel.finishBowelStep(payload) { advanceFrom(page) }
-                        }
-                    )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier.weight(1f)
+            ) { page ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+                ) {
+                    val step = steps[page]
+                    when (step) {
+                        RecapStep.CYCLE -> CycleStep(
+                            ui = cycleUi,
+                            initial = currentRecap?.cycle ?: RecapCyclePayload(),
+                            onContinue = { payload ->
+                                viewModel.finishCycleStep(payload) { advanceFrom(page) }
+                            }
+                        )
+                        RecapStep.PAIN -> PainStep(
+                            dayEventLines = dayEvents,
+                            hideDyspareunia = hideDyspareunia,
+                            initial = currentRecap?.pain ?: RecapPainPayload(),
+                            onContinue = { payload ->
+                                viewModel.finishPainStep(payload) { advanceFrom(page) }
+                            }
+                        )
+                        RecapStep.PSY -> PsyStep(
+                            hideLibido = hideLibido,
+                            initial = currentRecap?.psy ?: RecapPsyPayload(),
+                            onContinue = { payload ->
+                                viewModel.finishPsyStep(payload) { advanceFrom(page) }
+                            }
+                        )
+                        RecapStep.GENERAL -> GeneralStep(
+                            initial = currentRecap?.general ?: RecapGeneralPayload(),
+                            onContinue = { payload ->
+                                viewModel.finishGeneralStep(payload) { advanceFrom(page) }
+                            }
+                        )
+                        RecapStep.BOWEL -> BowelStep(
+                            initial = currentRecap?.bowel ?: RecapBowelPayload(),
+                            onContinue = { payload ->
+                                viewModel.finishBowelStep(payload) { advanceFrom(page) }
+                            }
+                        )
+                    }
                 }
             }
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
