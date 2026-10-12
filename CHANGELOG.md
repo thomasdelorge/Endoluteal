@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Retour et enregistrement signalés par des icônes dans les feuilles de saisie et la fiche médicament.
+
 ## [0.6.0] - 2026-10-12
 
 ### Fixed

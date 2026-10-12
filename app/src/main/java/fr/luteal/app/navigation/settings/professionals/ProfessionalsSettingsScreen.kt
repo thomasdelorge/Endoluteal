@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Professional
 import fr.luteal.core.model.professional.Specialty
@@ -49,9 +50,7 @@ fun ProfessionalsSettingsScreen(
             .padding(LutealSpacing.md),
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
     ) {
-        TextButton(onClick = onBack) {
-            Text(stringResource(R.string.professionals_settings_back))
-        }
+        ScreenBack(onClick = onBack)
         professionals.forEach { professional ->
             Text(
                 "${professional.name} · ${professional.displaySpecialty()}",

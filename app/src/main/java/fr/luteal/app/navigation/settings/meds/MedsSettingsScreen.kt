@@ -28,6 +28,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.FormSaveButton
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.meds.AlertSeverity
 import fr.luteal.core.model.meds.Composition
@@ -56,25 +58,42 @@ fun MedsSettingsScreen(
     val seedOffered by viewModel.seedOffered.collectAsStateWithLifecycle()
     val followupDelay by viewModel.painFollowupDelayMinutes.collectAsStateWithLifecycle()
     var current by androidx.compose.runtime.remember { mutableStateOf<MedsPage>(MedsPage.List) }
+    val navigateBack: () -> Unit = {
+        if (current == MedsPage.List) onBack() else current = MedsPage.List
+    }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(LutealSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-    ) {
-        TextButton(onClick = {
-            if (current == MedsPage.List) onBack() else current = MedsPage.List
-        }) {
-            Text(stringResource(R.string.meds_back))
+    when (val shown = current) {
+        is MedsPage.MedicationForm -> Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(LutealSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+        ) {
+            ScreenBack(onClick = navigateBack)
+            MedicationForm(
+                medication = catalog.medications.find { it.id == shown.id },
+                substances = catalog.substances,
+                modifier = Modifier.weight(1f),
+                onSave = {
+                    viewModel.saveMedication(it)
+                    current = MedsPage.List
+                }
+            )
         }
-        Text(
-            text = stringResource(R.string.meds_disclaimer),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        when (val shown = current) {
+        else -> Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(LutealSpacing.md),
+            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+        ) {
+            ScreenBack(onClick = navigateBack)
+            Text(
+                text = stringResource(R.string.meds_disclaimer),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            when (shown) {
             MedsPage.List -> MedicationList(
                 catalog = catalog,
                 seedOffered = seedOffered,
@@ -86,14 +105,6 @@ fun MedsSettingsScreen(
                 onAddMedication = { current = MedsPage.MedicationForm(null) },
                 onOpenSubstances = { current = MedsPage.Substances },
                 onOpenRules = { current = MedsPage.Rules }
-            )
-            is MedsPage.MedicationForm -> MedicationForm(
-                medication = catalog.medications.find { it.id == shown.id },
-                substances = catalog.substances,
-                onSave = {
-                    viewModel.saveMedication(it)
-                    current = MedsPage.List
-                }
             )
             MedsPage.Substances -> {
                 catalog.substances.forEach { substance ->
@@ -136,6 +147,7 @@ fun MedsSettingsScreen(
                     }
                 }
             )
+            }
         }
     }
 }
@@ -202,6 +214,7 @@ private fun MedicationList(
 private fun MedicationForm(
     medication: Medication?,
     substances: List<Substance>,
+    modifier: Modifier = Modifier,
     onSave: (Medication) -> Unit
 ) {
     var name by rememberSaveable { mutableStateOf(medication?.name.orEmpty()) }
@@ -214,6 +227,31 @@ private fun MedicationForm(
                 ?: listOf("" to "")
         )
     }
+    val trySave = {
+        val compositions = rows.mapNotNull { (substanceId, amount) ->
+            val mg = amount.replace(',', '.').toDoubleOrNull() ?: return@mapNotNull null
+            if (substanceId.isBlank() || mg <= 0.0) null else Composition(substanceId, mg)
+        }
+        if (name.isNotBlank() && compositions.isNotEmpty()) {
+            onSave(
+                Medication(
+                    id = medication?.id ?: UUID.randomUUID().toString(),
+                    name = name,
+                    form = form,
+                    contraindications = contraindications,
+                    archived = archived,
+                    compositions = compositions
+                )
+            )
+        }
+    }
+    Column(modifier = modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
+        ) {
     OutlinedTextField(name, { name = it }, label = { Text(stringResource(R.string.meds_name)) }, modifier = Modifier.fillMaxWidth())
     OutlinedTextField(form, { form = it }, label = { Text(stringResource(R.string.meds_form)) }, modifier = Modifier.fillMaxWidth())
     OutlinedTextField(
@@ -245,23 +283,14 @@ private fun MedicationForm(
             Switch(checked = archived, onCheckedChange = { archived = it })
         }
     }
-    TextButton(onClick = {
-        val compositions = rows.mapNotNull { (substanceId, amount) ->
-            val mg = amount.replace(',', '.').toDoubleOrNull() ?: return@mapNotNull null
-            if (substanceId.isBlank() || mg <= 0.0) null else Composition(substanceId, mg)
         }
-        if (name.isBlank() || compositions.isEmpty()) return@TextButton
-        onSave(
-            Medication(
-                id = medication?.id ?: UUID.randomUUID().toString(),
-                name = name,
-                form = form,
-                contraindications = contraindications,
-                archived = archived,
-                compositions = compositions
-            )
+        FormSaveButton(
+            onClick = trySave,
+            enabled = name.isNotBlank() && rows.any { (substanceId, amount) ->
+                substanceId.isNotBlank() && (amount.replace(',', '.').toDoubleOrNull() ?: 0.0) > 0.0
+            }
         )
-    }) { Text(stringResource(R.string.meds_save)) }
+    }
 }
 
 @Composable

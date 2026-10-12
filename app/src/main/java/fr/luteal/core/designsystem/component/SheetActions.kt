@@ -3,9 +3,13 @@ package fr.luteal.core.designsystem.component
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,11 +28,17 @@ fun SheetActions(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        TextButton(onClick = onCancel) {
-            Text(stringResource(R.string.intake_cancel))
+        IconButton(onClick = onCancel) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.intake_cancel)
+            )
         }
         Button(onClick = onConfirm, enabled = confirmEnabled) {
-            Text(stringResource(R.string.meds_save))
+            Icon(
+                imageVector = Icons.Filled.Check,
+                contentDescription = stringResource(R.string.meds_save)
+            )
         }
     }
 }

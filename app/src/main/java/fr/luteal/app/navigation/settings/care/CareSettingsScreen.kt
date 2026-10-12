@@ -24,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.care.CareProgram
 
@@ -45,9 +46,7 @@ fun CareSettingsScreen(
             .padding(LutealSpacing.md),
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
     ) {
-        TextButton(onClick = onBack) {
-            Text(stringResource(R.string.care_settings_back))
-        }
+        ScreenBack(onClick = onBack)
         if (!seedOffered) {
             Text(stringResource(R.string.care_seed_title), style = MaterialTheme.typography.titleMedium)
             Text(
