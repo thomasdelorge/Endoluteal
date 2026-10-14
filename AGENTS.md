@@ -18,8 +18,12 @@ Packages Kotlin `fr.luteal.*` conservés ; `applicationId` =
 1. **Pas de permission `INTERNET`** (données de santé hors de l'appareil).
 2. **Enregistré vs estimé** : ne jamais présenter une saisie utilisatrice comme
    un calcul ou une prédiction.
-3. **Migrations Room** obligatoires dès la v0.1.0 installée ; avant cela, reset de
-   schéma acceptable.
+3. **Migrations Room** : avant le schéma 11 (app 0.9.0), un reset des versions 1 à 10
+   est accepté. À partir du schéma 11, toute évolution est une migration additive
+   testée. Une migration manquante fait échouer l'ouverture, elle n'efface pas les
+   données. Un export JSON antérieur doit se réimporter : nouveaux champs optionnels
+   avec défaut, clés inconnues ignorées, `schema_version` 1 tant que les fichiers
+   0.9.0 restent lisibles.
 4. **Toute nouvelle table** doit être couverte par export/import JSON (backup).
 5. **Chaînes UI en français** (`res/values/strings.xml`).
 6. **Alertes médicamenteuses** : aide à la prise, pas un avis médical (mention

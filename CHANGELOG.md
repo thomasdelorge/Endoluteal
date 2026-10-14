@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Annuaire : une tuile par professionnel, édition au tap, ajout par le bouton +.
+- À partir de la 0.9.0, une évolution de schéma ne réinitialise plus les données.
 
 ## [0.9.0] - 2026-10-14
 
