@@ -891,7 +891,7 @@
     <string name="timeline_intake_count">%1$s : %2$d prise(s)</string>
     <string name="timeline_hospital_count">Hospitalisations : %1$d</string>
     <string name="timeline_care_count">Soins : %1$d</string>
-    <string name="timeline_share">Partager le PDF</string>
+    <string name="timeline_export_pdf">Exporter le PDF</string>
     <string name="nav_medications">Médicaments</string>
     <string name="agenda_title">Agenda</string>
     <string name="agenda_subtitle">Ce qui a été enregistré, jour par jour</string>

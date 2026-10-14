@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Réglages regroupés en Santé, Rappels, Apparence, Données et Sécurité.
 - Apparence : un seul menu combine le mode clair, sombre ou système et la couleur.
 - Thèmes Solarized, Catppuccin et Dracula.
+- La frise enregistre son PDF dans un fichier choisi, sans ouvrir le partage.
 
 ## [0.9.0] - 2026-10-14
 

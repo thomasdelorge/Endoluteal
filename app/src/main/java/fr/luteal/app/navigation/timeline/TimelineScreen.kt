@@ -19,6 +19,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,6 +35,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.app.navigation.ScreenHeader
 import fr.luteal.core.designsystem.component.LutealCard
+import fr.luteal.core.designsystem.component.LutealPrimaryButton
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Specialty
 import fr.luteal.core.model.report.SinceLastVisitSummary
@@ -50,6 +53,9 @@ fun TimelineScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val exportPdf = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        if (uri != null) writeTimelinePdf(context, uri, viewModel.pdfContent())
+    }
     val dateFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy")
     val zone = ZoneId.systemDefault()
 
@@ -101,9 +107,11 @@ fun TimelineScreen(
                 title = stringResource(R.string.nav_timeline),
                 subtitle = stringResource(R.string.timeline_subtitle)
             )
-            TextButton(onClick = { shareTimelinePdf(context, viewModel.pdfContent()) }) {
-                Text(stringResource(R.string.timeline_share))
-            }
+            LutealPrimaryButton(
+                text = stringResource(R.string.timeline_export_pdf),
+                onClick = { exportPdf.launch("frise.pdf") },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
         item {
             Text(stringResource(R.string.timeline_filter_professional), style = MaterialTheme.typography.labelLarge)
