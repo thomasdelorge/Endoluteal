@@ -116,20 +116,20 @@ class AppointmentEntryViewModel @Inject constructor(
         return CalendarImportEngine.suggestProfessionalId(title, location, history)
     }
 
-    fun createProfessional(name: String, specialty: Specialty, customSpecialty: String) {
-        viewModelScope.launch {
-            professionalRepository.upsert(
-                Professional(
-                    id = UUID.randomUUID().toString(),
-                    name = name.trim(),
-                    specialty = specialty,
-                    customSpecialty = customSpecialty.trim(),
-                    place = "",
-                    phone = "",
-                    notes = ""
-                )
+    suspend fun createProfessional(name: String, specialty: Specialty, customSpecialty: String): String {
+        val id = UUID.randomUUID().toString()
+        professionalRepository.upsert(
+            Professional(
+                id = id,
+                name = name.trim(),
+                specialty = specialty,
+                customSpecialty = customSpecialty.trim(),
+                place = "",
+                phone = "",
+                notes = ""
             )
-        }
+        )
+        return id
     }
 
     suspend fun delete(eventId: String) {

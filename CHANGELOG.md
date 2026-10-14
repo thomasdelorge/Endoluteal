@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Feuilles de saisie : une seule flèche retour en haut ; enregistrement épinglé en bas.
 - Retour système : ferme la feuille ou le sous-écran au lieu de quitter l’application.
 - Agenda : fond flouté et voile lors de l’ouverture du menu + ; le bouton + se masque en bas de liste scrollable.
+- Rendez-vous médical : choix du professionnel via un menu déroulant de l’annuaire.
+- Notifications de rappel : ouverture de l’app au tap, report +10/+30 qui retire la notif, actions utiles (3 max).
 
 ### Changed
 
