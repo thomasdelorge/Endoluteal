@@ -1,5 +1,8 @@
 package fr.luteal.app.navigation.entry
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.Place
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -33,6 +37,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
@@ -78,7 +83,9 @@ fun AppointmentSheet(
     var confirmDelete by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var showNewProfessional by remember { mutableStateOf(false) }
+    var mapsUnavailable by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     LaunchedEffect(existingEventId, professionals) {
         val id = existingEventId ?: return@LaunchedEffect
@@ -207,12 +214,34 @@ fun AppointmentSheet(
             DateTimeField(value = startAt, onValueChange = { startAt = it })
             Text(stringResource(R.string.appointment_end))
             DateTimeField(value = endAt, onValueChange = { endAt = it })
-            OutlinedTextField(
-                value = location,
-                onValueChange = { location = it },
-                label = { Text(stringResource(R.string.appointment_location)) },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = location,
+                    onValueChange = {
+                        location = it
+                        mapsUnavailable = false
+                    },
+                    label = { Text(stringResource(R.string.appointment_location)) },
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = {
+                        val query = Uri.encode(location.trim())
+                        val view = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$query"))
+                        try {
+                            context.startActivity(Intent.createChooser(view, context.getString(R.string.appointment_open_maps)))
+                        } catch (_: ActivityNotFoundException) {
+                            mapsUnavailable = true
+                        }
+                    },
+                    enabled = location.isNotBlank()
+                ) {
+                    Icon(Icons.Rounded.Place, contentDescription = stringResource(R.string.appointment_open_maps))
+                }
+            }
+            if (mapsUnavailable) {
+                Text(stringResource(R.string.appointment_maps_unavailable))
+            }
             OutlinedTextField(
                 value = feeText,
                 onValueChange = { feeText = it },

@@ -1064,6 +1064,8 @@
     <string name="appointment_start">Début</string>
     <string name="appointment_end">Fin</string>
     <string name="appointment_location">Lieu</string>
+    <string name="appointment_open_maps">Ouvrir dans une application de navigation</string>
+    <string name="appointment_maps_unavailable">Aucune application de navigation n’est installée.</string>
     <string name="appointment_fee">Coût de la séance (€)</string>
     <string name="appointment_reimbursement">Remboursement</string>
     <string name="appointment_reimbursement_empty">Non renseigné</string>
