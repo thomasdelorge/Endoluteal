@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.core.content.ContextCompat
 import fr.luteal.core.model.NotificationVisibility
 import android.content.Context
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -257,6 +258,16 @@ fun SettingsScreen(
             onSelect = viewModel::setAutoLockTimeout,
             onDismiss = { showTimeoutDialog = false }
         )
+    }
+
+    val settingsSubScreenOpen = showMeds || showPlans || showCare || showProfessionals
+    BackHandler(enabled = settingsSubScreenOpen) {
+        when {
+            showMeds -> showMeds = false
+            showPlans -> showPlans = false
+            showCare -> showCare = false
+            showProfessionals -> showProfessionals = false
+        }
     }
 
     if (showMeds) {

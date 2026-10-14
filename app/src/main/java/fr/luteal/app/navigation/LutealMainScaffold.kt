@@ -1,5 +1,6 @@
 package fr.luteal.app.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Arrangement
@@ -169,6 +170,51 @@ fun LutealMainScaffold(
             }
         )
     } else {
+        val overlayBackState = MainOverlayBackState(
+            appointmentDate = appointmentDate,
+            appointmentReportEventId = appointmentReportEventId,
+            recapDate = recapDate,
+            monthlyPeriod = monthlyPeriod,
+            hospitalDate = hospitalDate,
+            careDate = careDate,
+            symptomDate = symptomDate,
+            painCheckEventId = painCheckEventId,
+            intakeDate = intakeDate,
+            showBackfillDialog = showBackfillDialog
+        )
+        val overlayBackTarget = resolveMainOverlayBackTarget(overlayBackState)
+        BackHandler(enabled = overlayBackTarget != null) {
+            when (overlayBackTarget) {
+                MainOverlayBackTarget.APPOINTMENT -> {
+                    appointmentDate = null
+                    appointmentEventId = null
+                }
+                MainOverlayBackTarget.APPOINTMENT_REPORT -> appointmentReportEventId = null
+                MainOverlayBackTarget.RECAP -> recapDate = null
+                MainOverlayBackTarget.MONTHLY_QUESTIONNAIRE -> monthlyPeriod = null
+                MainOverlayBackTarget.HOSPITALIZATION -> {
+                    hospitalDate = null
+                    hospitalEventId = null
+                }
+                MainOverlayBackTarget.CARE_SESSION -> {
+                    careDate = null
+                    careEventId = null
+                    careTensOnly = false
+                }
+                MainOverlayBackTarget.SYMPTOM -> {
+                    symptomDate = null
+                    symptomEventId = null
+                }
+                MainOverlayBackTarget.PAIN_CHECK -> painCheckEventId = null
+                MainOverlayBackTarget.MEDICATION_INTAKE -> {
+                    intakeDate = null
+                    intakeMedicationId = null
+                    intakeEventId = null
+                }
+                MainOverlayBackTarget.BACKFILL_CYCLE -> showBackfillDialog = false
+                null -> Unit
+            }
+        }
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,

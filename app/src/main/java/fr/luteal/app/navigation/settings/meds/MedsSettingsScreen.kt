@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,6 +67,7 @@ fun MedsSettingsScreen(
     val navigateBack: () -> Unit = {
         if (current == MedsPage.List) onBack() else current = MedsPage.List
     }
+    BackHandler(onBack = navigateBack)
 
     when (val shown = current) {
         is MedsPage.MedicationForm -> Column(
