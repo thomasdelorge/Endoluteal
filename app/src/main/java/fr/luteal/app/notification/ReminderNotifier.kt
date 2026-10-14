@@ -1,22 +1,16 @@
 package fr.luteal.app.notification
 
 import android.Manifest
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
-import fr.luteal.app.R
 import fr.luteal.core.data.entity.ReminderEntity
-import fr.luteal.core.model.MedsAlarmPayload
 import fr.luteal.core.model.ReminderType
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlinx.serialization.json.Json
 
 @Singleton
 class ReminderNotifier @Inject constructor(
@@ -29,65 +23,8 @@ class ReminderNotifier @Inject constructor(
         ) {
             return
         }
-        val type = runCatching { ReminderType.valueOf(reminder.type) }.getOrDefault(ReminderType.RECAP)
-        val payload = runCatching {
-            Json { ignoreUnknownKeys = true }.decodeFromString(MedsAlarmPayload.serializer(), reminder.payloadJson)
-        }.getOrNull()
-        val body = when (type) {
-            ReminderType.APPOINTMENT_REPORT -> context.getString(R.string.notif_appointment_report_body)
-            else -> payload?.items?.joinToString { it.name }?.takeIf { it.isNotBlank() }
-                ?: payload?.name?.takeIf { it.isNotBlank() }
-                ?: context.getString(R.string.notif_reminder_body)
-        }
-        val title = when (type) {
-            ReminderType.APPOINTMENT_REPORT -> context.getString(R.string.notif_appointment_report_title)
-            else -> context.getString(R.string.notif_reminder_title)
-        }
-        val primary = when {
-            type == ReminderType.APPOINTMENT_REPORT -> R.string.notif_action_appointment_report
-            type == ReminderType.PAIN_FOLLOWUP -> R.string.notif_action_pain_check
-            payload != null && payload.items.isNotEmpty() -> R.string.notif_action_take_all
-            else -> R.string.notif_action_open
-        }
-        val notification = NotificationCompat.Builder(context, type.channelId)
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentTitle(title)
-            .setContentText(body)
-            .setAutoCancel(true)
-            .addAction(0, context.getString(primary), actionIntent(reminder.id, ReminderAlarmReceiver.ACTION_PRIMARY, 1))
-            .addAction(0, context.getString(R.string.notif_action_snooze_10), snoozeIntent(reminder.id, 10))
-            .addAction(0, context.getString(R.string.notif_action_snooze_30), snoozeIntent(reminder.id, 30))
-            .addAction(0, context.getString(R.string.notif_action_snooze_60), snoozeIntent(reminder.id, 60))
-            .addAction(0, context.getString(R.string.notif_action_dismiss), actionIntent(reminder.id, ReminderAlarmReceiver.ACTION_DISMISS, 4))
-            .build()
+        val notification = buildReminderNotification(context, reminder).build()
         NotificationManagerCompat.from(context).notify(reminder.id.hashCode(), notification)
-    }
-
-    private fun snoozeIntent(id: String, minutes: Int): PendingIntent =
-        pending(id, ReminderAlarmReceiver.ACTION_SNOOZE, minutes) {
-            putExtra(ReminderAlarmReceiver.EXTRA_MINUTES, minutes)
-        }
-
-    private fun actionIntent(id: String, action: String, code: Int): PendingIntent =
-        pending(id, action, code) {}
-
-    private fun pending(
-        id: String,
-        action: String,
-        code: Int,
-        fill: Intent.() -> Unit
-    ): PendingIntent {
-        val intent = Intent(context, ReminderAlarmReceiver::class.java).apply {
-            this.action = action
-            putExtra(ReminderAlarmReceiver.EXTRA_ID, id)
-            fill()
-        }
-        return PendingIntent.getBroadcast(
-            context,
-            id.hashCode() xor code,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
     }
 }
 

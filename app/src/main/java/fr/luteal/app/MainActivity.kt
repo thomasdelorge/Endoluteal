@@ -29,6 +29,7 @@ import fr.luteal.app.navigation.LutealMainScaffold
 import fr.luteal.app.calendar.CalendarImportScheduler
 import fr.luteal.app.notification.AppointmentReportScheduler
 import fr.luteal.app.notification.ReminderAlarmReceiver
+import fr.luteal.app.notification.ReminderScheduler
 import fr.luteal.core.data.datastore.UserPreferences
 import fr.luteal.core.data.datastore.UserPreferencesDataStore
 import fr.luteal.core.data.security.AppLockManager
@@ -52,6 +53,9 @@ class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var appointmentReportScheduler: AppointmentReportScheduler
+
+    @Inject
+    lateinit var reminderScheduler: ReminderScheduler
 
     private var bufferedImportJson by mutableStateOf<String?>(null)
     private var pendingPainEventId by mutableStateOf<String?>(null)
@@ -156,6 +160,12 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun handleReminderIntent(intent: Intent?) {
+        intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_COMPLETE_REMINDER_ID)?.let { reminderId ->
+            lifecycleScope.launch {
+                reminderScheduler.complete(reminderId)
+            }
+            intent.removeExtra(ReminderAlarmReceiver.EXTRA_COMPLETE_REMINDER_ID)
+        }
         pendingPainEventId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_PAIN_EVENT)
         pendingMedicationId = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_MEDICATION)
         pendingRecapDate = intent?.getStringExtra(ReminderAlarmReceiver.EXTRA_OPEN_RECAP_DATE)
