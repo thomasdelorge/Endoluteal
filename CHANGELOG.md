@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Import calendrier : toutes les 4 h, seuls le titre et le lieu suivent le calendrier. Une suppression côté calendrier laisse le rendez-vous.
 - Rendez-vous : le lieu s’ouvre dans une application de navigation.
 - Les exports JSON indiquent la version de l’application.
+- Réglages regroupés en Santé, Rappels, Apparence, Données et Sécurité.
 
 ## [0.9.0] - 2026-10-14
 

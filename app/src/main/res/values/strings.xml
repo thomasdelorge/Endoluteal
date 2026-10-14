@@ -1064,6 +1064,11 @@
     <string name="appointment_start">Début</string>
     <string name="appointment_end">Fin</string>
     <string name="appointment_location">Lieu</string>
+    <string name="settings_hub_health">Santé</string>
+    <string name="settings_hub_reminders">Rappels</string>
+    <string name="settings_hub_appearance">Apparence</string>
+    <string name="settings_hub_data">Données</string>
+    <string name="settings_hub_security">Sécurité</string>
     <string name="appointment_open_maps">Ouvrir dans une application de navigation</string>
     <string name="appointment_maps_unavailable">Aucune application de navigation n’est installée.</string>
     <string name="appointment_fee">Coût de la séance (€)</string>

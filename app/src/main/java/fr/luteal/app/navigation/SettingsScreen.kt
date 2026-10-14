@@ -26,6 +26,9 @@ import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material.icons.rounded.HealthAndSafety
 import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.material.icons.rounded.Medication
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.Palette
+import androidx.compose.material.icons.rounded.Storage
 import androidx.compose.material.icons.rounded.PhoneAndroid
 import androidx.compose.material.icons.rounded.Shield
 import androidx.compose.material.icons.rounded.Sync
@@ -71,6 +74,7 @@ import fr.luteal.app.navigation.settings.meds.MedsSettingsScreen
 import fr.luteal.app.navigation.settings.meds.TreatmentPlansSettingsScreen
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.LutealCard
+import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.LutealRadioRow
 import fr.luteal.core.designsystem.component.SettingsDropdownField
 import fr.luteal.core.designsystem.component.TimeField
@@ -132,6 +136,7 @@ fun SettingsScreen(
     var showPlans by remember { mutableStateOf(false) }
     var showCare by remember { mutableStateOf(false) }
     var showProfessionals by remember { mutableStateOf(false) }
+    var settingsSection by remember { mutableStateOf<SettingsSection?>(null) }
     var showClinicalReportDialog by remember { mutableStateOf(false) }
     var pendingReportConfig by remember { mutableStateOf<ClinicalReportConfig?>(null) }
 
@@ -260,13 +265,14 @@ fun SettingsScreen(
         )
     }
 
-    val settingsSubScreenOpen = showMeds || showPlans || showCare || showProfessionals
+    val settingsSubScreenOpen = showMeds || showPlans || showCare || showProfessionals || settingsSection != null
     BackHandler(enabled = settingsSubScreenOpen) {
         when {
             showMeds -> showMeds = false
             showPlans -> showPlans = false
             showCare -> showCare = false
             showProfessionals -> showProfessionals = false
+            settingsSection != null -> settingsSection = null
         }
     }
 
@@ -301,7 +307,34 @@ fun SettingsScreen(
             title = stringResource(R.string.settings_title),
             subtitle = stringResource(R.string.settings_subtitle)
         )
-
+        if (settingsSection == null) {
+            SettingsHubRow(Icons.Rounded.Medication, stringResource(R.string.settings_hub_health)) {
+                settingsSection = SettingsSection.HEALTH
+            }
+            SettingsHubRow(Icons.Rounded.Notifications, stringResource(R.string.settings_hub_reminders)) {
+                settingsSection = SettingsSection.REMINDERS
+            }
+            SettingsHubRow(Icons.Rounded.Palette, stringResource(R.string.settings_hub_appearance)) {
+                settingsSection = SettingsSection.APPEARANCE
+            }
+            SettingsHubRow(Icons.Rounded.Storage, stringResource(R.string.settings_hub_data)) {
+                settingsSection = SettingsSection.DATA
+            }
+            SettingsHubRow(Icons.Rounded.Shield, stringResource(R.string.settings_hub_security)) {
+                settingsSection = SettingsSection.SECURITY
+            }
+        Text(
+            text = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = LutealSpacing.sm)
+        )
+        } else {
+            ScreenBack(onClick = { settingsSection = null })
+            when (settingsSection) {
+                SettingsSection.HEALTH -> {
         SettingsSectionHeader(title = stringResource(R.string.settings_meds_title))
         LutealCard(modifier = Modifier.fillMaxWidth()) {
             Row(
@@ -388,25 +421,8 @@ fun SettingsScreen(
             }
         }
 
-        SecurityCard(
-            isAppLockEnabled = syncState.isAppLockEnabled,
-            isBiometricEnabled = syncState.isBiometricEnabled,
-            isBiometricHardwareAvailable = syncState.isBiometricHardwareAvailable,
-            autoLockTimeout = syncState.autoLockTimeout,
-            isScreenMaskingEnabled = syncState.isScreenMaskingEnabled,
-            onToggleAppLock = { enable ->
-                if (enable) {
-                    showSetPinDialog = true
-                } else {
-                    showDisableLockDialog = true
                 }
-            },
-            onToggleBiometric = viewModel::setBiometricEnabled,
-            onOpenTimeoutSelector = { showTimeoutDialog = true },
-            onOpenChangePin = { showChangePinDialog = true },
-            onToggleScreenMasking = viewModel::setScreenMaskingEnabled
-        )
-
+                SettingsSection.REMINDERS -> {
         NotificationSettingsCard(
             state = syncState,
             onToggleMaster = onToggleNotificationsMaster,
@@ -419,32 +435,9 @@ fun SettingsScreen(
             onCustomTitleChange = viewModel::setNotificationCustomTitle,
             onCustomBodyChange = viewModel::setNotificationCustomBody
         )
-
-        SettingsSectionHeader(title = stringResource(R.string.settings_data_management_title))
-
-        DataManagementCard(
-            exportState = syncState.exportState,
-            wipeState = syncState.wipeState,
-            importState = syncState.importState,
-            reportExportState = syncState.reportExportState,
-            onExportRequested = {
-                exportDocumentLauncher.launch("luteal_backup_${LocalDate.now()}.json")
-            },
-            onImportRequested = {
-                importDocumentLauncher.launch(arrayOf("application/json", "text/*", "*/*"))
-            },
-            onClinicalReportRequested = { showClinicalReportDialog = true },
-            onWipeRequested = { showWipeConfirmDialog = true },
-            onDismissExportState = viewModel::clearExportState,
-            onDismissWipeState = viewModel::clearWipeState,
-            onDismissImportState = viewModel::clearImportState,
-            onDismissReportExportState = viewModel::clearReportExportState
-        )
-
         CalendarImportSettingsCard()
-
-        AutoBackupCard()
-
+                }
+                SettingsSection.APPEARANCE -> {
         LutealCard(modifier = Modifier.fillMaxWidth()) {
             LutealToggleRow(
                 title = stringResource(R.string.settings_hide_dyspareunia_recap_title),
@@ -460,9 +453,6 @@ fun SettingsScreen(
                 onCheckedChange = viewModel::setHideLibidoInRecap
             )
         }
-
-        MonthlyScoreHistoryCard()
-
         SettingsSectionHeader(title = stringResource(R.string.settings_appearance_title))
 
         LutealCard(modifier = Modifier.fillMaxWidth()) {
@@ -517,15 +507,84 @@ fun SettingsScreen(
                 onClick = { viewModel.setTemperatureUnit("FAHRENHEIT") }
             )
         }
-        Text(
-            text = stringResource(R.string.settings_app_version, BuildConfig.VERSION_NAME),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                }
+                SettingsSection.DATA -> {
+        SettingsSectionHeader(title = stringResource(R.string.settings_data_management_title))
+
+        DataManagementCard(
+            exportState = syncState.exportState,
+            wipeState = syncState.wipeState,
+            importState = syncState.importState,
+            reportExportState = syncState.reportExportState,
+            onExportRequested = {
+                exportDocumentLauncher.launch("luteal_backup_${LocalDate.now()}.json")
+            },
+            onImportRequested = {
+                importDocumentLauncher.launch(arrayOf("application/json", "text/*", "*/*"))
+            },
+            onClinicalReportRequested = { showClinicalReportDialog = true },
+            onWipeRequested = { showWipeConfirmDialog = true },
+            onDismissExportState = viewModel::clearExportState,
+            onDismissWipeState = viewModel::clearWipeState,
+            onDismissImportState = viewModel::clearImportState,
+            onDismissReportExportState = viewModel::clearReportExportState
+        )
+        AutoBackupCard()
+        MonthlyScoreHistoryCard()
+                }
+                SettingsSection.SECURITY -> {
+        SecurityCard(
+            isAppLockEnabled = syncState.isAppLockEnabled,
+            isBiometricEnabled = syncState.isBiometricEnabled,
+            isBiometricHardwareAvailable = syncState.isBiometricHardwareAvailable,
+            autoLockTimeout = syncState.autoLockTimeout,
+            isScreenMaskingEnabled = syncState.isScreenMaskingEnabled,
+            onToggleAppLock = { enable ->
+                if (enable) {
+                    showSetPinDialog = true
+                } else {
+                    showDisableLockDialog = true
+                }
+            },
+            onToggleBiometric = viewModel::setBiometricEnabled,
+            onOpenTimeoutSelector = { showTimeoutDialog = true },
+            onOpenChangePin = { showChangePinDialog = true },
+            onToggleScreenMasking = viewModel::setScreenMaskingEnabled
+        )
+                }
+                null -> Unit
+            }
+        }
+        Spacer(Modifier.height(LutealSpacing.md))
+    }
+}
+
+
+private enum class SettingsSection {
+    HEALTH,
+    REMINDERS,
+    APPEARANCE,
+    DATA,
+    SECURITY
+}
+
+@Composable
+private fun SettingsHubRow(
+    icon: ImageVector,
+    title: String,
+    onClick: () -> Unit
+) {
+    LutealCard(onClick = onClick, modifier = Modifier.fillMaxWidth()) {
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = LutealSpacing.sm)
-        )
-        Spacer(Modifier.height(LutealSpacing.md))
+                .padding(vertical = LutealSpacing.sm),
+            horizontalArrangement = Arrangement.spacedBy(LutealSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null)
+            Text(title, style = MaterialTheme.typography.titleMedium)
+        }
     }
 }
 
