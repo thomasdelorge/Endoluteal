@@ -13,9 +13,43 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
 
 val MIGRATION_11_12 = object : Migration(11, 12) {
     override fun migrate(db: SupportSQLiteDatabase) {
-        db.execSQL("ALTER TABLE appointments ADD COLUMN feeCents INTEGER")
-        db.execSQL("ALTER TABLE appointments ADD COLUMN reimbursementStatus TEXT NOT NULL DEFAULT ''")
-        db.execSQL("ALTER TABLE appointments ADD COLUMN cpamCents INTEGER")
-        db.execSQL("ALTER TABLE appointments ADD COLUMN mutuelleCents INTEGER")
+        // Rebuild so reimbursementStatus is NOT NULL without a SQL default.
+        // ALTER TABLE ... DEFAULT '' does not match the Room entity and
+        // fails open on upgrade from schema 11.
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `appointments_new` (
+                `eventId` TEXT NOT NULL,
+                `professionalId` TEXT NOT NULL,
+                `calendarEventKey` TEXT,
+                `location` TEXT NOT NULL,
+                `report` TEXT NOT NULL,
+                `reportStatus` TEXT NOT NULL,
+                `feeCents` INTEGER,
+                `reimbursementStatus` TEXT NOT NULL,
+                `cpamCents` INTEGER,
+                `mutuelleCents` INTEGER,
+                PRIMARY KEY(`eventId`),
+                FOREIGN KEY(`eventId`) REFERENCES `journal_events`(`id`)
+                    ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+            """.trimIndent()
+        )
+        db.execSQL(
+            """
+            INSERT INTO appointments_new (
+                eventId, professionalId, calendarEventKey, location, report, reportStatus,
+                feeCents, reimbursementStatus, cpamCents, mutuelleCents
+            )
+            SELECT eventId, professionalId, calendarEventKey, location, report, reportStatus,
+                NULL, '', NULL, NULL
+            FROM appointments
+            """.trimIndent()
+        )
+        db.execSQL("DROP TABLE appointments")
+        db.execSQL("ALTER TABLE appointments_new RENAME TO appointments")
+        db.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_appointments_professionalId` ON `appointments` (`professionalId`)"
+        )
     }
 }

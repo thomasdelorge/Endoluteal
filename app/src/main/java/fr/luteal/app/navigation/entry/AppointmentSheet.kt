@@ -214,6 +214,7 @@ fun AppointmentSheet(
             DateTimeField(value = startAt, onValueChange = { startAt = it })
             Text(stringResource(R.string.appointment_end))
             DateTimeField(value = endAt, onValueChange = { endAt = it })
+            val mapsChooserTitle = stringResource(R.string.appointment_open_maps)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = location,
@@ -229,7 +230,7 @@ fun AppointmentSheet(
                         val query = Uri.encode(location.trim())
                         val view = Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q=$query"))
                         try {
-                            context.startActivity(Intent.createChooser(view, context.getString(R.string.appointment_open_maps)))
+                            context.startActivity(Intent.createChooser(view, mapsChooserTitle))
                         } catch (_: ActivityNotFoundException) {
                             mapsUnavailable = true
                         }

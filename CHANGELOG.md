@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.10.0] - 2026-10-14
 
+### Fixed
+
+- Mise à jour depuis la 0.9.0 : l'application s'ouvre à nouveau. La migration des rendez-vous correspond au schéma.
+
 ### Changed
 
 - Annuaire : une tuile par professionnel, édition au tap, ajout par le bouton +.
