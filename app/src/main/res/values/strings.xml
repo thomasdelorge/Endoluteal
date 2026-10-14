@@ -1064,6 +1064,15 @@
     <string name="appointment_start">Début</string>
     <string name="appointment_end">Fin</string>
     <string name="appointment_location">Lieu</string>
+    <string name="appointment_fee">Coût de la séance (€)</string>
+    <string name="appointment_reimbursement">Remboursement</string>
+    <string name="appointment_reimbursement_empty">Non renseigné</string>
+    <string name="appointment_reimbursement_pending">En cours</string>
+    <string name="appointment_reimbursement_no">Non</string>
+    <string name="appointment_reimbursement_done">Terminé</string>
+    <string name="appointment_cpam">Remboursé par la CPAM (€)</string>
+    <string name="appointment_mutuelle">Remboursé par la mutuelle (€)</string>
+    <string name="appointment_remaining">Reste à charge : %1$s €</string>
     <string name="appointment_report">Compte rendu</string>
     <string name="appointment_delete">Supprimer</string>
     <string name="appointment_more_actions">Autres actions</string>

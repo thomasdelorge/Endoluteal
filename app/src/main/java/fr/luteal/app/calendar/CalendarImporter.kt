@@ -108,9 +108,15 @@ class CalendarImporter @Inject constructor(
             )
         )
         val existingAppointment = appointmentRepository.get(eventId)
+        val base = existingAppointment ?: Appointment(
+            eventId = eventId,
+            professionalId = upsert.professionalId,
+            calendarEventKey = upsert.calendarEventKey,
+            location = upsert.location,
+            reportStatus = upsert.reportStatus
+        )
         appointmentRepository.upsert(
-            Appointment(
-                eventId = eventId,
+            base.copy(
                 professionalId = upsert.professionalId,
                 calendarEventKey = upsert.calendarEventKey,
                 location = upsert.location,

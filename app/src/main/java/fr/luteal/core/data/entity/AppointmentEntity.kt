@@ -23,5 +23,9 @@ data class AppointmentEntity(
     val calendarEventKey: String?,
     val location: String,
     val report: String,
-    val reportStatus: String
+    val reportStatus: String,
+    val feeCents: Int? = null,
+    val reimbursementStatus: String = "",
+    val cpamCents: Int? = null,
+    val mutuelleCents: Int? = null
 )

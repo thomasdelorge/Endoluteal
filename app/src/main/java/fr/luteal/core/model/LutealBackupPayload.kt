@@ -220,7 +220,11 @@ data class AppointmentBackupDto(
     @SerialName("calendar_event_key") val calendarEventKey: String? = null,
     @SerialName("location") val location: String = "",
     @SerialName("report") val report: String = "",
-    @SerialName("report_status") val reportStatus: String = "PENDING"
+    @SerialName("report_status") val reportStatus: String = "PENDING",
+    @SerialName("fee_cents") val feeCents: Int? = null,
+    @SerialName("reimbursement_status") val reimbursementStatus: String = "",
+    @SerialName("cpam_cents") val cpamCents: Int? = null,
+    @SerialName("mutuelle_cents") val mutuelleCents: Int? = null
 )
 
 @Serializable

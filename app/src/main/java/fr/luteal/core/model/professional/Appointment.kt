@@ -6,5 +6,9 @@ data class Appointment(
     val calendarEventKey: String? = null,
     val location: String = "",
     val report: String = "",
-    val reportStatus: ReportStatus = ReportStatus.PENDING
+    val reportStatus: ReportStatus = ReportStatus.PENDING,
+    val feeCents: Int? = null,
+    val reimbursementStatus: ReimbursementStatus = ReimbursementStatus.UNSPECIFIED,
+    val cpamCents: Int? = null,
+    val mutuelleCents: Int? = null
 )

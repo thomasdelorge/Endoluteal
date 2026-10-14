@@ -16,6 +16,7 @@ import fr.luteal.core.model.JournalEvent
 import fr.luteal.core.model.JournalEventType
 import fr.luteal.core.model.professional.Appointment
 import fr.luteal.core.model.professional.Professional
+import fr.luteal.core.model.professional.ReimbursementStatus
 import fr.luteal.core.model.professional.ReportStatus
 import fr.luteal.core.model.professional.Specialty
 import java.time.Clock
@@ -52,7 +53,11 @@ class AppointmentEntryViewModel @Inject constructor(
         endAt: Instant?,
         zoneId: ZoneId,
         location: String,
-        report: String
+        report: String,
+        feeCents: Int?,
+        reimbursementStatus: ReimbursementStatus,
+        cpamCents: Int?,
+        mutuelleCents: Int?
     ) {
         val now = clock.instant()
         val existing = eventId?.let { journalEventRepository.get(it) }
@@ -81,7 +86,11 @@ class AppointmentEntryViewModel @Inject constructor(
                 calendarEventKey = existingAppointment?.calendarEventKey,
                 location = location,
                 report = report,
-                reportStatus = status
+                reportStatus = status,
+                feeCents = feeCents,
+                reimbursementStatus = reimbursementStatus,
+                cpamCents = cpamCents,
+                mutuelleCents = mutuelleCents
             )
         )
         appointmentReportScheduler.syncForEvent(id)

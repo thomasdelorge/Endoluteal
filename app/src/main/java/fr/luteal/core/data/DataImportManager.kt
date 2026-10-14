@@ -454,7 +454,11 @@ class DataImportManager @Inject constructor(
                                 calendarEventKey = appointment.calendarEventKey,
                                 location = appointment.location,
                                 report = appointment.report,
-                                reportStatus = appointment.reportStatus
+                                reportStatus = appointment.reportStatus,
+                                feeCents = appointment.feeCents,
+                                reimbursementStatus = appointment.reimbursementStatus,
+                                cpamCents = appointment.cpamCents,
+                                mutuelleCents = appointment.mutuelleCents
                             )
                         )
                     }

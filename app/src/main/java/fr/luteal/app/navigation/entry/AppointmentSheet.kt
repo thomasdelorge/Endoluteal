@@ -38,8 +38,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.EntryScaffold
+import fr.luteal.core.designsystem.component.SettingsDropdownField
 import fr.luteal.core.designsystem.theme.LutealSpacing
+import fr.luteal.core.model.professional.ReimbursementStatus
 import fr.luteal.core.model.professional.Specialty
+import fr.luteal.core.model.professional.formatCents
+import fr.luteal.core.model.professional.parseEurosToCents
+import fr.luteal.core.model.professional.remainingChargeCents
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -66,6 +71,10 @@ fun AppointmentSheet(
     var importedTitle by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var report by remember { mutableStateOf("") }
+    var feeText by remember { mutableStateOf("") }
+    var reimbursementStatus by remember { mutableStateOf(ReimbursementStatus.UNSPECIFIED) }
+    var cpamText by remember { mutableStateOf("") }
+    var mutuelleText by remember { mutableStateOf("") }
     var confirmDelete by remember { mutableStateOf(false) }
     var menuOpen by remember { mutableStateOf(false) }
     var showNewProfessional by remember { mutableStateOf(false) }
@@ -86,6 +95,10 @@ fun AppointmentSheet(
             selectedProfessionalId = appointment.professionalId.takeIf { it.isNotBlank() }
             location = appointment.location
             report = appointment.report
+            feeText = appointment.feeCents?.let(::formatCents).orEmpty()
+            reimbursementStatus = appointment.reimbursementStatus
+            cpamText = appointment.cpamCents?.let(::formatCents).orEmpty()
+            mutuelleText = appointment.mutuelleCents?.let(::formatCents).orEmpty()
         }
     }
 
@@ -135,7 +148,11 @@ fun AppointmentSheet(
                     endAt = endAt.atZone(zone).toInstant(),
                     zoneId = zone,
                     location = location,
-                    report = report
+                    report = report,
+                    feeCents = parseEurosToCents(feeText),
+                    reimbursementStatus = reimbursementStatus,
+                    cpamCents = parseEurosToCents(cpamText),
+                    mutuelleCents = parseEurosToCents(mutuelleText)
                 )
                 onDismiss()
             }
@@ -197,12 +214,54 @@ fun AppointmentSheet(
                 modifier = Modifier.fillMaxWidth()
             )
             OutlinedTextField(
+                value = feeText,
+                onValueChange = { feeText = it },
+                label = { Text(stringResource(R.string.appointment_fee)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            SettingsDropdownField(
+                label = stringResource(R.string.appointment_reimbursement),
+                selectedLabel = reimbursementLabel(reimbursementStatus),
+                options = ReimbursementStatus.entries.map { status ->
+                    status.name to reimbursementLabel(status)
+                },
+                onSelect = { reimbursementStatus = ReimbursementStatus.fromStored(it) }
+            )
+            OutlinedTextField(
+                value = cpamText,
+                onValueChange = { cpamText = it },
+                label = { Text(stringResource(R.string.appointment_cpam)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            OutlinedTextField(
+                value = mutuelleText,
+                onValueChange = { mutuelleText = it },
+                label = { Text(stringResource(R.string.appointment_mutuelle)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            val remaining = remainingChargeCents(
+                parseEurosToCents(feeText),
+                parseEurosToCents(cpamText),
+                parseEurosToCents(mutuelleText)
+            )
+            if (remaining != null) {
+                Text(stringResource(R.string.appointment_remaining, formatCents(remaining)))
+            }
+            OutlinedTextField(
                 value = report,
                 onValueChange = { report = it },
                 label = { Text(stringResource(R.string.appointment_report)) },
                 modifier = Modifier.fillMaxWidth()
             )
     }
+}
+
+@Composable
+private fun reimbursementLabel(status: ReimbursementStatus): String = when (status) {
+    ReimbursementStatus.UNSPECIFIED -> stringResource(R.string.appointment_reimbursement_empty)
+    ReimbursementStatus.IN_PROGRESS -> stringResource(R.string.appointment_reimbursement_pending)
+    ReimbursementStatus.NO -> stringResource(R.string.appointment_reimbursement_no)
+    ReimbursementStatus.DONE -> stringResource(R.string.appointment_reimbursement_done)
 }
 
 @OptIn(ExperimentalLayoutApi::class)

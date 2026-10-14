@@ -251,7 +251,11 @@ class DataExportManager @Inject constructor(
                 calendarEventKey = entity.calendarEventKey,
                 location = entity.location,
                 report = entity.report,
-                reportStatus = entity.reportStatus
+                reportStatus = entity.reportStatus,
+                feeCents = entity.feeCents,
+                reimbursementStatus = entity.reimbursementStatus,
+                cpamCents = entity.cpamCents,
+                mutuelleCents = entity.mutuelleCents
             )
         }
         val careTypes = careTypeDao.allOnce().map { entity ->

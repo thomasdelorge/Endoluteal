@@ -3,6 +3,7 @@ package fr.luteal.core.data.repository
 import fr.luteal.core.data.entity.AppointmentEntity
 import fr.luteal.core.data.local.AppointmentDao
 import fr.luteal.core.model.professional.Appointment
+import fr.luteal.core.model.professional.ReimbursementStatus
 import fr.luteal.core.model.professional.ReportStatus
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -39,7 +40,11 @@ class AppointmentRepositoryImpl @Inject constructor(
         calendarEventKey = calendarEventKey,
         location = location,
         report = report,
-        reportStatus = ReportStatus.fromStored(reportStatus)
+        reportStatus = ReportStatus.fromStored(reportStatus),
+        feeCents = feeCents,
+        reimbursementStatus = ReimbursementStatus.fromStored(reimbursementStatus),
+        cpamCents = cpamCents,
+        mutuelleCents = mutuelleCents
     )
 
     private fun Appointment.toEntity(): AppointmentEntity = AppointmentEntity(
@@ -48,6 +53,10 @@ class AppointmentRepositoryImpl @Inject constructor(
         calendarEventKey = calendarEventKey,
         location = location,
         report = report,
-        reportStatus = reportStatus.name
+        reportStatus = reportStatus.name,
+        feeCents = feeCents,
+        reimbursementStatus = if (reimbursementStatus == ReimbursementStatus.UNSPECIFIED) "" else reimbursementStatus.name,
+        cpamCents = cpamCents,
+        mutuelleCents = mutuelleCents
     )
 }
