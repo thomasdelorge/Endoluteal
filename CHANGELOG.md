@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - La frise enregistre son PDF dans un fichier choisi, sans ouvrir le partage.
 - Examens et médicaments d'une hospitalisation se saisissent dans une fenêtre, puis s'affichent en liste.
 - Médicaments : une tuile par traitement, avec un bandeau rouge si la prochaine prise est trop tôt.
+- Une prise passée se modifie ou se supprime depuis la tuile du médicament.
 
 ## [0.9.0] - 2026-10-14
 

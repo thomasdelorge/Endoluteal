@@ -28,13 +28,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class MedsPlanRow(val plan: TreatmentPlan, val name: String, val nextAt: LocalDateTime?)
+data class MedsIntakeLine(val eventId: String, val units: Double, val at: Instant)
+
 data class MedsHistoryRow(
     val medicationId: String,
     val name: String,
     val lastAt: Instant?,
     val nextAt: Instant?,
     val alert: SafetyAlert? = null,
-    val ruleMessage: String? = null
+    val ruleMessage: String? = null,
+    val intakes: List<MedsIntakeLine> = emptyList()
 )
 
 data class MedsUi(
@@ -79,7 +82,10 @@ class MedsViewModel @Inject constructor(
                 Instant.ofEpochMilli(last.startAt),
                 report.nextPossibleIntakeAt,
                 alert,
-                ruleMessage
+                ruleMessage,
+                intakes.sortedByDescending { it.startAt }.map {
+                    MedsIntakeLine(it.eventId, it.units, Instant.ofEpochMilli(it.startAt))
+                }
             )
         }.sortedByDescending { it.lastAt }
         MedsUi(
@@ -105,5 +111,9 @@ class MedsViewModel @Inject constructor(
             )
             treatmentPlanScheduler.sync()
         }
+    }
+
+    fun deleteIntake(eventId: String) {
+        viewModelScope.launch { intakeRepository.delete(eventId) }
     }
 }
