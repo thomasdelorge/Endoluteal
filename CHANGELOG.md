@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Annuaire : une tuile par professionnel, édition au tap, ajout par le bouton +.
 - À partir de la 0.9.0, une évolution de schéma ne réinitialise plus les données.
 - Rendez-vous : coût, statut de remboursement, parts CPAM et mutuelle, reste à charge calculé.
+- Import calendrier : toutes les 4 h, seuls le titre et le lieu suivent le calendrier. Une suppression côté calendrier laisse le rendez-vous.
 
 ## [0.9.0] - 2026-10-14
 

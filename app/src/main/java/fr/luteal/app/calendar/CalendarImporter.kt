@@ -90,40 +90,46 @@ class CalendarImporter @Inject constructor(
     ): String {
         val eventId = upsert.existingEventId ?: UUID.randomUUID().toString()
         val existingEvent = upsert.existingEventId?.let { journalEventRepository.get(it) }
-        val startAt = Instant.ofEpochMilli(upsert.startAtEpochMillis)
-        val endAt = upsert.endAtEpochMillis?.let(Instant::ofEpochMilli)
-        journalEventRepository.upsert(
-            JournalEvent(
-                id = eventId,
-                type = JournalEventType.APPOINTMENT,
-                startAt = startAt,
-                endAt = endAt,
-                zoneId = zone.id,
-                notes = upsert.title,
-                linkedEventId = null,
-                payload = EventPayload.Appointment,
-                marks = emptyList(),
-                createdAt = existingEvent?.createdAt ?: now,
-                updatedAt = now
+        if (existingEvent != null) {
+            journalEventRepository.upsert(existingEvent.copy(notes = upsert.title, updatedAt = now))
+        } else {
+            val startAt = Instant.ofEpochMilli(upsert.startAtEpochMillis)
+            val endAt = upsert.endAtEpochMillis?.let(Instant::ofEpochMilli)
+            journalEventRepository.upsert(
+                JournalEvent(
+                    id = eventId,
+                    type = JournalEventType.APPOINTMENT,
+                    startAt = startAt,
+                    endAt = endAt,
+                    zoneId = zone.id,
+                    notes = upsert.title,
+                    linkedEventId = null,
+                    payload = EventPayload.Appointment,
+                    marks = emptyList(),
+                    createdAt = now,
+                    updatedAt = now
+                )
             )
-        )
+        }
         val existingAppointment = appointmentRepository.get(eventId)
-        val base = existingAppointment ?: Appointment(
-            eventId = eventId,
-            professionalId = upsert.professionalId,
-            calendarEventKey = upsert.calendarEventKey,
-            location = upsert.location,
-            reportStatus = upsert.reportStatus
-        )
-        appointmentRepository.upsert(
-            base.copy(
-                professionalId = upsert.professionalId,
-                calendarEventKey = upsert.calendarEventKey,
-                location = upsert.location,
-                report = existingAppointment?.report ?: "",
-                reportStatus = upsert.reportStatus
+        if (existingAppointment != null) {
+            appointmentRepository.upsert(
+                existingAppointment.copy(
+                    location = upsert.location,
+                    calendarEventKey = upsert.calendarEventKey
+                )
             )
-        )
+        } else {
+            appointmentRepository.upsert(
+                Appointment(
+                    eventId = eventId,
+                    professionalId = upsert.professionalId,
+                    calendarEventKey = upsert.calendarEventKey,
+                    location = upsert.location,
+                    reportStatus = upsert.reportStatus
+                )
+            )
+        }
         return eventId
     }
 

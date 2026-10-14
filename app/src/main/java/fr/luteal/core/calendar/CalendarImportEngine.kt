@@ -54,37 +54,51 @@ object CalendarImportEngine {
         existingImported: List<ExistingImportedAppointment>,
         history: List<ProfessionalSuggestionHistory>
     ): CalendarImportPlan {
-        val importedKeys = instances.map { it.calendarEventKey }.toSet()
         val existingByKey = existingImported.associateBy { it.calendarEventKey }
+        val claimed = mutableSetOf<String>()
 
         val upserts = instances.map { instance ->
-            val prior = existingByKey[instance.calendarEventKey]
-            val professionalId = prior?.professionalId?.takeIf { it.isNotBlank() }
-                ?: suggestProfessionalId(instance.title, instance.location, history)
-                ?: ""
-            val reportStatus = when {
-                prior == null -> ReportStatus.PENDING
-                prior.reportStatus == ReportStatus.CANCELLED && prior.report.isBlank() -> ReportStatus.PENDING
-                else -> prior.reportStatus
+            val exact = existingByKey[instance.calendarEventKey]
+            val prior = exact ?: uniqueByAndroidEventId(instance.calendarEventKey, existingImported, claimed)
+            if (prior != null) claimed += prior.eventId
+            if (prior != null) {
+                CalendarImportUpsert(
+                    existingEventId = prior.eventId,
+                    calendarEventKey = instance.calendarEventKey,
+                    title = instance.title,
+                    location = instance.location,
+                    professionalId = prior.professionalId,
+                    startAtEpochMillis = prior.startAtEpochMillis,
+                    endAtEpochMillis = prior.endAtEpochMillis,
+                    reportStatus = prior.reportStatus
+                )
+            } else {
+                CalendarImportUpsert(
+                    existingEventId = null,
+                    calendarEventKey = instance.calendarEventKey,
+                    title = instance.title,
+                    location = instance.location,
+                    professionalId = suggestProfessionalId(instance.title, instance.location, history).orEmpty(),
+                    startAtEpochMillis = instance.startAtEpochMillis,
+                    endAtEpochMillis = instance.endAtEpochMillis,
+                    reportStatus = ReportStatus.PENDING
+                )
             }
-            CalendarImportUpsert(
-                existingEventId = prior?.eventId,
-                calendarEventKey = instance.calendarEventKey,
-                title = instance.title,
-                location = instance.location,
-                professionalId = professionalId,
-                startAtEpochMillis = instance.startAtEpochMillis,
-                endAtEpochMillis = instance.endAtEpochMillis,
-                reportStatus = reportStatus
-            )
         }
 
-        val cancelEventIds = existingImported
-            .filter { it.calendarEventKey !in importedKeys }
-            .filter { it.report.isBlank() && it.reportStatus != ReportStatus.DONE }
-            .map { it.eventId }
+        return CalendarImportPlan(upserts = upserts, cancelEventIds = emptyList())
+    }
 
-        return CalendarImportPlan(upserts = upserts, cancelEventIds = cancelEventIds)
+    private fun uniqueByAndroidEventId(
+        calendarEventKey: String,
+        existingImported: List<ExistingImportedAppointment>,
+        claimed: Set<String>
+    ): ExistingImportedAppointment? {
+        val androidId = calendarEventKey.substringBefore(':')
+        val candidates = existingImported.filter {
+            it.eventId !in claimed && it.calendarEventKey.substringBefore(':') == androidId
+        }
+        return candidates.singleOrNull()
     }
 
     fun suggestProfessionalId(

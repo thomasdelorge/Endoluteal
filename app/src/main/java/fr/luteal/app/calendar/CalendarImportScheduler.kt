@@ -35,7 +35,7 @@ class CalendarImportScheduler @Inject constructor(
             workManager.cancelUniqueWork(WORK_PERIODIC)
             return
         }
-        val request = PeriodicWorkRequestBuilder<CalendarImportWorker>(6, TimeUnit.HOURS).build()
+        val request = PeriodicWorkRequestBuilder<CalendarImportWorker>(4, TimeUnit.HOURS).build()
         workManager.enqueueUniquePeriodicWork(
             WORK_PERIODIC,
             ExistingPeriodicWorkPolicy.UPDATE,

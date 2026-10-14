@@ -25,7 +25,7 @@ class CalendarImportEngineTest {
     }
 
     @Test
-    fun cancelsMissingImportedWithoutReport() {
+    fun doesNotCancelWhenCalendarEventDisappears() {
         val plan = CalendarImportEngine.planImport(
             instances = emptyList(),
             existingImported = listOf(
@@ -43,7 +43,8 @@ class CalendarImportEngineTest {
             ),
             history = emptyList()
         )
-        assertEquals(listOf("e1"), plan.cancelEventIds)
+        assertTrue(plan.cancelEventIds.isEmpty())
+        assertTrue(plan.upserts.isEmpty())
     }
 
     @Test
@@ -100,5 +101,43 @@ class CalendarImportEngineTest {
         assertEquals("e1", upsert.existingEventId)
         assertEquals("pro-9", upsert.professionalId)
         assertEquals("Cabinet", upsert.location)
+    }
+
+    @Test
+    fun updatesTitleAndKeepsOriginalTimeWhenBeginChanges() {
+        val plan = CalendarImportEngine.planImport(
+            instances = listOf(
+                ImportedCalendarInstance(
+                    calendarEventKey = "7:999",
+                    title = "Nouveau titre",
+                    description = "",
+                    location = "Nouveau lieu",
+                    startAtEpochMillis = 999,
+                    endAtEpochMillis = 1200
+                )
+            ),
+            existingImported = listOf(
+                ExistingImportedAppointment(
+                    eventId = "e1",
+                    calendarEventKey = "7:100",
+                    professionalId = "pro-9",
+                    location = "Ancien lieu",
+                    report = "CR",
+                    reportStatus = ReportStatus.DONE,
+                    title = "Ancien titre",
+                    startAtEpochMillis = 100,
+                    endAtEpochMillis = 200
+                )
+            ),
+            history = emptyList()
+        )
+        val upsert = plan.upserts.single()
+        assertEquals("e1", upsert.existingEventId)
+        assertEquals("Nouveau titre", upsert.title)
+        assertEquals("Nouveau lieu", upsert.location)
+        assertEquals("pro-9", upsert.professionalId)
+        assertEquals(100L, upsert.startAtEpochMillis)
+        assertEquals(ReportStatus.DONE, upsert.reportStatus)
+        assertTrue(plan.cancelEventIds.isEmpty())
     }
 }
