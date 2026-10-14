@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-14
+
 ### Fixed
 
 - Feuilles de saisie et onglets principaux : contenu dans la zone sûre (encoche, barre de statut, navigation système).
