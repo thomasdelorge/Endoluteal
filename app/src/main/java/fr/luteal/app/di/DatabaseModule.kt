@@ -42,7 +42,9 @@ object DatabaseModule {
             "endoluteal.db"
         )
             .addMigrations(MIGRATION_10_11, MIGRATION_11_12)
-            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+            // Versions below 10 may wipe. 10 starts MIGRATION_10_11, so Room
+            // forbids listing it here. From 11, a missing migration fails open.
+            .fallbackToDestructiveMigrationFrom(true, 1, 2, 3, 4, 5, 6, 7, 8, 9)
             .build()
     }
 

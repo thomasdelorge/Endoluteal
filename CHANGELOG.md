@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Mise à jour depuis la 0.9.0 : l'application s'ouvre à nouveau. La migration des rendez-vous correspond au schéma.
+- Démarrage : Room refusait d'ouvrir la base (migration 10 et reset destructif se chevauchaient).
+- Mise à jour depuis la 0.9.0 : la migration des rendez-vous correspond au schéma.
 
 ### Changed
 
