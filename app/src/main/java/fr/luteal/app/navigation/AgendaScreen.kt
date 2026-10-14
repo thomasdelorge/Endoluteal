@@ -1,7 +1,7 @@
 package fr.luteal.app.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,6 +56,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
@@ -121,6 +122,7 @@ fun AgendaScreen(
     var selectedDate by rememberSaveable { mutableStateOf(state.today) }
     var showMonthPicker by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
+    BackHandler(enabled = fabExpanded) { fabExpanded = false }
     val coroutineScope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
     var cycleToEdit by remember { mutableStateOf<Cycle?>(null) }
@@ -189,7 +191,9 @@ fun AgendaScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .then(if (fabExpanded) Modifier.blur(8.dp) else Modifier),
         contentPadding = PaddingValues(
             horizontal = LutealSpacing.md,
             vertical = LutealSpacing.lg
@@ -310,6 +314,15 @@ fun AgendaScreen(
                 )
             }
     }
+        if (fabExpanded) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .testTag("agenda_fab_scrim")
+                    .clickable { fabExpanded = false }
+                    .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
+            )
+        }
         AgendaSpeedDial(
             expanded = fabExpanded,
             actions = listOf(

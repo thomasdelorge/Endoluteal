@@ -47,4 +47,20 @@ class AgendaSpeedDialTest {
             composeRule.onAllNodesWithTag("agenda_action_daily_recap").fetchSemanticsNodes().size
         )
     }
+
+    @Test
+    fun scrimTapClosesFabMenu() {
+        composeRule.setContent {
+            LutealTheme {
+                AgendaScreen(state = LutealUiState(today = LocalDate.parse("2026-08-13")))
+            }
+        }
+        composeRule.onNodeWithTag("agenda_fab").performClick()
+        composeRule.onNodeWithText("Récap du jour").assertIsDisplayed()
+        composeRule.onNodeWithTag("agenda_fab_scrim").performClick()
+        assertEquals(
+            0,
+            composeRule.onAllNodesWithTag("agenda_action_daily_recap").fetchSemanticsNodes().size
+        )
+    }
 }
