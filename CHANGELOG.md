@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Annuaire : une tuile par professionnel, édition au tap, ajout par le bouton +.
+
 ## [0.9.0] - 2026-10-14
 
 ### Fixed

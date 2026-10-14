@@ -5,13 +5,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -27,6 +33,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
+import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Professional
@@ -50,30 +57,36 @@ fun ProfessionalsSettingsScreen(
             .padding(LutealSpacing.md),
         verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
     ) {
-        ScreenBack(onClick = onBack)
-        professionals.forEach { professional ->
-            Text(
-                "${professional.name} · ${professional.displaySpecialty()}",
-                style = MaterialTheme.typography.titleMedium
-            )
-            if (professional.place.isNotBlank()) {
-                Text(professional.place, style = MaterialTheme.typography.bodySmall)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = {
-                    editorTarget = professional
-                    editorOpen = true
-                }) { Text(stringResource(R.string.timeline_edit_appointment)) }
-                TextButton(onClick = { pendingDelete = professional }) {
-                    Text(stringResource(R.string.meds_delete))
-                }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ScreenBack(onClick = onBack)
+            Spacer(Modifier.weight(1f))
+            IconButton(onClick = {
+                editorTarget = null
+                editorOpen = true
+            }) {
+                Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.professional_add))
             }
         }
-        TextButton(onClick = {
-            editorTarget = null
-            editorOpen = true
-        }) {
-            Text(stringResource(R.string.professional_add))
+        professionals.forEach { professional ->
+            LutealCard(onClick = {
+                editorTarget = professional
+                editorOpen = true
+            }) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            "${professional.name} · ${professional.displaySpecialty()}",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (professional.place.isNotBlank()) {
+                            Text(professional.place, style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                    IconButton(onClick = { pendingDelete = professional }) {
+                        Icon(Icons.Rounded.Delete, contentDescription = stringResource(R.string.meds_delete))
+                    }
+                }
+            }
         }
     }
 
