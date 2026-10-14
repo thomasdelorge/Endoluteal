@@ -11,6 +11,7 @@ import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import fr.luteal.app.BuildConfig
 import fr.luteal.app.MainActivity
 import fr.luteal.app.R
 import fr.luteal.app.notification.NotificationChannelManager
@@ -86,7 +87,7 @@ class BackupWriter @Inject constructor(
         val created = DocumentsContract.createDocument(resolver, parent, "application/json", name)
             ?: error(context.getString(R.string.backup_error_folder))
         resolver.openOutputStream(created)?.use { stream ->
-            dataExportManager.exportToStream(stream)
+            dataExportManager.exportToStream(stream, BuildConfig.VERSION_NAME)
         } ?: error(context.getString(R.string.backup_error_folder))
         val children = DocumentsContract.buildChildDocumentsUriUsingTree(
             treeUri,

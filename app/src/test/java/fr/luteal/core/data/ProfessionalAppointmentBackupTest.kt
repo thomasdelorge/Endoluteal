@@ -16,6 +16,7 @@ import fr.luteal.core.model.professional.Specialty
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -117,7 +118,8 @@ class ProfessionalAppointmentBackupTest {
             )
         )
 
-        val json = exportManager.exportToJsonString()
+        val json = exportManager.exportToJsonString(appVersion = "0.9.0")
+        assertTrue(json.contains("\"app_version\": \"0.9.0\""))
         database.appointmentDao().deleteAll()
         database.professionalDao().deleteAll()
         database.journalEventDao().deleteAllEvents()
