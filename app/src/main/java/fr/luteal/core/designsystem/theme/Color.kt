@@ -121,6 +121,11 @@ private data class PaletteTones(
 )
 
 fun colorSchemeFor(palette: String, dark: Boolean): ColorScheme {
+    when (palette) {
+        "SOLARIZED" -> return if (dark) SolarizedDark else SolarizedLight
+        "CATPPUCCIN" -> return if (dark) CatppuccinMocha else CatppuccinLatte
+        "DRACULA" -> return DraculaScheme
+    }
     val base = if (dark) DarkColorScheme else LightColorScheme
     val tones = paletteTones(palette, dark) ?: return base
     return base.copy(
@@ -193,3 +198,88 @@ private fun paletteTones(palette: String, dark: Boolean): PaletteTones? = when (
     }
     else -> null
 }
+
+private val SolarizedLight = lightColorScheme(
+    primary = Color(0xFF268BD2),
+    onPrimary = Color(0xFFFDF6E3),
+    primaryContainer = Color(0xFFEEE8D5),
+    onPrimaryContainer = Color(0xFF073642),
+    secondary = Color(0xFF2AA198),
+    onSecondary = Color(0xFFFDF6E3),
+    background = Color(0xFFFDF6E3),
+    onBackground = Color(0xFF657B83),
+    surface = Color(0xFFEEE8D5),
+    onSurface = Color(0xFF586E75),
+    surfaceVariant = Color(0xFFEEE8D5),
+    onSurfaceVariant = Color(0xFF657B83),
+    error = Color(0xFFDC322F),
+    onError = Color(0xFFFDF6E3)
+)
+
+private val SolarizedDark = darkColorScheme(
+    primary = Color(0xFF268BD2),
+    onPrimary = Color(0xFF002B36),
+    primaryContainer = Color(0xFF073642),
+    onPrimaryContainer = Color(0xFF93A1A1),
+    secondary = Color(0xFF2AA198),
+    onSecondary = Color(0xFF002B36),
+    background = Color(0xFF002B36),
+    onBackground = Color(0xFF839496),
+    surface = Color(0xFF073642),
+    onSurface = Color(0xFF93A1A1),
+    surfaceVariant = Color(0xFF073642),
+    onSurfaceVariant = Color(0xFF839496),
+    error = Color(0xFFDC322F),
+    onError = Color(0xFF002B36)
+)
+
+private val CatppuccinLatte = lightColorScheme(
+    primary = Color(0xFF1E66F5),
+    onPrimary = Color(0xFFEFF1F5),
+    primaryContainer = Color(0xFFDCE0E8),
+    onPrimaryContainer = Color(0xFF4C4F69),
+    secondary = Color(0xFF40A02B),
+    onSecondary = Color(0xFFEFF1F5),
+    background = Color(0xFFEFF1F5),
+    onBackground = Color(0xFF4C4F69),
+    surface = Color(0xFFE6E9EF),
+    onSurface = Color(0xFF4C4F69),
+    surfaceVariant = Color(0xFFCCD0DA),
+    onSurfaceVariant = Color(0xFF6C6F85),
+    error = Color(0xFFD20F69),
+    onError = Color(0xFFEFF1F5)
+)
+
+private val CatppuccinMocha = darkColorScheme(
+    primary = Color(0xFF89B4FA),
+    onPrimary = Color(0xFF11111B),
+    primaryContainer = Color(0xFF313244),
+    onPrimaryContainer = Color(0xFFCDD6F4),
+    secondary = Color(0xFFA6E3A1),
+    onSecondary = Color(0xFF11111B),
+    background = Color(0xFF1E1E2E),
+    onBackground = Color(0xFFCDD6F4),
+    surface = Color(0xFF181825),
+    onSurface = Color(0xFFCDD6F4),
+    surfaceVariant = Color(0xFF313244),
+    onSurfaceVariant = Color(0xFFBAC2DE),
+    error = Color(0xFFF38BA8),
+    onError = Color(0xFF11111B)
+)
+
+private val DraculaScheme = darkColorScheme(
+    primary = Color(0xFFBD93F9),
+    onPrimary = Color(0xFF282A36),
+    primaryContainer = Color(0xFF44475A),
+    onPrimaryContainer = Color(0xFFF8F8F2),
+    secondary = Color(0xFF8BE9FD),
+    onSecondary = Color(0xFF282A36),
+    background = Color(0xFF282A36),
+    onBackground = Color(0xFFF8F8F2),
+    surface = Color(0xFF21222C),
+    onSurface = Color(0xFFF8F8F2),
+    surfaceVariant = Color(0xFF44475A),
+    onSurfaceVariant = Color(0xFFF8F8F2),
+    error = Color(0xFFFF5555),
+    onError = Color(0xFF282A36)
+)

@@ -280,6 +280,9 @@
     <string name="settings_palette_blue">Bleu</string>
     <string name="settings_palette_plum">Prune</string>
     <string name="settings_palette_sand">Sable</string>
+    <string name="settings_palette_solarized">Solarized</string>
+    <string name="settings_palette_catppuccin">Catppuccin</string>
+    <string name="settings_palette_dracula">Dracula</string>
     <string name="settings_about_title">À propos des estimations</string>
     <string name="settings_about_body">Luteal sépare les observations enregistrées des calculs estimatifs. L’application ne pose aucun diagnostic et ne formule aucune conclusion médicale.</string>
     <string name="settings_app_version">Version %1$s</string>

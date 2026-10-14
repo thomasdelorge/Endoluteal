@@ -35,4 +35,15 @@ class ThemeModeTest {
         assertTrue(evergreen != blue)
         assertEquals(evergreen, colorSchemeFor("NOPE", dark = false).primary)
     }
+
+    @Test
+    fun devThemesUseTheirOwnSurfaces() {
+        val evergreen = colorSchemeFor("EVERGREEN", dark = false).background
+        assertTrue(colorSchemeFor("SOLARIZED", dark = false).background != evergreen)
+        assertTrue(colorSchemeFor("CATPPUCCIN", dark = true).background != colorSchemeFor("EVERGREEN", dark = true).background)
+        assertEquals(
+            colorSchemeFor("DRACULA", dark = true).background,
+            colorSchemeFor("DRACULA", dark = false).background
+        )
+    }
 }

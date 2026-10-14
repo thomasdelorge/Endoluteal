@@ -561,11 +561,14 @@ private fun appearanceMenuOptions(): List<Pair<String, String>> {
         "EVERGREEN" to stringResource(R.string.settings_palette_evergreen),
         "BLUE" to stringResource(R.string.settings_palette_blue),
         "PLUM" to stringResource(R.string.settings_palette_plum),
-        "SAND" to stringResource(R.string.settings_palette_sand)
+        "SAND" to stringResource(R.string.settings_palette_sand),
+        "SOLARIZED" to stringResource(R.string.settings_palette_solarized),
+        "CATPPUCCIN" to stringResource(R.string.settings_palette_catppuccin)
     )
-    return palettes.flatMap { (paletteId, paletteLabel) ->
+    val themed = palettes.flatMap { (paletteId, paletteLabel) ->
         modes.map { (modeId, modeLabel) -> "$modeId|$paletteId" to "$modeLabel - $paletteLabel" }
     }
+    return themed + ("DARK|DRACULA" to stringResource(R.string.settings_palette_dracula))
 }
 
 private enum class SettingsSection {
