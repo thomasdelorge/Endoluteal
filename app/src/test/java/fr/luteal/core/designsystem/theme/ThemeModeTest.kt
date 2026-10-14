@@ -19,6 +19,11 @@ class ThemeModeTest {
     }
 
     @Test
+    fun appearanceChoiceSplitsModeAndPalette() {
+        assertEquals("LIGHT" to "BLUE", splitAppearanceChoice("LIGHT|BLUE"))
+    }
+
+    @Test
     fun unknownModeFallsBackToTheDevice() {
         assertTrue(resolveDarkTheme("NOPE", systemDark = true))
     }

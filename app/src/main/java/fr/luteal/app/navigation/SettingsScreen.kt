@@ -78,6 +78,7 @@ import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.LutealRadioRow
 import fr.luteal.core.designsystem.component.SettingsDropdownField
 import fr.luteal.core.designsystem.component.TimeField
+import fr.luteal.core.designsystem.theme.splitAppearanceChoice
 import java.time.LocalTime
 import fr.luteal.core.designsystem.component.LutealSecondaryButton
 import fr.luteal.core.designsystem.component.LutealToggleRow
@@ -461,29 +462,18 @@ fun SettingsScreen(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            val themeOptions = listOf(
-                "SYSTEM" to stringResource(R.string.settings_theme_system),
-                "LIGHT" to stringResource(R.string.settings_theme_light),
-                "DARK" to stringResource(R.string.settings_theme_dark)
-            )
+            val appearanceOptions = appearanceMenuOptions()
+            val selectedAppearance = "${syncState.themeMode}|${syncState.colorPalette}"
             SettingsDropdownField(
                 label = stringResource(R.string.settings_theme_label),
-                selectedLabel = themeOptions.first { it.first == syncState.themeMode }.second,
-                options = themeOptions,
-                onSelect = viewModel::setThemeMode
-            )
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-            val paletteOptions = listOf(
-                "EVERGREEN" to stringResource(R.string.settings_palette_evergreen),
-                "BLUE" to stringResource(R.string.settings_palette_blue),
-                "PLUM" to stringResource(R.string.settings_palette_plum),
-                "SAND" to stringResource(R.string.settings_palette_sand)
-            )
-            SettingsDropdownField(
-                label = stringResource(R.string.settings_palette_title),
-                selectedLabel = paletteOptions.first { it.first == syncState.colorPalette }.second,
-                options = paletteOptions,
-                onSelect = viewModel::setColorPalette
+                selectedLabel = appearanceOptions.find { it.first == selectedAppearance }?.second
+                    ?: appearanceOptions.first().second,
+                options = appearanceOptions,
+                onSelect = { value ->
+                    val (mode, palette) = splitAppearanceChoice(value)
+                    viewModel.setThemeMode(mode)
+                    viewModel.setColorPalette(palette)
+                }
             )
             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             SettingsInformationRow(
@@ -559,6 +549,24 @@ fun SettingsScreen(
     }
 }
 
+
+@Composable
+private fun appearanceMenuOptions(): List<Pair<String, String>> {
+    val modes = listOf(
+        "LIGHT" to stringResource(R.string.settings_theme_light),
+        "DARK" to stringResource(R.string.settings_theme_dark),
+        "SYSTEM" to stringResource(R.string.settings_theme_system)
+    )
+    val palettes = listOf(
+        "EVERGREEN" to stringResource(R.string.settings_palette_evergreen),
+        "BLUE" to stringResource(R.string.settings_palette_blue),
+        "PLUM" to stringResource(R.string.settings_palette_plum),
+        "SAND" to stringResource(R.string.settings_palette_sand)
+    )
+    return palettes.flatMap { (paletteId, paletteLabel) ->
+        modes.map { (modeId, modeLabel) -> "$modeId|$paletteId" to "$modeLabel - $paletteLabel" }
+    }
+}
 
 private enum class SettingsSection {
     HEALTH,

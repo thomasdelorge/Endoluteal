@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rendez-vous : le lieu s’ouvre dans une application de navigation.
 - Les exports JSON indiquent la version de l’application.
 - Réglages regroupés en Santé, Rappels, Apparence, Données et Sécurité.
+- Apparence : un seul menu combine le mode clair, sombre ou système et la couleur.
 
 ## [0.9.0] - 2026-10-14
 
