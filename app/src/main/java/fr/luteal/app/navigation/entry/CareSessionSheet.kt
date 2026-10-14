@@ -32,10 +32,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
-import fr.luteal.core.designsystem.component.FullScreenEntry
+import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.component.PainScale
-import fr.luteal.core.designsystem.component.ScreenBack
-import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.care.CareType
@@ -149,19 +147,41 @@ fun CareSessionSheet(
         )
     }
 
-    FullScreenEntry {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            ScreenBack(onClick = onDismiss)
-            Text(
-                stringResource(if (tensOnly) R.string.agenda_action_tens else R.string.care_title),
-                style = MaterialTheme.typography.titleLarge
-            )
+    val duration = durationMinutes.toIntOrNull() ?: 0
+    val tensDurations = setOf(30, 60, 90, 120)
+    val namedProgram = programName.trim()
+    val programOk = when {
+        tensOnly && selectedType?.programs?.isNotEmpty() == true -> namedProgram.isNotEmpty()
+        isTens -> namedProgram.isNotEmpty()
+        else -> true
+    }
+
+    EntryScaffold(
+        onBack = onDismiss,
+        title = stringResource(if (tensOnly) R.string.agenda_action_tens else R.string.care_title),
+        confirmEnabled = selectedType != null && programOk &&
+            if (isTens) duration in tensDurations else duration > 0,
+        onConfirm = {
+            val type = selectedType ?: return@EntryScaffold
+            scope.launch {
+                val saved = viewModel.save(
+                    eventId = existingEventId,
+                    careType = type,
+                    programName = namedProgram,
+                    startAt = at.atZone(zone).toInstant(),
+                    durationMinutes = duration,
+                    painBefore = painBefore,
+                    zoneId = zone,
+                    notes = notes
+                )
+                if (tensOnly && !scheduleReminder) {
+                    onDismiss()
+                } else {
+                    followup = saved
+                }
+            }
+        }
+    ) {
             if (careTypes.isEmpty()) {
                 Text(
                     stringResource(R.string.care_empty_types),
@@ -256,44 +276,10 @@ fun CareSessionSheet(
                 label = { Text(stringResource(R.string.symptom_notes)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            val duration = durationMinutes.toIntOrNull() ?: 0
-            val tensDurations = setOf(30, 60, 90, 120)
-            val namedProgram = programName.trim()
-            val programOk = when {
-                tensOnly && selectedType?.programs?.isNotEmpty() == true -> namedProgram.isNotEmpty()
-                isTens -> namedProgram.isNotEmpty()
-                else -> true
-            }
-            SheetActions(
-                onCancel = onDismiss,
-                confirmEnabled = selectedType != null && programOk &&
-                    if (isTens) duration in tensDurations else duration > 0,
-                onConfirm = {
-                    val type = selectedType ?: return@SheetActions
-                    scope.launch {
-                        val saved = viewModel.save(
-                            eventId = existingEventId,
-                            careType = type,
-                            programName = namedProgram,
-                            startAt = at.atZone(zone).toInstant(),
-                            durationMinutes = duration,
-                            painBefore = painBefore,
-                            zoneId = zone,
-                            notes = notes
-                        )
-                        if (tensOnly && !scheduleReminder) {
-                            onDismiss()
-                        } else {
-                            followup = saved
-                        }
-                    }
-                }
-            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.care_delete))
                 }
             }
-        }
     }
 }

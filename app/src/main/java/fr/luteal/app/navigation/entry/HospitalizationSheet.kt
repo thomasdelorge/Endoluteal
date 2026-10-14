@@ -25,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
-import fr.luteal.core.designsystem.component.FullScreenEntry
-import fr.luteal.core.designsystem.component.ScreenBack
-import fr.luteal.core.designsystem.component.SheetActions
+import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.EventPayload
@@ -101,16 +99,29 @@ fun HospitalizationSheet(
         )
     }
 
-    FullScreenEntry {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            ScreenBack(onClick = onDismiss)
-            Text(stringResource(R.string.hospital_title), style = MaterialTheme.typography.titleLarge)
+    EntryScaffold(
+        onBack = onDismiss,
+        title = stringResource(R.string.hospital_title),
+        onConfirm = {
+            scope.launch {
+                val endInstant = if (hasDischarge) dischargeAt.atZone(zone).toInstant() else null
+                viewModel.save(
+                    eventId = existingEventId,
+                    startAt = admissionAt.atZone(zone).toInstant(),
+                    endAt = endInstant,
+                    zoneId = zone,
+                    notes = notes,
+                    payload = EventPayload.Hospitalization(
+                        place = place,
+                        reason = reason,
+                        exams = exams,
+                        administeredMedications = meds
+                    )
+                )
+                onDismiss()
+            }
+        }
+    ) {
             Text(stringResource(R.string.hospital_admission))
             DateTimeField(value = admissionAt, onValueChange = { admissionAt = it })
             RowWithSwitch(
@@ -172,34 +183,11 @@ fun HospitalizationSheet(
                 label = { Text(stringResource(R.string.symptom_notes)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            SheetActions(
-                onCancel = onDismiss,
-                onConfirm = {
-                    scope.launch {
-                        val endInstant = if (hasDischarge) dischargeAt.atZone(zone).toInstant() else null
-                        viewModel.save(
-                            eventId = existingEventId,
-                            startAt = admissionAt.atZone(zone).toInstant(),
-                            endAt = endInstant,
-                            zoneId = zone,
-                            notes = notes,
-                            payload = EventPayload.Hospitalization(
-                                place = place,
-                                reason = reason,
-                                exams = exams,
-                                administeredMedications = meds
-                            )
-                        )
-                        onDismiss()
-                    }
-                }
-            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.hospital_delete))
                 }
             }
-        }
     }
 }
 

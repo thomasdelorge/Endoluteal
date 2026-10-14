@@ -35,9 +35,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
 import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
-import fr.luteal.core.designsystem.component.FullScreenEntry
+import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.component.PainScale
-import fr.luteal.core.designsystem.component.ScreenBack
 import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -137,16 +136,35 @@ fun MedicationIntakeSheet(
         }
     }
 
-    FullScreenEntry {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            ScreenBack(onClick = onDismiss)
-            Text(stringResource(R.string.intake_title), style = MaterialTheme.typography.titleLarge)
+    EntryScaffold(
+        onBack = onDismiss,
+        title = stringResource(R.string.intake_title),
+        confirmEnabled = medicationId != null && unitCount != null && unitCount > 0.0,
+        onConfirm = {
+            val id = medicationId ?: return@EntryScaffold
+            val count = unitCount ?: return@EntryScaffold
+            val alerts = report?.alerts.orEmpty()
+            if (alerts.any { it.severity == AlertSeverity.DANGER }) {
+                askDanger = true
+            } else {
+                scope.launch {
+                    val saved = viewModel.saveIntake(
+                        id,
+                        count,
+                        at.atZone(zone).toInstant(),
+                        marksWith(intensity, marks),
+                        false,
+                        existingEventId
+                    )
+                    if (existingEventId == null) {
+                        doneAt = saved.nextPossibleIntakeAt
+                    } else {
+                        onDismiss()
+                    }
+                }
+            }
+        }
+    ) {
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = query,
@@ -197,40 +215,11 @@ fun MedicationIntakeSheet(
             if (showMap) {
                 BodyMap(marks = marks, onMarksChange = { marks = it })
             }
-            SheetActions(
-                onCancel = onDismiss,
-                confirmEnabled = medicationId != null && unitCount != null && unitCount > 0.0,
-                onConfirm = {
-                    val id = medicationId ?: return@SheetActions
-                    val count = unitCount ?: return@SheetActions
-                    val alerts = report?.alerts.orEmpty()
-                    if (alerts.any { it.severity == AlertSeverity.DANGER }) {
-                        askDanger = true
-                    } else {
-                        scope.launch {
-                            val saved = viewModel.saveIntake(
-                                id,
-                                count,
-                                at.atZone(zone).toInstant(),
-                                marksWith(intensity, marks),
-                                false,
-                                existingEventId
-                            )
-                            if (existingEventId == null) {
-                                doneAt = saved.nextPossibleIntakeAt
-                            } else {
-                                onDismiss()
-                            }
-                        }
-                    }
-                }
-            )
             if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.intake_delete))
                 }
             }
-        }
     }
 
     if (askDanger) {

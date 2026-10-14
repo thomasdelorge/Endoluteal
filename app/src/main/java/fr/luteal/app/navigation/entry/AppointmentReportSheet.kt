@@ -25,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import fr.luteal.app.R
-import fr.luteal.core.designsystem.component.FullScreenEntry
-import fr.luteal.core.designsystem.component.ScreenBack
-import fr.luteal.core.designsystem.component.SheetActions
+import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.professional.Specialty
 import kotlinx.coroutines.launch
@@ -61,44 +59,36 @@ fun AppointmentReportSheet(
         NewProfessionalDialog(
             onDismiss = { showNewProfessional = false },
             onSave = { name, specialty, custom ->
-                viewModel.createProfessional(name, specialty, custom)
-                showNewProfessional = false
+                scope.launch {
+                    selectedProfessionalId = viewModel.createProfessional(name, specialty, custom)
+                    showNewProfessional = false
+                }
             }
         )
     }
 
-    FullScreenEntry {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            ScreenBack(onClick = onDismiss)
-            Text(stringResource(R.string.appointment_report_prompt_title), style = MaterialTheme.typography.titleLarge)
+    EntryScaffold(
+        onBack = onDismiss,
+        title = stringResource(R.string.appointment_report_prompt_title),
+        confirmEnabled = selectedProfessionalId != null,
+        onConfirm = {
+            val professionalId = selectedProfessionalId ?: return@EntryScaffold
+            scope.launch {
+                viewModel.saveReport(eventId, professionalId, report)
+                onDismiss()
+            }
+        }
+    ) {
             Text(
                 stringResource(R.string.appointment_report_prompt_body),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Text(stringResource(R.string.appointment_professional), style = MaterialTheme.typography.labelLarge)
-            if (professionals.isEmpty()) {
-                Text(
-                    stringResource(R.string.appointment_no_professional),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-                    professionals.forEach { professional ->
-                        FilterChip(
-                            selected = professional.id == selectedProfessionalId,
-                            onClick = { selectedProfessionalId = professional.id },
-                            label = { Text("${professional.name} · ${professional.displaySpecialty()}") }
-                        )
-                    }
-                }
-            }
+            ProfessionalPickerField(
+                professionals = professionals,
+                selectedId = selectedProfessionalId,
+                onSelected = { selectedProfessionalId = it }
+            )
             TextButton(onClick = { showNewProfessional = true }) {
                 Text(stringResource(R.string.appointment_add_professional))
             }
@@ -109,17 +99,5 @@ fun AppointmentReportSheet(
                 modifier = Modifier.fillMaxWidth(),
                 minLines = 4
             )
-            SheetActions(
-                onCancel = onDismiss,
-                confirmEnabled = selectedProfessionalId != null,
-                onConfirm = {
-                    val professionalId = selectedProfessionalId ?: return@SheetActions
-                    scope.launch {
-                        viewModel.saveReport(eventId, professionalId, report)
-                        onDismiss()
-                    }
-                }
-            )
-        }
     }
 }
