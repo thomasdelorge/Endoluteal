@@ -2,11 +2,8 @@ package fr.luteal.app.navigation.entry
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -25,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import fr.luteal.app.R
 import fr.luteal.core.designsystem.component.DateTimeField
+import fr.luteal.core.designsystem.component.LutealCard
 import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.component.PainScale
 import fr.luteal.core.designsystem.theme.LutealSpacing
@@ -56,6 +54,9 @@ fun HospitalizationSheet(
     var exams by remember { mutableStateOf(listOf<EventPayload.HospitalExam>()) }
     var meds by remember { mutableStateOf(listOf<EventPayload.HospitalAdministeredMedication>()) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var editingExam by remember { mutableStateOf<IndexedDraft<EventPayload.HospitalExam>?>(null) }
+    var editingMed by remember { mutableStateOf<IndexedDraft<EventPayload.HospitalAdministeredMedication>?>(null) }
+    var confirmRowRemove by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(existingEventId) {
@@ -145,37 +146,83 @@ fun HospitalizationSheet(
                 label = { Text(stringResource(R.string.hospital_reason)) },
                 modifier = Modifier.fillMaxWidth()
             )
-            Text(stringResource(R.string.hospital_exams), style = MaterialTheme.typography.titleMedium)
+            SectionHeader(stringResource(R.string.hospital_exams)) {
+                editingExam = IndexedDraft(null, EventPayload.HospitalExam())
+            }
             exams.forEachIndexed { index, exam ->
-                ExamEditor(
-                    exam = exam,
-                    onChange = { updated ->
-                        exams = exams.toMutableList().also { it[index] = updated }
-                    },
-                    onRemove = {
-                        exams = exams.filterIndexed { i, _ -> i != index }
+                LutealCard(onClick = { editingExam = IndexedDraft(index, exam) }) {
+                    Text(exam.name.ifBlank { stringResource(R.string.hospital_exam_name) })
+                    if (exam.date.isNotBlank()) {
+                        Text(exam.date, style = MaterialTheme.typography.bodySmall)
                     }
-                )
+                }
             }
-            TextButton(onClick = {
-                exams = exams + EventPayload.HospitalExam()
-            }) { Text(stringResource(R.string.hospital_add_exam)) }
-
-            Text(stringResource(R.string.hospital_medications), style = MaterialTheme.typography.titleMedium)
+            SectionHeader(stringResource(R.string.hospital_medications)) {
+                editingMed = IndexedDraft(null, EventPayload.HospitalAdministeredMedication())
+            }
             meds.forEachIndexed { index, med ->
-                MedEditor(
-                    med = med,
-                    onChange = { updated ->
-                        meds = meds.toMutableList().also { it[index] = updated }
+                LutealCard(onClick = { editingMed = IndexedDraft(index, med) }) {
+                    Text(med.freeText.ifBlank { stringResource(R.string.hospital_med_name) })
+                    if (med.administeredAt.isNotBlank()) {
+                        Text(med.administeredAt, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+            editingExam?.let { draft ->
+                ExamDialog(
+                    draft = draft.value,
+                    canRemove = draft.index != null,
+                    onChange = { editingExam = draft.copy(value = it) },
+                    onConfirm = {
+                        val index = draft.index
+                        exams = if (index == null) exams + draft.value
+                        else exams.toMutableList().also { it[index] = draft.value }
+                        editingExam = null
                     },
-                    onRemove = {
-                        meds = meds.filterIndexed { i, _ -> i != index }
+                    onRemove = { confirmRowRemove = true },
+                    onDismiss = { editingExam = null }
+                )
+            }
+            editingMed?.let { draft ->
+                MedDialog(
+                    draft = draft.value,
+                    canRemove = draft.index != null,
+                    onChange = { editingMed = draft.copy(value = it) },
+                    onConfirm = {
+                        val index = draft.index
+                        meds = if (index == null) meds + draft.value
+                        else meds.toMutableList().also { it[index] = draft.value }
+                        editingMed = null
+                    },
+                    onRemove = { confirmRowRemove = true },
+                    onDismiss = { editingMed = null }
+                )
+            }
+            if (confirmRowRemove) {
+                AlertDialog(
+                    onDismissRequest = { confirmRowRemove = false },
+                    title = { Text(stringResource(R.string.hospital_remove_row)) },
+                    text = { Text(stringResource(R.string.hospital_delete_body)) },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            editingExam?.index?.let { index ->
+                                exams = exams.filterIndexed { i, _ -> i != index }
+                            }
+                            editingMed?.index?.let { index ->
+                                meds = meds.filterIndexed { i, _ -> i != index }
+                            }
+                            confirmRowRemove = false
+                            editingExam = null
+                            editingMed = null
+                        }) { Text(stringResource(R.string.hospital_remove_row)) }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { confirmRowRemove = false }) {
+                            Text(stringResource(R.string.intake_cancel))
+                        }
                     }
                 )
             }
-            TextButton(onClick = {
-                meds = meds + EventPayload.HospitalAdministeredMedication()
-            }) { Text(stringResource(R.string.hospital_add_med)) }
 
             OutlinedTextField(
                 value = notes,
@@ -207,60 +254,104 @@ private fun RowWithSwitch(
     }
 }
 
+private data class IndexedDraft<T>(val index: Int?, val value: T)
+
 @Composable
-private fun ExamEditor(
-    exam: EventPayload.HospitalExam,
-    onChange: (EventPayload.HospitalExam) -> Unit,
-    onRemove: () -> Unit
-) {
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-        OutlinedTextField(
-            value = exam.name,
-            onValueChange = { onChange(exam.copy(name = it)) },
-            label = { Text(stringResource(R.string.hospital_exam_name)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = exam.date,
-            onValueChange = { onChange(exam.copy(date = it)) },
-            label = { Text(stringResource(R.string.hospital_exam_date)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = exam.result,
-            onValueChange = { onChange(exam.copy(result = it)) },
-            label = { Text(stringResource(R.string.hospital_exam_result)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        TextButton(onClick = onRemove) { Text(stringResource(R.string.hospital_remove_row)) }
+private fun SectionHeader(title: String, onAdd: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        TextButton(onClick = onAdd) { Text("+") }
     }
 }
 
 @Composable
-private fun MedEditor(
-    med: EventPayload.HospitalAdministeredMedication,
-    onChange: (EventPayload.HospitalAdministeredMedication) -> Unit,
-    onRemove: () -> Unit
+private fun ExamDialog(
+    draft: EventPayload.HospitalExam,
+    canRemove: Boolean,
+    onChange: (EventPayload.HospitalExam) -> Unit,
+    onConfirm: () -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit
 ) {
-    var pain by remember(med) { mutableStateOf(med.painAfter) }
-    Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-        OutlinedTextField(
-            value = med.freeText,
-            onValueChange = { onChange(med.copy(freeText = it)) },
-            label = { Text(stringResource(R.string.hospital_med_name)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        OutlinedTextField(
-            value = med.administeredAt,
-            onValueChange = { onChange(med.copy(administeredAt = it)) },
-            label = { Text(stringResource(R.string.hospital_med_time)) },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Text(stringResource(R.string.hospital_med_pain_after))
-        PainScale(value = pain, onValueChange = {
-            pain = it
-            onChange(med.copy(painAfter = it))
-        })
-        TextButton(onClick = onRemove) { Text(stringResource(R.string.hospital_remove_row)) }
-    }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.hospital_exams)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+                OutlinedTextField(
+                    value = draft.name,
+                    onValueChange = { onChange(draft.copy(name = it)) },
+                    label = { Text(stringResource(R.string.hospital_exam_name)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = draft.date,
+                    onValueChange = { onChange(draft.copy(date = it)) },
+                    label = { Text(stringResource(R.string.hospital_exam_date)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = draft.result,
+                    onValueChange = { onChange(draft.copy(result = it)) },
+                    label = { Text(stringResource(R.string.hospital_exam_result)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (canRemove) {
+                    TextButton(onClick = onRemove) { Text(stringResource(R.string.hospital_remove_row)) }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.meds_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.intake_cancel)) }
+        }
+    )
+}
+
+@Composable
+private fun MedDialog(
+    draft: EventPayload.HospitalAdministeredMedication,
+    canRemove: Boolean,
+    onChange: (EventPayload.HospitalAdministeredMedication) -> Unit,
+    onConfirm: () -> Unit,
+    onRemove: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.hospital_medications)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
+                OutlinedTextField(
+                    value = draft.freeText,
+                    onValueChange = { onChange(draft.copy(freeText = it)) },
+                    label = { Text(stringResource(R.string.hospital_med_name)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = draft.administeredAt,
+                    onValueChange = { onChange(draft.copy(administeredAt = it)) },
+                    label = { Text(stringResource(R.string.hospital_med_time)) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Text(stringResource(R.string.hospital_med_pain_after))
+                PainScale(value = draft.painAfter, onValueChange = { onChange(draft.copy(painAfter = it)) })
+                if (canRemove) {
+                    TextButton(onClick = onRemove) { Text(stringResource(R.string.hospital_remove_row)) }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onConfirm) { Text(stringResource(R.string.meds_save)) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.intake_cancel)) }
+        }
+    )
 }
