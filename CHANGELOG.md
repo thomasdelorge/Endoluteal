@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Thèmes Solarized, Catppuccin et Dracula.
 - La frise enregistre son PDF dans un fichier choisi, sans ouvrir le partage.
 - Examens et médicaments d'une hospitalisation se saisissent dans une fenêtre, puis s'affichent en liste.
+- Médicaments : une tuile par traitement, avec un bandeau rouge si la prochaine prise est trop tôt.
 
 ## [0.9.0] - 2026-10-14
 

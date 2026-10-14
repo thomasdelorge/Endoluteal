@@ -9,6 +9,7 @@ import fr.luteal.core.data.repository.MedicationRepository
 import fr.luteal.core.data.repository.TreatmentPlanRepository
 import fr.luteal.core.model.meds.CandidateIntake
 import fr.luteal.core.model.meds.MedicationSafetyChecker
+import fr.luteal.core.model.meds.SafetyAlert
 import fr.luteal.core.model.meds.TreatmentPlan
 import fr.luteal.core.model.meds.nextGroupedIntake
 import java.time.Clock
@@ -27,7 +28,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class MedsPlanRow(val plan: TreatmentPlan, val name: String, val nextAt: LocalDateTime?)
-data class MedsHistoryRow(val medicationId: String, val name: String, val lastAt: Instant?, val nextAt: Instant?)
+data class MedsHistoryRow(
+    val medicationId: String,
+    val name: String,
+    val lastAt: Instant?,
+    val nextAt: Instant?,
+    val alert: SafetyAlert? = null,
+    val ruleMessage: String? = null
+)
 
 data class MedsUi(
     val plans: List<MedsPlanRow> = emptyList(),
@@ -63,7 +71,16 @@ class MedsViewModel @Inject constructor(
                     .map { fr.luteal.core.model.meds.RecordedIntake(it.medicationId, it.units, Instant.ofEpochMilli(it.startAt)) },
                 catalog
             )
-            MedsHistoryRow(medicationId, names[medicationId] ?: medicationId, Instant.ofEpochMilli(last.startAt), report.nextPossibleIntakeAt)
+            val alert = report.alerts.maxByOrNull { it.severity }
+            val ruleMessage = alert?.ruleId?.let { ruleId -> catalog.rules.find { it.id == ruleId }?.message }
+            MedsHistoryRow(
+                medicationId,
+                names[medicationId] ?: medicationId,
+                Instant.ofEpochMilli(last.startAt),
+                report.nextPossibleIntakeAt,
+                alert,
+                ruleMessage
+            )
         }.sortedByDescending { it.lastAt }
         MedsUi(
             plans = planRows,
