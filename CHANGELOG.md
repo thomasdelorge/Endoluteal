@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Feuilles de saisie et onglets principaux : contenu dans la zone sûre (encoche, barre de statut, navigation système).
 - Feuilles de saisie : une seule flèche retour en haut ; enregistrement épinglé en bas.
 - Retour système : ferme la feuille ou le sous-écran au lieu de quitter l’application.
-- Agenda : fond flouté et voile lors de l’ouverture du menu +.
+- Agenda : fond flouté et voile lors de l’ouverture du menu + ; le bouton + se masque en bas de liste scrollable.
 
 ### Changed
 

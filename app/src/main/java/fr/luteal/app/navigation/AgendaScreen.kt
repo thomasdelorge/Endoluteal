@@ -21,6 +21,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.IconButton
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -122,6 +124,12 @@ fun AgendaScreen(
     var selectedDate by rememberSaveable { mutableStateOf(state.today) }
     var showMonthPicker by remember { mutableStateOf(false) }
     var fabExpanded by remember { mutableStateOf(false) }
+    val listState = rememberLazyListState()
+    val hideFab = hideAgendaFab(
+        canScrollBackward = listState.canScrollBackward,
+        canScrollForward = listState.canScrollForward,
+        fabExpanded = fabExpanded
+    )
     BackHandler(enabled = fabExpanded) { fabExpanded = false }
     val coroutineScope = rememberCoroutineScope()
     val locale = LocalConfiguration.current.locales[0]
@@ -191,6 +199,7 @@ fun AgendaScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
+        state = listState,
         modifier = Modifier
             .fillMaxSize()
             .then(if (fabExpanded) Modifier.blur(8.dp) else Modifier),
@@ -323,6 +332,12 @@ fun AgendaScreen(
                     .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f))
             )
         }
+        AnimatedVisibility(
+            visible = !hideFab,
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(LutealSpacing.md)
+        ) {
         AgendaSpeedDial(
             expanded = fabExpanded,
             actions = listOf(
@@ -351,11 +366,9 @@ fun AgendaScreen(
                     onRecordAppointment(selectedDate)
                 }
             ),
-            onToggle = { fabExpanded = !fabExpanded },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(LutealSpacing.md)
+            onToggle = { fabExpanded = !fabExpanded }
         )
+        }
     }
 
     cycleToEdit?.let { cycle ->
@@ -446,6 +459,12 @@ private fun DayEventCard(
         }
     }
 }
+
+internal fun hideAgendaFab(
+    canScrollBackward: Boolean,
+    canScrollForward: Boolean,
+    fabExpanded: Boolean
+): Boolean = !fabExpanded && canScrollBackward && !canScrollForward
 
 private data class SpeedDialAction(
     val tag: String,
