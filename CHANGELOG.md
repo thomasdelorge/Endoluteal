@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Feuilles de saisie et onglets principaux : contenu dans la zone sûre (encoche, barre de statut, navigation système).
+
 ### Changed
 
 - Carte du corps : points de douleur positionnés sur le schéma (intensité et type par point), pour une heatmap future.
