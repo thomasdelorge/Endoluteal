@@ -58,8 +58,40 @@ class RoomSchemaHarnessTest {
         }
     }
 
+    @Test
+    fun migratesAppointmentsFrom12To13() {
+        helper.createDatabase(MIGRATION_12_DB, 12).use { db ->
+            db.execSQL(
+                """
+                INSERT INTO journal_events (
+                    id, type, startAt, endAt, zoneId, notes, linkedEventId, payloadJson, createdAt, updatedAt
+                ) VALUES ('evt', 'APPOINTMENT', 1, NULL, 'Europe/Paris', 'titre', NULL, '{}', 1, 1)
+                """.trimIndent()
+            )
+            db.execSQL(
+                """
+                INSERT INTO appointments (
+                    eventId, professionalId, calendarEventKey, location, report, reportStatus, reimbursementStatus
+                ) VALUES ('evt', 'pro', 'k', 'Cabinet', 'CR', 'PENDING', '')
+                """.trimIndent()
+            )
+        }
+        helper.runMigrationsAndValidate(MIGRATION_12_DB, 13, true, MIGRATION_12_13).use { db ->
+            db.query(
+                "SELECT description, titleEdited, locationEdited, location FROM appointments WHERE eventId = 'evt'"
+            ).use { cursor ->
+                assertTrue(cursor.moveToFirst())
+                assertEquals("", cursor.getString(0))
+                assertEquals(0, cursor.getInt(1))
+                assertEquals(0, cursor.getInt(2))
+                assertEquals("Cabinet", cursor.getString(3))
+            }
+        }
+    }
+
     companion object {
         private const val TEST_DB = "endoluteal-schema-harness-test.db"
         private const val MIGRATION_DB = "endoluteal-migration-11-12.db"
+        private const val MIGRATION_12_DB = "endoluteal-migration-12-13.db"
     }
 }

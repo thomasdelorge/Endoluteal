@@ -52,7 +52,9 @@ class AppointmentEntryViewModel @Inject constructor(
         startAt: Instant,
         endAt: Instant?,
         zoneId: ZoneId,
+        title: String,
         location: String,
+        description: String,
         report: String,
         feeCents: Int?,
         reimbursementStatus: ReimbursementStatus,
@@ -71,7 +73,7 @@ class AppointmentEntryViewModel @Inject constructor(
                 startAt = startAt,
                 endAt = endAt,
                 zoneId = zoneId.id,
-                notes = existing?.notes.orEmpty(),
+                notes = title,
                 linkedEventId = null,
                 payload = EventPayload.Appointment,
                 marks = emptyList(),
@@ -79,14 +81,22 @@ class AppointmentEntryViewModel @Inject constructor(
                 updatedAt = now
             )
         )
+        // A manual save marks the title and location as locally edited so the
+        // next calendar sync keeps the user's wording instead of the calendar's.
+        val titleEdited = existingAppointment?.titleEdited == true || (existing != null && title != existing.notes)
+        val locationEdited = existingAppointment?.locationEdited == true ||
+            (existingAppointment != null && location != existingAppointment.location)
         appointmentRepository.upsert(
             Appointment(
                 eventId = id,
                 professionalId = professionalId,
                 calendarEventKey = existingAppointment?.calendarEventKey,
                 location = location,
+                description = description,
                 report = report,
                 reportStatus = status,
+                titleEdited = titleEdited,
+                locationEdited = locationEdited,
                 feeCents = feeCents,
                 reimbursementStatus = reimbursementStatus,
                 cpamCents = cpamCents,

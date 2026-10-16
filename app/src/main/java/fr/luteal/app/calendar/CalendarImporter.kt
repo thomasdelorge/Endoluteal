@@ -90,8 +90,17 @@ class CalendarImporter @Inject constructor(
     ): String {
         val eventId = upsert.existingEventId ?: UUID.randomUUID().toString()
         val existingEvent = upsert.existingEventId?.let { journalEventRepository.get(it) }
+        val existingAppointment = appointmentRepository.get(eventId)
+        // A local edit of the title or location wins over the calendar on the
+        // next sync: keep the user's wording instead of the calendar's.
+        val titleEdited = existingAppointment?.titleEdited == true
         if (existingEvent != null) {
-            journalEventRepository.upsert(existingEvent.copy(notes = upsert.title, updatedAt = now))
+            journalEventRepository.upsert(
+                existingEvent.copy(
+                    notes = if (titleEdited) existingEvent.notes else upsert.title,
+                    updatedAt = now
+                )
+            )
         } else {
             val startAt = Instant.ofEpochMilli(upsert.startAtEpochMillis)
             val endAt = upsert.endAtEpochMillis?.let(Instant::ofEpochMilli)
@@ -111,11 +120,10 @@ class CalendarImporter @Inject constructor(
                 )
             )
         }
-        val existingAppointment = appointmentRepository.get(eventId)
         if (existingAppointment != null) {
             appointmentRepository.upsert(
                 existingAppointment.copy(
-                    location = upsert.location,
+                    location = if (existingAppointment.locationEdited) existingAppointment.location else upsert.location,
                     calendarEventKey = upsert.calendarEventKey
                 )
             )

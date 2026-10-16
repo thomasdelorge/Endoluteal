@@ -1063,6 +1063,11 @@
     <string name="hospital_delete_body">L’événement sera retiré de l’agenda.</string>
     <string name="hospital_delete_confirm">Supprimer</string>
     <string name="appointment_title">Rendez-vous</string>
+    <string name="appointment_section_header">Rendez-vous</string>
+    <string name="appointment_section_when">Quand</string>
+    <string name="appointment_section_reimbursement">Remboursement</string>
+    <string name="appointment_section_report">Compte-rendu</string>
+    <string name="appointment_description">Description</string>
     <string name="appointment_professional">Professionnel</string>
     <string name="appointment_no_professional">Ajoutez un professionnel ci-dessous.</string>
     <string name="appointment_add_professional">Nouveau professionnel</string>

@@ -113,6 +113,7 @@ class ProfessionalAppointmentBackupTest {
                 professionalId = "pro-1",
                 calendarEventKey = null,
                 location = "Consultation",
+                description = "Première visite",
                 report = "Suivi",
                 reportStatus = "DONE"
             )
@@ -132,5 +133,6 @@ class ProfessionalAppointmentBackupTest {
         val appt = database.appointmentDao().allOnce().single()
         assertEquals("pro-1", appt.professionalId)
         assertEquals("Consultation", appt.location)
+        assertEquals("Première visite", appt.description)
     }
 }

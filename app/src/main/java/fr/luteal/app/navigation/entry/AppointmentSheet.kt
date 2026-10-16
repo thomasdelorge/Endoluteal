@@ -22,6 +22,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -75,6 +76,7 @@ fun AppointmentSheet(
     var selectedProfessionalId by remember { mutableStateOf<String?>(null) }
     var importedTitle by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     var report by remember { mutableStateOf("") }
     var feeText by remember { mutableStateOf("") }
     var reimbursementStatus by remember { mutableStateOf(ReimbursementStatus.UNSPECIFIED) }
@@ -101,6 +103,7 @@ fun AppointmentSheet(
         if (appointment != null) {
             selectedProfessionalId = appointment.professionalId.takeIf { it.isNotBlank() }
             location = appointment.location
+            description = appointment.description
             report = appointment.report
             feeText = appointment.feeCents?.let(::formatCents).orEmpty()
             reimbursementStatus = appointment.reimbursementStatus
@@ -154,7 +157,9 @@ fun AppointmentSheet(
                     startAt = startAt.atZone(zone).toInstant(),
                     endAt = endAt.atZone(zone).toInstant(),
                     zoneId = zone,
+                    title = importedTitle,
                     location = location,
+                    description = description,
                     report = report,
                     feeCents = parseEurosToCents(feeText),
                     reimbursementStatus = reimbursementStatus,
@@ -199,9 +204,15 @@ fun AppointmentSheet(
             }
         }
     ) {
-            if (importedTitle.isNotBlank()) {
-                Text(importedTitle, style = MaterialTheme.typography.titleMedium)
-            }
+            // Header — title, professional, location and description can all be
+            // edited locally and override the calendar on the next sync.
+            Text(stringResource(R.string.appointment_section_header), style = MaterialTheme.typography.titleMedium)
+            OutlinedTextField(
+                value = importedTitle,
+                onValueChange = { importedTitle = it },
+                label = { Text(stringResource(R.string.appointment_title)) },
+                modifier = Modifier.fillMaxWidth()
+            )
             ProfessionalPickerField(
                 professionals = professionals,
                 selectedId = selectedProfessionalId,
@@ -210,10 +221,6 @@ fun AppointmentSheet(
             TextButton(onClick = { showNewProfessional = true }) {
                 Text(stringResource(R.string.appointment_add_professional))
             }
-            Text(stringResource(R.string.appointment_start))
-            DateTimeField(value = startAt, onValueChange = { startAt = it })
-            Text(stringResource(R.string.appointment_end))
-            DateTimeField(value = endAt, onValueChange = { endAt = it })
             val mapsChooserTitle = stringResource(R.string.appointment_open_maps)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
@@ -243,6 +250,26 @@ fun AppointmentSheet(
             if (mapsUnavailable) {
                 Text(stringResource(R.string.appointment_maps_unavailable))
             }
+            OutlinedTextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text(stringResource(R.string.appointment_description)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = LutealSpacing.sm))
+
+            // Quand — date and time.
+            Text(stringResource(R.string.appointment_section_when), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.appointment_start))
+            DateTimeField(value = startAt, onValueChange = { startAt = it })
+            Text(stringResource(R.string.appointment_end))
+            DateTimeField(value = endAt, onValueChange = { endAt = it })
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = LutealSpacing.sm))
+
+            // Remboursement — cost and reimbursements.
+            Text(stringResource(R.string.appointment_section_reimbursement), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = feeText,
                 onValueChange = { feeText = it },
@@ -277,11 +304,17 @@ fun AppointmentSheet(
             if (remaining != null) {
                 Text(stringResource(R.string.appointment_remaining, formatCents(remaining)))
             }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = LutealSpacing.sm))
+
+            // CR — the clinical report, free-form multiline.
+            Text(stringResource(R.string.appointment_section_report), style = MaterialTheme.typography.titleMedium)
             OutlinedTextField(
                 value = report,
                 onValueChange = { report = it },
                 label = { Text(stringResource(R.string.appointment_report)) },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 4
             )
     }
 }

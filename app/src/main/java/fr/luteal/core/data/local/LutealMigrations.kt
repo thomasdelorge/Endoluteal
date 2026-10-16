@@ -53,3 +53,11 @@ val MIGRATION_11_12 = object : Migration(11, 12) {
         )
     }
 }
+
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE appointments ADD COLUMN description TEXT NOT NULL DEFAULT ''")
+        db.execSQL("ALTER TABLE appointments ADD COLUMN titleEdited INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE appointments ADD COLUMN locationEdited INTEGER NOT NULL DEFAULT 0")
+    }
+}
