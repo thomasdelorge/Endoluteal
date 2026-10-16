@@ -35,11 +35,16 @@ class AppointmentReportScheduler @Inject constructor(
         }
         val event = journalEventDao.get(eventId)?.event ?: return
         val end = event.endAt?.let(Instant::ofEpochMilli) ?: Instant.ofEpochMilli(event.startAt)
-        val trigger = if (end.isBefore(clock.instant())) clock.instant() else end
+        // Never notify retroactively: an appointment already finished (e.g. picked
+        // up by a calendar sync) no longer triggers a CR reminder.
+        if (!end.isAfter(clock.instant())) {
+            reminderScheduler.cancel(reminderId)
+            return
+        }
         reminderScheduler.schedule(
             id = reminderId,
             type = ReminderType.APPOINTMENT_REPORT,
-            triggerAt = trigger,
+            triggerAt = end,
             payloadJson = "{}",
             eventId = eventId
         )
