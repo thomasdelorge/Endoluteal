@@ -44,7 +44,6 @@ import fr.luteal.app.LutealViewModel
 import fr.luteal.app.R
 import fr.luteal.app.navigation.entry.MedicationIntakeSheet
 import fr.luteal.app.navigation.entry.MedicationIntakeViewModel
-import fr.luteal.app.navigation.entry.PainCheckSheet
 import fr.luteal.app.navigation.entry.CareSessionEntryViewModel
 import fr.luteal.app.navigation.entry.CareSessionSheet
 import fr.luteal.app.navigation.entry.AppointmentEntryViewModel
@@ -95,7 +94,6 @@ fun LutealMainScaffold(
     var intakeDate by remember { mutableStateOf<LocalDate?>(null) }
     var intakeMedicationId by remember { mutableStateOf<String?>(null) }
     var intakeEventId by remember { mutableStateOf<String?>(null) }
-    var painCheckEventId by remember { mutableStateOf<String?>(null) }
     var symptomDate by remember { mutableStateOf<LocalDate?>(null) }
     var symptomEventId by remember { mutableStateOf<String?>(null) }
     var careDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -130,8 +128,12 @@ fun LutealMainScaffold(
         pendingAppointmentReportEventId
     ) {
         if (pendingPainEventId != null) {
+            // The pain follow-up opens the intake's own sheet so the after-pain
+            // is recorded where the dose was taken, not in a detached check.
             selectedDestination = LutealDestination.AGENDA
-            painCheckEventId = pendingPainEventId
+            intakeEventId = pendingPainEventId
+            intakeMedicationId = null
+            intakeDate = uiState.today
             onPendingReminderConsumed()
         } else if (pendingMedicationId != null) {
             selectedDestination = LutealDestination.AGENDA
@@ -178,7 +180,6 @@ fun LutealMainScaffold(
             hospitalDate = hospitalDate,
             careDate = careDate,
             symptomDate = symptomDate,
-            painCheckEventId = painCheckEventId,
             intakeDate = intakeDate,
             showBackfillDialog = showBackfillDialog
         )
@@ -205,7 +206,6 @@ fun LutealMainScaffold(
                     symptomDate = null
                     symptomEventId = null
                 }
-                MainOverlayBackTarget.PAIN_CHECK -> painCheckEventId = null
                 MainOverlayBackTarget.MEDICATION_INTAKE -> {
                     intakeDate = null
                     intakeMedicationId = null
@@ -371,14 +371,6 @@ fun LutealMainScaffold(
                 intakeMedicationId = null
                 intakeEventId = null
             }
-        )
-    }
-
-    painCheckEventId?.let { eventId ->
-        PainCheckSheet(
-            linkedEventId = eventId,
-            viewModel = intakeViewModel,
-            onDismiss = { painCheckEventId = null }
         )
     }
 

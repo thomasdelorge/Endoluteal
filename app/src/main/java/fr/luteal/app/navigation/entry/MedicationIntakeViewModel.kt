@@ -112,20 +112,26 @@ class MedicationIntakeViewModel @Inject constructor(
         }
     }
 
+    suspend fun painCheckFor(linkedEventId: String?): JournalEvent? =
+        linkedEventId?.let { journalEventRepository.getLinkedPainCheck(it) }
+
     suspend fun savePainCheck(linkedEventId: String?, marks: List<PainMark>) {
         val now = clock.instant()
+        // Reuse the existing linked pain check so a follow-up edit replaces the
+        // reported pain instead of piling up detached duplicates.
+        val existingId = linkedEventId?.let { journalEventRepository.getLinkedPainCheck(it)?.id }
         journalEventRepository.upsert(
             JournalEvent(
-                id = UUID.randomUUID().toString(),
+                id = existingId ?: UUID.randomUUID().toString(),
                 type = JournalEventType.PAIN_CHECK,
-                startAt = now,
+                startAt = existingId?.let { runCatching { journalEventRepository.get(it)?.createdAt }.getOrNull() } ?: now,
                 endAt = null,
                 zoneId = ZoneId.systemDefault().id,
                 notes = "",
                 linkedEventId = linkedEventId,
                 payload = EventPayload.PainCheck,
                 marks = marks,
-                createdAt = now,
+                createdAt = existingId?.let { runCatching { journalEventRepository.get(it)?.createdAt }.getOrNull() } ?: now,
                 updatedAt = now
             )
         )

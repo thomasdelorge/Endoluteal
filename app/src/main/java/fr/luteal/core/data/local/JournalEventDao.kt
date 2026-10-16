@@ -26,6 +26,10 @@ interface JournalEventDao {
     fun observeBetween(from: Long, to: Long): Flow<List<JournalEventWithMarks>>
 
     @Transaction
+    @Query("SELECT * FROM journal_events WHERE linkedEventId = :linkedEventId AND type = 'PAIN_CHECK' LIMIT 1")
+    suspend fun getLinkedPainCheck(linkedEventId: String): JournalEventWithMarks?
+
+    @Transaction
     @Query("SELECT * FROM journal_events WHERE type = :type ORDER BY startAt ASC")
     fun observeByType(type: String): Flow<List<JournalEventWithMarks>>
 

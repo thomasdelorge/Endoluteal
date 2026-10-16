@@ -11,7 +11,6 @@ enum class MainOverlayBackTarget {
     HOSPITALIZATION,
     CARE_SESSION,
     SYMPTOM,
-    PAIN_CHECK,
     MEDICATION_INTAKE,
     BACKFILL_CYCLE
 }
@@ -24,7 +23,6 @@ data class MainOverlayBackState(
     val hospitalDate: LocalDate? = null,
     val careDate: LocalDate? = null,
     val symptomDate: LocalDate? = null,
-    val painCheckEventId: String? = null,
     val intakeDate: LocalDate? = null,
     val showBackfillDialog: Boolean = false
 )
@@ -37,7 +35,6 @@ fun resolveMainOverlayBackTarget(state: MainOverlayBackState): MainOverlayBackTa
     state.hospitalDate != null -> MainOverlayBackTarget.HOSPITALIZATION
     state.careDate != null -> MainOverlayBackTarget.CARE_SESSION
     state.symptomDate != null -> MainOverlayBackTarget.SYMPTOM
-    state.painCheckEventId != null -> MainOverlayBackTarget.PAIN_CHECK
     state.intakeDate != null -> MainOverlayBackTarget.MEDICATION_INTAKE
     state.showBackfillDialog -> MainOverlayBackTarget.BACKFILL_CYCLE
     else -> null

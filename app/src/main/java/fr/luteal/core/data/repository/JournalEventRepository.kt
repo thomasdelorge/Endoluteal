@@ -13,6 +13,9 @@ interface JournalEventRepository {
 
     suspend fun get(id: String): JournalEvent?
 
+    /** The pain check reported after a medication intake, if any. */
+    suspend fun getLinkedPainCheck(linkedEventId: String): JournalEvent?
+
     suspend fun upsert(event: JournalEvent)
 
     suspend fun delete(id: String)

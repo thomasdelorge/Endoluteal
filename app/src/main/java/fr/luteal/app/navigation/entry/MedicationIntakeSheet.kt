@@ -14,11 +14,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -37,7 +35,6 @@ import fr.luteal.core.common.LocalizedDateFormatter
 import fr.luteal.core.designsystem.component.DateTimeField
 import fr.luteal.core.designsystem.component.EntryScaffold
 import fr.luteal.core.designsystem.component.PainScale
-import fr.luteal.core.designsystem.component.SheetActions
 import fr.luteal.core.designsystem.component.bodymap.BodyMap
 import fr.luteal.core.designsystem.theme.LutealSpacing
 import fr.luteal.core.model.PainMark
@@ -75,6 +72,9 @@ fun MedicationIntakeSheet(
     var intensity by remember { mutableStateOf<Int?>(null) }
     var marks by remember { mutableStateOf<List<PainMark>>(emptyList()) }
     var showMap by remember { mutableStateOf(false) }
+    var afterIntensity by remember { mutableStateOf<Int?>(null) }
+    var afterMarks by remember { mutableStateOf<List<PainMark>>(emptyList()) }
+    var showAfterMap by remember { mutableStateOf(false) }
     var report by remember { mutableStateOf<SafetyReport?>(null) }
     var askDanger by remember { mutableStateOf(false) }
     var doneAt by remember { mutableStateOf<Instant?>(null) }
@@ -90,6 +90,9 @@ fun MedicationIntakeSheet(
         units = intake.units.toString()
         marks = event.marks
         intensity = event.marks.maxOfOrNull { it.intensity }
+        val after = viewModel.painCheckFor(id)
+        afterMarks = after?.marks.orEmpty()
+        afterIntensity = after?.marks?.maxOfOrNull { it.intensity }
     }
 
     if (confirmDelete && existingEventId != null) {
@@ -126,6 +129,16 @@ fun MedicationIntakeSheet(
         if (query.isBlank()) query = name
     }
 
+    fun saveAfterPain(eventId: String?) {
+        if (eventId == null) return
+        val marks = marksWith(afterIntensity, afterMarks)
+        scope.launch {
+            if (marks.isNotEmpty()) {
+                viewModel.savePainCheck(eventId, marks)
+            }
+        }
+    }
+
     LaunchedEffect(medicationId, units, at, catalog.medications.size) {
         val id = medicationId
         val count = unitCount
@@ -156,6 +169,7 @@ fun MedicationIntakeSheet(
                         false,
                         existingEventId
                     )
+                    saveAfterPain(existingEventId)
                     if (existingEventId == null) {
                         doneAt = saved.nextPossibleIntakeAt
                     } else {
@@ -216,6 +230,16 @@ fun MedicationIntakeSheet(
                 BodyMap(marks = marks, onMarksChange = { marks = it })
             }
             if (existingEventId != null) {
+                Text(stringResource(R.string.intake_pain_after))
+                PainScale(value = afterIntensity, onValueChange = { afterIntensity = it })
+                TextButton(onClick = { showAfterMap = !showAfterMap }) {
+                    Text(stringResource(R.string.intake_body_map))
+                }
+                if (showAfterMap) {
+                    BodyMap(marks = afterMarks, onMarksChange = { afterMarks = it })
+                }
+            }
+            if (existingEventId != null) {
                 TextButton(onClick = { confirmDelete = true }) {
                     Text(stringResource(R.string.intake_delete))
                 }
@@ -241,6 +265,7 @@ fun MedicationIntakeSheet(
                             true,
                             existingEventId
                         )
+                        saveAfterPain(existingEventId)
                         if (existingEventId == null) {
                             doneAt = saved.nextPossibleIntakeAt
                         } else {
@@ -283,41 +308,6 @@ fun MedicationIntakeSheet(
                 TextButton(onClick = onDismiss) { Text(stringResource(R.string.intake_ok)) }
             }
         )
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun PainCheckSheet(
-    linkedEventId: String?,
-    viewModel: MedicationIntakeViewModel,
-    onDismiss: () -> Unit
-) {
-    var intensity by remember { mutableStateOf<Int?>(null) }
-    var marks by remember { mutableStateOf<List<PainMark>>(emptyList()) }
-    var showMap by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(LutealSpacing.md),
-            verticalArrangement = Arrangement.spacedBy(LutealSpacing.sm)
-        ) {
-            Text(stringResource(R.string.pain_check_title), style = MaterialTheme.typography.titleLarge)
-            PainScale(value = intensity, onValueChange = { intensity = it })
-            TextButton(onClick = { showMap = !showMap }) { Text(stringResource(R.string.intake_body_map)) }
-            if (showMap) BodyMap(marks = marks, onMarksChange = { marks = it })
-            SheetActions(
-                onCancel = onDismiss,
-                onConfirm = {
-                    scope.launch {
-                        viewModel.savePainCheck(linkedEventId, marksWith(intensity, marks))
-                        onDismiss()
-                    }
-                }
-            )
-        }
     }
 }
 

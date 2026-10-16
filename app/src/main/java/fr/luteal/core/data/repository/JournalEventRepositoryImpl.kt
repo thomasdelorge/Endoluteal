@@ -30,6 +30,9 @@ class JournalEventRepositoryImpl @Inject constructor(
     override suspend fun get(id: String): JournalEvent? =
         journalEventDao.get(id)?.toDomain()
 
+    override suspend fun getLinkedPainCheck(linkedEventId: String): JournalEvent? =
+        journalEventDao.getLinkedPainCheck(linkedEventId)?.toDomain()
+
     override suspend fun upsert(event: JournalEvent) {
         event.marks.forEach { mark ->
             require(mark.intensity in 0..10) {

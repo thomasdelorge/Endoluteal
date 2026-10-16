@@ -1199,6 +1199,7 @@
     <string name="intake_search">Rechercher</string>
     <string name="intake_units">Nombre d’unités</string>
     <string name="intake_pain_before">Douleur avant la prise</string>
+    <string name="intake_pain_after">Douleur après la prise</string>
     <string name="intake_body_map">Localiser sur le corps</string>
     <string name="intake_danger_title">Alerte</string>
     <string name="intake_danger_body">Cette prise dépasse une limite ou une incompatibilité. Confirmez seulement si vous décidez de l’enregistrer quand même.</string>
