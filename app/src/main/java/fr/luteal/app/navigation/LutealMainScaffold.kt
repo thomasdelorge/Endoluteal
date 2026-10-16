@@ -330,11 +330,6 @@ fun LutealMainScaffold(
                                 }
                             )
                             LutealDestination.MEDICATIONS -> MedsScreen(
-                                onTake = { medicationId ->
-                                    intakeEventId = null
-                                    intakeMedicationId = medicationId
-                                    intakeDate = uiState.today
-                                },
                                 onLogIntake = {
                                     intakeEventId = null
                                     intakeMedicationId = null

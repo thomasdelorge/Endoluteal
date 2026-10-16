@@ -34,7 +34,6 @@ import java.time.ZoneId
 
 @Composable
 fun MedsScreen(
-    onTake: (String) -> Unit,
     onLogIntake: () -> Unit,
     onOpenIntake: (eventId: String, date: LocalDate) -> Unit,
     viewModel: MedsViewModel = hiltViewModel()
@@ -92,11 +91,6 @@ fun MedsScreen(
                         color = MaterialTheme.colorScheme.onErrorContainer
                     )
                 }
-                LutealPrimaryButton(
-                    text = stringResource(R.string.meds_take),
-                    onClick = { onTake(row.medicationId) },
-                    modifier = Modifier.fillMaxWidth()
-                )
                 row.intakes.forEach { intake ->
                     val whenLabel = intake.at.atZone(zone).toLocalDateTime().let(LocalizedDateFormatter::formatNumericDateTime)
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
