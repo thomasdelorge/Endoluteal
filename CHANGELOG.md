@@ -5,7 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.11.0] - 2026-10-16
+
+### Added
+
+- Symptômes renseignables : étourdissements et vertiges.
+- Éditeur de rendez-vous redécoupé en sections (rendez-vous, quand, remboursement, compte-rendu) avec un CR multiligne et un titre éditable.
+- La fiche de prise de médicament enregistre la douleur après la prise.
+- Les saisies du jour sont regroupées en tuiles par type (rendez-vous, médicaments, autres).
+
+### Changed
+
+- Un rendez-vous modifié localement (titre, lieu, description) n'est plus écrasé par la synchronisation calendrier suivante.
+- Le rappel de compte-rendu d'un rendez-vous ne se déclenche plus rétroactivement à la synchronisation : uniquement à la fin du rendez-vous.
+- Suppression du bouton « Prendre » redondant sur les cartes de médicaments.
 
 ## [0.10.0] - 2026-10-14
 
