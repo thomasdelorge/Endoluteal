@@ -30,7 +30,9 @@ object ObservationCatalog {
         "sleep_issue",
         "bloating",
         "nausea",
-        "digestive_changes"
+        "digestive_changes",
+        "dizziness",
+        "vertigo"
     )
 
     /**

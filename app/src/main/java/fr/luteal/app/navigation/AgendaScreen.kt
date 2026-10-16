@@ -1003,6 +1003,8 @@ private fun symptomDisplayName(id: String): String = when (id) {
     "anxiety" -> stringResource(R.string.symptom_anxiety)
     "acne" -> stringResource(R.string.symptom_acne)
     "pelvic_pain_outside_period" -> stringResource(R.string.symptom_pelvic_pain_outside_period)
+    "dizziness" -> stringResource(R.string.symptom_dizziness)
+    "vertigo" -> stringResource(R.string.symptom_vertigo)
     else -> id
 }
 

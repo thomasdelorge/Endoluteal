@@ -21,6 +21,8 @@ data class Symptom(
             Symptom("digestive_changes", SymptomCategory.PHYSICAL, "digestive_changes"),
             Symptom("acne", SymptomCategory.PHYSICAL, "acne"),
             Symptom("breast_tenderness", SymptomCategory.PHYSICAL, "tenderness"),
+            Symptom("dizziness", SymptomCategory.PHYSICAL, "dizziness"),
+            Symptom("vertigo", SymptomCategory.PHYSICAL, "vertigo"),
             // Offered only when endometriosis is declared; see
             // [ObservationCatalog]. Safe to add client-side because the catalog
             // is client-owned under E2EE and unknown keys survive sync as

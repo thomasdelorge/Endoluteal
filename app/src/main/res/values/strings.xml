@@ -192,6 +192,8 @@
     <string name="symptom_anxiety">Anxiété</string>
     <string name="symptom_acne">Peau, acné</string>
     <string name="symptom_pelvic_pain_outside_period">Douleur pelvienne hors règles</string>
+    <string name="symptom_dizziness">Étourdissements</string>
+    <string name="symptom_vertigo">Vertiges</string>
     <string name="symptom_group_pain">Douleurs</string>
     <string name="symptom_group_physical">Corps &amp; Digestion</string>
     <string name="symptom_group_mood_energy">Humeur &amp; Énergie</string>
