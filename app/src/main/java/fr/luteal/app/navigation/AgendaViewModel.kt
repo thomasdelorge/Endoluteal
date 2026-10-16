@@ -13,6 +13,8 @@ import fr.luteal.core.model.recap.DailyRecap
 import fr.luteal.core.model.EventPayload
 import fr.luteal.core.model.JournalEvent
 import fr.luteal.core.model.JournalEventType
+import fr.luteal.core.model.professional.Appointment
+import fr.luteal.core.model.professional.Professional
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -80,6 +82,14 @@ class AgendaViewModel @Inject constructor(
 
     val recapsByDate: StateFlow<Map<LocalDate, DailyRecap>> = dailyRecapRepository.observeAll()
         .map { list -> list.associateBy { it.date } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val appointments: StateFlow<Map<String, Appointment>> = appointmentRepository.observeAll()
+        .map { list -> list.associateBy { it.eventId } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
+    val professionals: StateFlow<Map<String, Professional>> = professionalRepository.observeAll()
+        .map { list -> list.associateBy { it.id } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 }
 

@@ -1068,6 +1068,7 @@
     <string name="appointment_section_reimbursement">Remboursement</string>
     <string name="appointment_section_report">Compte-rendu</string>
     <string name="appointment_description">Description</string>
+    <string name="appointment_when">Quand</string>
     <string name="appointment_professional">Professionnel</string>
     <string name="appointment_no_professional">Ajoutez un professionnel ci-dessous.</string>
     <string name="appointment_add_professional">Nouveau professionnel</string>
@@ -1110,6 +1111,11 @@
     <string name="agenda_fab_open">Ouvrir les saisies</string>
     <string name="agenda_fab_close">Fermer les saisies</string>
     <string name="agenda_events_empty">Aucun événement ce jour</string>
+    <string name="day_tile_appointments">Rendez-vous médicaux</string>
+    <string name="day_tile_medications">Médicaments</string>
+    <string name="day_tile_others">Autre</string>
+    <string name="day_tile_pain_before">douleur avant %1$d</string>
+    <string name="day_tile_pain_after">douleur après %1$d</string>
     <string name="agenda_event_count">%1$d événement(s)</string>
     <string name="screen_coming_soon_title">Bientôt</string>
     <string name="screen_coming_soon_body">Cet écran arrivera dans une prochaine version.</string>

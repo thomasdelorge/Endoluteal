@@ -103,6 +103,8 @@ fun AgendaScreen(
     events: List<JournalEvent> = emptyList(),
     intakeLabels: Map<String, String> = emptyMap(),
     dailyRecaps: Map<LocalDate, DailyRecap> = emptyMap(),
+    appointments: Map<String, fr.luteal.core.model.professional.Appointment> = emptyMap(),
+    professionals: Map<String, fr.luteal.core.model.professional.Professional> = emptyMap(),
     onOpenRecap: (LocalDate) -> Unit = {},
     onRecordMedication: (LocalDate) -> Unit = {},
     onRecordSymptom: (LocalDate) -> Unit = {},
@@ -110,6 +112,7 @@ fun AgendaScreen(
     onRecordHospitalization: (LocalDate) -> Unit = {},
     onRecordAppointment: (LocalDate) -> Unit = {},
     onOpenEvent: (JournalEvent) -> Unit = {},
+    onOpenAppointmentDetail: (JournalEvent) -> Unit = {},
     onEditCycle: (cycleId: String, newStartDate: LocalDate) -> Unit = { _, _ -> },
     onDeleteCycle: (cycleId: String) -> Unit = {},
     onBackfillCycle: () -> Unit = {}
@@ -316,10 +319,13 @@ fun AgendaScreen(
                 )
             }
             item {
-                DayEventList(
+                DayEventTiles(
                     events = dayEvents,
                     intakeLabels = intakeLabels,
-                    onOpenEvent = onOpenEvent
+                    appointments = appointments,
+                    professionals = professionals,
+                    onOpenEvent = onOpenEvent,
+                    onOpenAppointmentDetail = onOpenAppointmentDetail
                 )
             }
     }
@@ -396,27 +402,85 @@ fun AgendaScreen(
 }
 
 @Composable
-private fun DayEventList(
+private fun DayEventTiles(
     events: List<JournalEvent>,
     intakeLabels: Map<String, String>,
-    onOpenEvent: (JournalEvent) -> Unit
+    appointments: Map<String, fr.luteal.core.model.professional.Appointment>,
+    professionals: Map<String, fr.luteal.core.model.professional.Professional>,
+    onOpenEvent: (JournalEvent) -> Unit,
+    onOpenAppointmentDetail: (JournalEvent) -> Unit
 ) {
     val children = events.filter { it.linkedEventId != null }.groupBy { it.linkedEventId }
     val roots = events.filter { event ->
         event.linkedEventId == null || events.none { it.id == event.linkedEventId }
     }
+    if (roots.isEmpty() && children.isEmpty()) {
+        Text(
+            text = stringResource(R.string.agenda_events_empty),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        return
+    }
     Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xs)) {
-        if (roots.isEmpty()) {
-            Text(
-                text = stringResource(R.string.agenda_events_empty),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            roots.forEach { event ->
-                DayEventCard(event, intakeLabels[event.id], onClick = { onOpenEvent(event) })
-                children[event.id].orEmpty().forEach { child ->
-                    DayEventCard(child, intakeLabels[child.id], nested = true, onClick = { onOpenEvent(child) })
+        val appointmentRoots = roots.filter { it.type == JournalEventType.APPOINTMENT }
+        if (appointmentRoots.isNotEmpty()) {
+            TypeTile(title = stringResource(R.string.day_tile_appointments)) {
+                appointmentRoots.forEach { event ->
+                    val professional = appointments[event.id]?.professionalId?.let { professionals[it] }
+                    TypeSubItem(
+                        headline = buildList {
+                            add(LocalizedDateFormatter.formatTime(event.startAt.atZone(event.zone()).toLocalTime()))
+                            if (event.notes.isNotBlank()) add(event.notes)
+                            if (professional != null) add(professional.name)
+                        }.joinToString(" · "),
+                        onClick = { onOpenAppointmentDetail(event) }
+                    )
+                }
+            }
+        }
+
+        val intakeRoots = roots.filter { it.type == JournalEventType.MEDICATION_INTAKE }
+        if (intakeRoots.isNotEmpty()) {
+            TypeTile(title = stringResource(R.string.day_tile_medications)) {
+                intakeRoots.forEach { event ->
+                    val intakeLabel = intakeLabels[event.id]
+                    val before = event.marks.maxOfOrNull { it.intensity }
+                    val after = children[event.id].orEmpty().firstOrNull()
+                        ?.marks?.maxOfOrNull { it.intensity }
+                    val painBefore = if (before != null) stringResource(R.string.day_tile_pain_before, before) else null
+                    val painAfter = if (after != null) stringResource(R.string.day_tile_pain_after, after) else null
+                    TypeSubItem(
+                        headline = buildList {
+                            add(LocalizedDateFormatter.formatTime(event.startAt.atZone(event.zone()).toLocalTime()))
+                            if (!intakeLabel.isNullOrBlank()) add(intakeLabel)
+                            if (painBefore != null) add(painBefore)
+                            if (painAfter != null) add(painAfter)
+                        }.joinToString(" · "),
+                        onClick = { onOpenEvent(event) }
+                    )
+                }
+            }
+        }
+
+        val otherRoots = roots.filter { it.type != JournalEventType.APPOINTMENT && it.type != JournalEventType.MEDICATION_INTAKE }
+        if (otherRoots.isNotEmpty() || children.isNotEmpty()) {
+            TypeTile(title = stringResource(R.string.day_tile_others)) {
+                val all = otherRoots.flatMap { root ->
+                    listOf(root) + children[root.id].orEmpty()
+                }
+                all.forEach { event ->
+                    val intakeLabel = intakeLabels[event.id]
+                    val pain = event.marks.maxOfOrNull { it.intensity }
+                    val typeLabel = stringResource(event.type.labelRes())
+                    TypeSubItem(
+                        headline = buildList {
+                            add(typeLabel)
+                            if (!intakeLabel.isNullOrBlank()) add(intakeLabel)
+                            if (pain != null) add(pain.toString())
+                        }.joinToString(" · "),
+                        onClick = { onOpenEvent(event) }
+                    )
                 }
             }
         }
@@ -424,41 +488,32 @@ private fun DayEventList(
 }
 
 @Composable
-private fun DayEventCard(
-    event: JournalEvent,
-    intakeLabel: String?,
-    nested: Boolean = false,
-    onClick: () -> Unit = {}
+private fun TypeTile(
+    title: String,
+    content: @Composable () -> Unit
 ) {
-    val typeLabel = stringResource(event.type.labelRes())
-    val pain = event.marks.maxOfOrNull { it.intensity }
-    val headline = buildString {
-        if (nested) append("· ")
-        append(typeLabel)
-        if (!intakeLabel.isNullOrBlank()) append(" · ").append(intakeLabel)
-        if (pain != null) append(" · ").append(pain)
+    LutealCard(modifier = Modifier.fillMaxWidth()) {
+        Column(verticalArrangement = Arrangement.spacedBy(LutealSpacing.xxs)) {
+            Text(title, style = MaterialTheme.typography.titleMedium)
+            content()
+        }
     }
-    LutealCard(
+}
+
+@Composable
+private fun TypeSubItem(headline: String, onClick: () -> Unit) {
+    Text(
+        text = headline,
+        style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
             .semantics { contentDescription = headline }
-    ) {
-        Column(modifier = Modifier.padding(LutealSpacing.sm)) {
-            Text(
-                text = headline,
-                style = if (nested) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.titleMedium
-            )
-            if (event.notes.isNotBlank()) {
-                Text(
-                    text = event.notes,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
+    )
 }
+
+private fun JournalEvent.zone(): java.time.ZoneId =
+    runCatching { java.time.ZoneId.of(zoneId) }.getOrDefault(java.time.ZoneId.systemDefault())
 
 internal fun hideAgendaFab(
     canScrollBackward: Boolean,
